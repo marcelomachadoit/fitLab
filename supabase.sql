@@ -7,3 +7,21 @@ alter table public.meals enable row level security;
 create policy "Users manage own profile" on public.profiles for all using (auth.uid() = id) with check (auth.uid() = id);
 create policy "Anyone can read foods" on public.foods for select using (true);
 create policy "Users manage own meals" on public.meals for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- Cria o perfil automaticamente durante o cadastro no Auth.
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+	insert into public.profiles (id, name)
+	values (new.id, coalesce(new.raw_user_meta_data ->> 'name', split_part(new.email, '@', 1)));
+	return new;
+end;
+$$;
+
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+	after insert on auth.users
+	for each row execute procedure public.handle_new_user();

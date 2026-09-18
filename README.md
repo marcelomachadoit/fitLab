@@ -8,7 +8,11 @@ Abra a pasta no VS Code e use a extensão Live Server ou outro servidor HTTP loc
 
 ## Supabase
 
-A integração será adicionada na Fase 2. Copie `.env.example` para `.env.local` e configure URL e chave anon pública. A `service_role key` nunca deve ser usada no frontend.
+O aplicativo agora exige uma sessão do Supabase antes de revelar o dashboard. Configure a URL e a chave `anon public` em `js/supabase.js` (ou defina `window.FITLAB_SUPABASE_URL` e `window.FITLAB_SUPABASE_ANON_KEY` antes desse script). A `service_role key` nunca deve ser usada no frontend.
+
+Em um site estático do Cloudflare Pages, variáveis `.env` não são injetadas automaticamente no JavaScript do navegador. A URL e a anon key são credenciais públicas destinadas ao frontend; a proteção dos dados vem do Auth e das políticas RLS do banco. Nunca publique a service role key.
+
+No Supabase, em **Authentication > URL Configuration**, defina **Site URL** como a URL do Cloudflare Pages e adicione essa mesma URL em **Redirect URLs**. Execute todo o arquivo `supabase.sql` no SQL Editor para ativar RLS e criar o perfil automaticamente no cadastro.
 
 ## Cloudflare Pages
 
@@ -18,9 +22,13 @@ Envie o projeto para GitHub, conecte o repositório no Cloudflare Pages, deixe o
 
 Abra a URL publicada no Safari, toque em Compartilhar e escolha **Adicionar à Tela de Início**. O manifest, o apple-touch-icon e as meta tags já estão configurados para o FitLab.
 
-## Próximas fases
+## Estado atual
 
-- Fase 2: cadastro, login e Supabase Auth.
-- Fase 3: alimentos e refeições persistidos no PostgreSQL com RLS.
-- Fase 4: refinamento offline e ícones dedicados 192/512.
-- Fase 5: deploy e testes finais em iPhone.
+- Tela de login/cadastro obrigatória antes do dashboard.
+- Supabase Auth, busca de alimentos e leitura/exclusão de refeições preparados.
+- Dashboard mobile-first com totais nutricionais calculados a partir das refeições.
+- RLS definido em `supabase.sql` para que cada usuário veja apenas seus próprios registros.
+
+## Próxima etapa
+
+Adicionar o formulário de seleção de alimento, quantidade e tipo de refeição para completar o fluxo de criação de registros.
