@@ -45,6 +45,7 @@
     <symbol id="i-edit" viewBox="0 0 24 24"><path d="M4.6 19.4h3.2L19 8.2a1.6 1.6 0 0 0 0-2.3l-.9-.9a1.6 1.6 0 0 0-2.3 0L4.6 16.2Z"/><path d="m14.6 6.5 2.9 2.9"/></symbol>
     <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 4.3 20.8 19.6H3.2Z"/><path d="M12 10v4.4"/><path d="M12 17.3v.01"/></symbol>
     <symbol id="i-info" viewBox="0 0 24 24"><path d="M12 20.8a8.8 8.8 0 1 0 0-17.6 8.8 8.8 0 0 0 0 17.6Z"/><path d="M12 11.2v5.4"/><path d="M12 7.7v.01"/></symbol>
+    <symbol id="i-grip" viewBox="0 0 24 24"><path d="M5 9.2h14"/><path d="M5 14.8h14"/></symbol>
     <symbol id="i-close" viewBox="0 0 24 24"><path d="M6.6 6.6 17.4 17.4"/><path d="M17.4 6.6 6.6 17.4"/></symbol>
   </svg>
 
@@ -212,8 +213,8 @@
             <p class="eyebrow">SEU DIA</p>
             <h2>Refeições</h2>
           </div>
-          <button class="text-button" type="button" data-action="add-meal">
-            <svg class="icon"><use href="#i-plus"></use></svg>Adicionar
+          <button class="text-button" type="button" data-action="edit-slots">
+            <svg class="icon"><use href="#i-edit"></use></svg>Personalizar refeições
           </button>
         </div>
         <section class="meal-list" id="meal-list" aria-label="Refeições do dia"></section>
@@ -338,7 +339,7 @@
       <button class="nav-item" type="button" data-target="progresso">
         <svg class="icon"><use href="#i-chart"></use></svg><small>Progresso</small>
       </button>
-      <button class="nav-add" type="button" data-action="add-meal" aria-label="Adicionar alimento">
+      <button class="nav-add" type="button" data-action="log-meal" aria-label="Registrar consumo">
         <svg class="icon"><use href="#i-plus"></use></svg>
       </button>
       <button class="nav-item" type="button" data-target="alimentos">
@@ -567,6 +568,98 @@
       <footer class="modal-actions">
         <button class="secondary-button" type="button" id="goals-back" hidden>Voltar</button>
         <button class="primary-button" type="submit" id="goals-next">Continuar</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <dialog class="modal" id="slots-dialog" aria-labelledby="slots-dialog-title">
+    <form class="modal-card" id="slots-form">
+      <header class="modal-header">
+        <h2 id="slots-dialog-title">Personalizar refeições</h2>
+        <button class="modal-close" type="button" data-close-dialog="slots-dialog" aria-label="Fechar">
+          <svg class="icon"><use href="#i-close"></use></svg>
+        </button>
+      </header>
+      <p class="modal-hint">Monte a rotina do seu jeito: renomeie, acrescente "Ceia", "Lanche 2", ou remova o que não usa. Arraste pelo punho à esquerda para mudar a ordem.</p>
+      <div class="modal-body">
+        <ul class="slot-list" id="slot-list"></ul>
+        <button class="pill-button ghost" type="button" id="slot-add">
+          <svg class="icon"><use href="#i-plus"></use></svg>Acrescentar refeição
+        </button>
+      </div>
+      <p class="modal-feedback" id="slots-feedback"></p>
+      <footer class="modal-actions">
+        <button class="secondary-button" type="button" data-close-dialog="slots-dialog">Cancelar</button>
+        <button class="primary-button" type="submit" id="slots-submit">Salvar refeições</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <dialog class="modal" id="entry-dialog" aria-labelledby="entry-dialog-title">
+    <form class="modal-card" id="entry-form">
+      <header class="modal-header">
+        <h2 id="entry-dialog-title">Registrar consumo</h2>
+        <button class="modal-close" type="button" data-close-dialog="entry-dialog" aria-label="Fechar">
+          <svg class="icon"><use href="#i-close"></use></svg>
+        </button>
+      </header>
+      <div class="segmented" role="tablist">
+        <button class="segment selected" type="button" data-entry-mode="food" role="tab" aria-selected="true">Alimento</button>
+        <button class="segment" type="button" data-entry-mode="recipe" role="tab" aria-selected="false">Receita</button>
+      </div>
+      <div class="modal-body">
+        <label class="field">
+          <span class="field-label">Refeição</span>
+          <span class="field-control">
+            <select id="entry-slot"></select>
+          </span>
+        </label>
+
+        <div id="entry-food-mode">
+          <div class="ingredient-picker">
+            <label class="field picker-search">
+              <span class="field-label">Buscar alimento</span>
+              <span class="field-control">
+                <svg class="icon"><use href="#i-search"></use></svg>
+                <input id="entry-food-search" type="search" autocomplete="off" placeholder="Digite parte do nome...">
+              </span>
+            </label>
+            <label class="field picker-food">
+              <span class="field-label">Alimento <span class="field-count" id="entry-food-count"></span></span>
+              <span class="field-control">
+                <select id="entry-food"></select>
+              </span>
+            </label>
+            <label class="field picker-quantity">
+              <span class="field-label">Quantidade</span>
+              <span class="field-control">
+                <input id="entry-quantity" type="number" min="0.01" max="100000" step="any" value="100">
+              </span>
+            </label>
+            <label class="field picker-unit">
+              <span class="field-label">Medida</span>
+              <span class="field-control">
+                <select id="entry-unit"></select>
+              </span>
+            </label>
+          </div>
+          <p class="field-note" id="entry-preview">Selecione um alimento para ver as calorias.</p>
+        </div>
+
+        <div id="entry-recipe-mode" hidden>
+          <label class="field">
+            <span class="field-label">Receita</span>
+            <span class="field-control">
+              <select id="entry-recipe"></select>
+            </span>
+          </label>
+          <p class="field-note" id="entry-recipe-preview">Escolha uma receita para ver o que será lançado.</p>
+        </div>
+      </div>
+      <p class="modal-feedback" id="entry-feedback"></p>
+      <footer class="modal-actions">
+        <button class="secondary-button" type="button" data-close-dialog="entry-dialog">Cancelar</button>
+        <button class="primary-button" type="submit" id="entry-submit">Registrar</button>
       </footer>
     </form>
   </dialog>

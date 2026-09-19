@@ -7,6 +7,11 @@ let foodCatalog = [];
 let editingFoodId = null;
 let recipeDraft = { id: null, items: [] };
 let recipeQuantityTouched = false;
+let mealSlots = [];
+let slotDraft = [];
+let recipeList = [];
+let entryMode = 'food';
+let entryQuantityTouched = false;
 let nutritionProfile = null;
 let goalStep = 0;
 let goalDraft = {};
@@ -353,6 +358,48 @@ function normalizeText(value) {
   return String(value).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 }
 
+// Helpers compartilhados pelos dois seletores de alimento (receita e registro de consumo).
+function matchingFoods(term) {
+  const needle = normalizeText(String(term || '').trim());
+  return needle ? foodCatalog.filter((food) => normalizeText(food.name).includes(needle)) : foodCatalog;
+}
+
+function populateFoodSelect(select, matches) {
+  const previous = select.value;
+  select.replaceChildren();
+  matches.forEach((food) => {
+    const option = document.createElement('option');
+    option.value = String(food.id);
+    option.textContent = food.user_id ? `${food.name} (meu)` : food.name;
+    select.append(option);
+  });
+  if (previous && matches.some((food) => String(food.id) === previous)) select.value = previous;
+}
+
+function describeMatches(counter, matches, term) {
+  if (!matches.length) counter.textContent = '(nenhum resultado)';
+  else if (!term) counter.textContent = `(${matches.length})`;
+  else counter.textContent = matches.length === 1 ? '(1 resultado)' : `(${matches.length} resultados)`;
+}
+
+function populateUnitSelect(select, food) {
+  const previous = select.value;
+  const options = recipeUnitOptions(food);
+  select.replaceChildren();
+  options.forEach((option) => {
+    const element = document.createElement('option');
+    element.value = option.value;
+    element.textContent = option.label;
+    select.append(element);
+  });
+  if (options.some((option) => option.value === previous)) select.value = previous;
+  return options;
+}
+
+function defaultQuantityFor(food, option) {
+  return !option || option.factor !== 1 || baseUnitOf(food) === 'un' ? '1' : '100';
+}
+
 function fillRecipeFoodSelect() {
   const select = document.querySelector('#recipe-food');
   const previous = select.value;
@@ -550,7 +597,8 @@ async function removeRecipe(recipe) {
 }
 
 async function loadRecipes() {
-  renderRecipes(await getRecipes());
+  recipeList = await getRecipes();
+  renderRecipes(recipeList);
 }
 
 /* ---------------------------------------------------------
@@ -820,50 +868,399 @@ async function handleProfileSubmit(event) {
    Refeições e resumo do dia
    --------------------------------------------------------- */
 
-function renderMeals(meals) {
+function renderMeals(meals, slots) {
   const list = document.querySelector('#meal-list');
-  const types = {
-    breakfast: ['Café da manhã', 'i-sunrise', 'breakfast'],
-    lunch: ['Almoço', 'i-utensils', 'lunch'],
-    snack: ['Lanches', 'i-apple', 'snack'],
-    dinner: ['Jantar', 'i-moon', 'dinner'],
-  };
   list.replaceChildren();
-  Object.entries(types).forEach(([type, [label, icon, className]]) => {
-    const items = meals.filter((meal) => meal.meal_type === type);
+  if (!slots.length) {
+    const emptyState = document.createElement('p');
+    emptyState.className = 'empty-state';
+    emptyState.textContent = 'Você ainda não tem refeições. Use "Personalizar refeições" para criar as suas.';
+    list.append(emptyState);
+    return;
+  }
+  const tons = ['breakfast', 'lunch', 'snack', 'dinner'];
+  slots.forEach((slot, index) => {
+    const items = meals.filter((meal) => String(meal.slot_id) === String(slot.id));
     const calories = items.reduce((sum, meal) => sum + (meal.foods ? calculateNutrition(meal.foods, meal.quantity).calories : 0), 0);
+
     const card = document.createElement('article');
     card.className = `meal-card${items.length ? '' : ' empty-meal'}`;
-    const mealIcon = document.createElement('div');
-    mealIcon.className = `meal-icon ${className}`;
-    mealIcon.append(createIcon(icon));
-    const mealInfo = document.createElement('div');
-    mealInfo.className = 'meal-info';
+
+    const header = document.createElement('div');
+    header.className = 'meal-header';
+    const icon = document.createElement('div');
+    icon.className = `meal-icon ${tons[index % tons.length]}`;
+    icon.append(createIcon(`i-${slot.icon || 'utensils'}`));
+    const info = document.createElement('div');
+    info.className = 'meal-info';
     const heading = document.createElement('h3');
-    heading.textContent = label;
+    heading.textContent = slot.name;
     const description = document.createElement('p');
-    description.textContent = items.length ? items.map((meal) => `${meal.foods.name} (${formatQuantity(meal.quantity, meal.foods)})`).join(', ') : 'Adicione sua próxima refeição';
-    mealInfo.append(heading, description);
-    card.append(mealIcon, mealInfo);
+    description.textContent = items.length
+      ? `${items.length} ${items.length === 1 ? 'item' : 'itens'} · ${formatNumber(calories)} kcal`
+      : 'Nada registrado ainda';
+    info.append(heading, description);
+    header.append(icon, info, createIconButton('i-plus', 'add-small', `Registrar em ${slot.name}`, () => openEntryDialog(slot.id)));
+    card.append(header);
+
     if (items.length) {
-      const total = document.createElement('div');
-      total.className = 'meal-total';
-      const caloriesValue = document.createElement('strong');
-      caloriesValue.textContent = calories;
-      const caloriesUnit = document.createElement('small');
-      caloriesUnit.textContent = 'kcal';
-      total.append(caloriesValue, caloriesUnit);
-      const deleteButton = createIconButton('i-trash', 'more-button', 'Excluir refeição', async () => {
-        try { await deleteMeal(items[0].id); showToast('Refeição removida.'); await refreshDashboard(); } catch (error) { showToast('Não foi possível remover a refeição.', 'error'); }
+      const entries = document.createElement('ul');
+      entries.className = 'meal-items';
+      items.forEach((meal) => {
+        const row = document.createElement('li');
+        const detail = document.createElement('div');
+        detail.className = 'ingredient-info';
+        const name = document.createElement('strong');
+        name.textContent = meal.foods ? meal.foods.name : 'Alimento removido';
+        const amount = document.createElement('small');
+        const nutrition = meal.foods ? calculateNutrition(meal.foods, meal.quantity) : { calories: 0 };
+        amount.textContent = `${formatQuantity(meal.quantity, meal.foods)} · ${formatNumber(nutrition.calories)} kcal`;
+        detail.append(name, amount);
+        row.append(detail, createIconButton('i-trash', 'ghost-button danger', `Remover ${name.textContent}`, async () => {
+          try {
+            await deleteMeal(meal.id);
+            showToast('Registro removido.');
+            await refreshDashboard();
+          } catch (error) {
+            showToast(`Não foi possível remover. ${describeDatabaseError(error)}`, 'error');
+          }
+        }));
+        entries.append(row);
       });
-      deleteButton.dataset.deleteMeal = String(items[0].id);
-      card.append(total, deleteButton);
-    } else {
-      const addButton = createIconButton('i-plus', 'add-small', `Adicionar ${label}`, () => showToast('A seleção de alimento será aberta na próxima atualização.'));
-      card.append(addButton);
+      card.append(entries);
     }
+
     list.append(card);
   });
+}
+
+/* Personalizar refeições ------------------------------------------------ */
+
+async function loadMealSlots() {
+  let slots = await getMealSlots();
+  // Conta nova começa com as quatro refeições usuais, que o usuário renomeia depois.
+  if (!slots.length) slots = await createDefaultMealSlots();
+  mealSlots = slots;
+  return slots;
+}
+
+function openSlotsDialog() {
+  slotDraft = mealSlots.map((slot) => ({ id: slot.id, name: slot.name, icon: slot.icon }));
+  if (!slotDraft.length) slotDraft = DEFAULT_MEAL_SLOTS.map((slot) => ({ name: slot.name, icon: slot.icon }));
+  document.querySelector('#slots-feedback').textContent = '';
+  renderSlotDraft();
+  openDialog('slots-dialog');
+}
+
+function renderSlotDraft() {
+  const list = document.querySelector('#slot-list');
+  list.replaceChildren();
+  slotDraft.forEach((slot, index) => {
+    const row = document.createElement('li');
+    row.className = 'slot-row';
+    row.dataset.index = String(index);
+
+    const handle = document.createElement('button');
+    handle.className = 'slot-drag';
+    handle.type = 'button';
+    handle.setAttribute('aria-label', `Mover ${slot.name || 'refeição'}. Use as setas para cima e para baixo.`);
+    handle.title = 'Arraste para reordenar';
+    handle.append(createIcon('i-grip'));
+    attachSlotDrag(handle, row);
+    // Sem ponteiro (teclado, leitor de tela) as setas fazem o mesmo trabalho.
+    handle.addEventListener('keydown', (event) => {
+      if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
+      event.preventDefault();
+      moveSlotDraft(index, event.key === 'ArrowUp' ? index - 1 : index + 1);
+    });
+
+    // O ícone gira pela lista aceita pelo banco a cada clique: escolha visual sem outro menu.
+    const iconButton = createIconButton(`i-${slot.icon}`, 'slot-icon', `Trocar ícone de ${slot.name || 'refeição'}`, () => {
+      const atual = MEAL_SLOT_ICONS.indexOf(slot.icon);
+      slot.icon = MEAL_SLOT_ICONS[(atual + 1) % MEAL_SLOT_ICONS.length];
+      renderSlotDraft();
+    });
+
+    const field = document.createElement('span');
+    field.className = 'field-control';
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.maxLength = 60;
+    input.value = slot.name;
+    input.placeholder = 'Nome da refeição';
+    input.setAttribute('aria-label', `Nome da refeição ${index + 1}`);
+    input.addEventListener('input', () => { slot.name = input.value; });
+    field.append(input);
+
+    row.append(handle, iconButton, field, createIconButton('i-trash', 'ghost-button danger', `Remover ${slot.name || 'refeição'}`, () => {
+      const aviso = slot.id
+        ? `Remover "${slot.name}"? Os alimentos já registrados nela serão apagados junto.`
+        : `Remover "${slot.name || 'esta refeição'}"?`;
+      if (!window.confirm(aviso)) return;
+      slotDraft.splice(index, 1);
+      renderSlotDraft();
+    }));
+    list.append(row);
+  });
+}
+
+function moveSlotDraft(from, to) {
+  if (to < 0 || to >= slotDraft.length) return;
+  const [item] = slotDraft.splice(from, 1);
+  slotDraft.splice(to, 0, item);
+  renderSlotDraft();
+  // Devolve o foco ao punho que acabou de se mover, para continuar navegando pelo teclado.
+  const handles = document.querySelectorAll('#slot-list .slot-drag');
+  if (handles[to]) handles[to].focus();
+}
+
+// Arrastar com pointer events cobre mouse e toque; a linha é movida no próprio DOM durante
+// o gesto (nada de re-renderizar no meio, que destruiria o elemento sob o dedo) e a ordem
+// só volta para o rascunho quando o gesto termina.
+function attachSlotDrag(handle, row) {
+  handle.addEventListener('pointerdown', (event) => {
+    if (event.button) return;
+    event.preventDefault();
+    const list = row.parentElement;
+    row.classList.add('dragging');
+    handle.setPointerCapture(event.pointerId);
+
+    // Procura o destino pela posição absoluta do ponteiro, e não passo a passo:
+    // um arrasto rápido chega de uma vez ao lugar certo em vez de subir uma linha por evento.
+    const onMove = (moveEvent) => {
+      const y = moveEvent.clientY;
+      const alvo = [...list.children].find((sibling) => {
+        if (sibling === row) return false;
+        const rect = sibling.getBoundingClientRect();
+        return y < rect.top + (rect.height / 2);
+      });
+      if (alvo) {
+        if (alvo !== row.nextElementSibling) list.insertBefore(row, alvo);
+      } else if (list.lastElementChild !== row) {
+        list.append(row);
+      }
+    };
+
+    const onEnd = () => {
+      handle.removeEventListener('pointermove', onMove);
+      handle.removeEventListener('pointerup', onEnd);
+      handle.removeEventListener('pointercancel', onEnd);
+      row.classList.remove('dragging');
+      const ordem = [...list.children].map((item) => Number(item.dataset.index));
+      slotDraft = ordem.map((posicao) => slotDraft[posicao]);
+      renderSlotDraft();
+    };
+
+    handle.addEventListener('pointermove', onMove);
+    handle.addEventListener('pointerup', onEnd);
+    handle.addEventListener('pointercancel', onEnd);
+  });
+}
+
+function addSlotDraftRow() {
+  slotDraft.push({ name: '', icon: MEAL_SLOT_ICONS[slotDraft.length % MEAL_SLOT_ICONS.length] });
+  renderSlotDraft();
+  const inputs = document.querySelectorAll('#slot-list input');
+  if (inputs.length) inputs[inputs.length - 1].focus();
+}
+
+async function handleSlotsSubmit(event) {
+  event.preventDefault();
+  const feedback = document.querySelector('#slots-feedback');
+  const button = document.querySelector('#slots-submit');
+  const nomes = slotDraft.map((slot) => slot.name.trim());
+  if (!slotDraft.length) {
+    feedback.textContent = 'Mantenha pelo menos uma refeição.';
+    return;
+  }
+  if (nomes.some((nome) => !nome)) {
+    feedback.textContent = 'Dê um nome a todas as refeições.';
+    return;
+  }
+  if (new Set(nomes.map((nome) => nome.toLowerCase())).size !== nomes.length) {
+    feedback.textContent = 'Há nomes repetidos na lista.';
+    return;
+  }
+  button.disabled = true;
+  feedback.textContent = '';
+  try {
+    // Apaga primeiro: libera o nome para ser reaproveitado na mesma gravação.
+    const mantidos = new Set(slotDraft.filter((slot) => slot.id).map((slot) => String(slot.id)));
+    const removidos = mealSlots.filter((slot) => !mantidos.has(String(slot.id)));
+    for (const slot of removidos) await deleteMealSlot(slot.id);
+    for (const [index, slot] of slotDraft.entries()) {
+      await saveMealSlot({ id: slot.id, name: slot.name.trim(), icon: slot.icon, position: index });
+    }
+    closeDialog('slots-dialog');
+    showToast('Refeições atualizadas.');
+    await refreshDashboard();
+  } catch (error) {
+    feedback.textContent = `Não foi possível salvar as refeições. ${describeDatabaseError(error)}`;
+  } finally {
+    button.disabled = false;
+  }
+}
+
+/* Registrar consumo ----------------------------------------------------- */
+
+function openEntryDialog(slotId = null) {
+  if (!mealSlots.length) {
+    showToast('Crie uma refeição antes em "Personalizar refeições".', 'error');
+    return;
+  }
+  entryQuantityTouched = false;
+  document.querySelector('#entry-food-search').value = '';
+  document.querySelector('#entry-feedback').textContent = '';
+  fillSlotSelect(slotId);
+  fillEntryFoodSelect();
+  fillEntryRecipeSelect();
+  setEntryMode('food');
+  openDialog('entry-dialog');
+}
+
+function setEntryMode(mode) {
+  entryMode = mode;
+  document.querySelectorAll('[data-entry-mode]').forEach((button) => {
+    const ativo = button.dataset.entryMode === mode;
+    button.classList.toggle('selected', ativo);
+    button.setAttribute('aria-selected', String(ativo));
+  });
+  document.querySelector('#entry-food-mode').hidden = mode !== 'food';
+  document.querySelector('#entry-recipe-mode').hidden = mode !== 'recipe';
+  document.querySelector('#entry-submit').textContent = mode === 'recipe' ? 'Registrar receita' : 'Registrar';
+  document.querySelector('#entry-feedback').textContent = '';
+}
+
+function fillSlotSelect(slotId) {
+  const select = document.querySelector('#entry-slot');
+  select.replaceChildren();
+  mealSlots.forEach((slot) => {
+    const option = document.createElement('option');
+    option.value = String(slot.id);
+    option.textContent = slot.name;
+    select.append(option);
+  });
+  if (slotId && mealSlots.some((slot) => String(slot.id) === String(slotId))) select.value = String(slotId);
+}
+
+function selectedEntryFood() {
+  return foodCatalog.find((food) => String(food.id) === document.querySelector('#entry-food').value);
+}
+
+function selectedEntryUnit() {
+  const value = document.querySelector('#entry-unit').value;
+  return recipeUnitOptions(selectedEntryFood()).find((option) => option.value === value);
+}
+
+function fillEntryFoodSelect() {
+  const termo = document.querySelector('#entry-food-search').value;
+  const matches = matchingFoods(termo);
+  populateFoodSelect(document.querySelector('#entry-food'), matches);
+  describeMatches(document.querySelector('#entry-food-count'), matches, normalizeText(termo.trim()));
+  updateEntryUnit(true);
+}
+
+function updateEntryUnit(resetQuantity = false) {
+  const food = selectedEntryFood();
+  const options = populateUnitSelect(document.querySelector('#entry-unit'), food);
+  if (resetQuantity && !entryQuantityTouched) {
+    const atual = options.find((option) => option.value === document.querySelector('#entry-unit').value);
+    document.querySelector('#entry-quantity').value = defaultQuantityFor(food, atual);
+  }
+  updateEntryPreview();
+}
+
+// Mostra o que será gravado antes de gravar.
+function updateEntryPreview() {
+  const preview = document.querySelector('#entry-preview');
+  const food = selectedEntryFood();
+  const option = selectedEntryUnit();
+  const digitado = Number(document.querySelector('#entry-quantity').value);
+  if (!food || !option || !Number.isFinite(digitado) || digitado <= 0) {
+    preview.textContent = 'Selecione um alimento e uma quantidade válida.';
+    return;
+  }
+  const quantidade = Number((digitado * option.factor).toFixed(2));
+  const nutrition = calculateNutrition(food, quantidade);
+  preview.textContent = `${formatQuantity(quantidade, food)} de ${food.name} = ${formatNumber(nutrition.calories)} kcal · P ${formatNumber(nutrition.protein)} g · C ${formatNumber(nutrition.carbohydrates)} g · G ${formatNumber(nutrition.fat)} g`;
+}
+
+function fillEntryRecipeSelect() {
+  const select = document.querySelector('#entry-recipe');
+  select.replaceChildren();
+  recipeList.forEach((recipe) => {
+    const option = document.createElement('option');
+    option.value = String(recipe.id);
+    option.textContent = recipe.name;
+    select.append(option);
+  });
+  updateEntryRecipePreview();
+}
+
+function updateEntryRecipePreview() {
+  const preview = document.querySelector('#entry-recipe-preview');
+  const recipe = recipeList.find((item) => String(item.id) === document.querySelector('#entry-recipe').value);
+  if (!recipe) {
+    preview.textContent = 'Você ainda não tem receitas. Crie uma na aba Alimentos.';
+    return;
+  }
+  const items = (recipe.recipe_items || []).filter((item) => item.foods);
+  if (!items.length) {
+    preview.textContent = 'Esta receita está sem ingredientes.';
+    return;
+  }
+  const totals = calculateRecipeTotals(items);
+  preview.textContent = `${items.length} ${items.length === 1 ? 'item' : 'itens'} · ${formatNumber(totals.calories)} kcal: ${items.map((item) => `${item.foods.name} ${formatQuantity(item.quantity, item.foods)}`).join(', ')}`;
+}
+
+async function handleEntrySubmit(event) {
+  event.preventDefault();
+  const feedback = document.querySelector('#entry-feedback');
+  const button = document.querySelector('#entry-submit');
+  const slotId = document.querySelector('#entry-slot').value;
+  if (!slotId) {
+    feedback.textContent = 'Escolha em qual refeição registrar.';
+    return;
+  }
+  button.disabled = true;
+  feedback.textContent = '';
+  try {
+    if (entryMode === 'recipe') {
+      const recipe = recipeList.find((item) => String(item.id) === document.querySelector('#entry-recipe').value);
+      const items = recipe ? (recipe.recipe_items || []).filter((item) => item.foods) : [];
+      if (!items.length) {
+        feedback.textContent = 'Escolha uma receita que tenha ingredientes.';
+        return;
+      }
+      await addRecipeMeals(items.map((item) => ({ food_id: item.food_id, quantity: Number(item.quantity) })), slotId);
+      showToast(`${recipe.name} registrada.`);
+    } else {
+      const food = selectedEntryFood();
+      const option = selectedEntryUnit();
+      const digitado = Number(document.querySelector('#entry-quantity').value);
+      if (!food || !option) {
+        feedback.textContent = 'Escolha um alimento.';
+        return;
+      }
+      if (!Number.isFinite(digitado) || digitado <= 0) {
+        feedback.textContent = 'Informe uma quantidade maior que zero.';
+        return;
+      }
+      const quantidade = Number((digitado * option.factor).toFixed(2));
+      if (quantidade > 100000) {
+        feedback.textContent = 'Quantidade muito alta para este alimento.';
+        return;
+      }
+      await addMeal(food.id, quantidade, slotId);
+      showToast(`${food.name} registrado.`);
+    }
+    closeDialog('entry-dialog');
+    await refreshDashboard();
+  } catch (error) {
+    feedback.textContent = `Não foi possível registrar. ${describeDatabaseError(error)}`;
+  } finally {
+    button.disabled = false;
+  }
 }
 
 function renderNutrition(meals, goals = currentGoals()) {
@@ -881,8 +1278,8 @@ function renderNutrition(meals, goals = currentGoals()) {
 }
 
 async function refreshDashboard() {
-  const meals = await getTodayMeals();
-  renderMeals(meals);
+  const [meals, slots] = await Promise.all([getTodayMeals(), loadMealSlots()]);
+  renderMeals(meals, slots);
   renderNutrition(meals);
 }
 
@@ -893,7 +1290,18 @@ async function refreshDashboard() {
 applyTheme(getStoredTheme());
 
 document.querySelectorAll('[data-target]').forEach((button) => button.addEventListener('click', () => showView(button.dataset.target)));
-document.querySelectorAll('[data-action="add-meal"]').forEach((button) => button.addEventListener('click', () => { showView('alimentos'); document.querySelector('#food-search').focus(); }));
+document.querySelector('[data-action="edit-slots"]').addEventListener('click', openSlotsDialog);
+document.querySelector('[data-action="log-meal"]').addEventListener('click', () => openEntryDialog());
+document.querySelector('#slot-add').addEventListener('click', addSlotDraftRow);
+document.querySelector('#slots-form').addEventListener('submit', handleSlotsSubmit);
+document.querySelector('#entry-form').addEventListener('submit', handleEntrySubmit);
+document.querySelectorAll('[data-entry-mode]').forEach((button) => button.addEventListener('click', () => setEntryMode(button.dataset.entryMode)));
+document.querySelector('#entry-food-search').addEventListener('input', fillEntryFoodSelect);
+document.querySelector('#entry-food-search').addEventListener('keydown', (event) => { if (event.key === 'Enter') event.preventDefault(); });
+document.querySelector('#entry-food').addEventListener('change', () => updateEntryUnit(true));
+document.querySelector('#entry-unit').addEventListener('change', updateEntryPreview);
+document.querySelector('#entry-quantity').addEventListener('input', () => { entryQuantityTouched = true; updateEntryPreview(); });
+document.querySelector('#entry-recipe').addEventListener('change', updateEntryRecipePreview);
 document.querySelectorAll('[data-close-dialog]').forEach((button) => button.addEventListener('click', () => closeDialog(button.dataset.closeDialog)));
 document.querySelector('[data-action="new-food"]').addEventListener('click', () => openFoodDialog());
 document.querySelector('[data-action="new-recipe"]').addEventListener('click', () => openRecipeDialog());

@@ -808,9 +808,8 @@ input {
 .settings-form { display: grid; gap: 11px; }
 
 .meal-card {
-  display: flex;
-  align-items: center;
-  gap: 13px;
+  display: grid;
+  gap: 12px;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
@@ -820,6 +819,95 @@ input {
 }
 
 .meal-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+
+.meal-header { display: flex; align-items: center; gap: 13px; }
+
+.meal-items { list-style: none; margin: 0; padding: 0; display: grid; gap: 7px; }
+
+.meal-items li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+}
+
+.meal-items strong { display: block; font-size: 13.5px; font-weight: 600; overflow-wrap: anywhere; }
+.meal-items small { display: block; font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+
+.slot-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 9px; }
+.slot-row { display: flex; align-items: center; gap: 9px; }
+.slot-row .field-control { flex: 1; min-width: 0; }
+.slot-row .field-control input { padding: 12px 0; font-size: 14px; }
+
+.slot-drag {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 30px;
+  height: 44px;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--muted);
+  cursor: grab;
+  /* Sem isto o navegador rola a página em vez de deixar arrastar no toque. */
+  touch-action: none;
+  transition: background var(--speed) var(--ease), color var(--speed) var(--ease);
+}
+
+.slot-drag:hover { background: var(--surface-soft); color: var(--ink); }
+.slot-drag:active { cursor: grabbing; }
+.slot-drag .icon { width: 18px; height: 18px; }
+
+.slot-row.dragging {
+  position: relative;
+  z-index: 2;
+  opacity: .92;
+  transform: scale(1.01);
+  box-shadow: var(--shadow-md);
+  border-radius: var(--radius-sm);
+}
+
+.slot-row.dragging .field-control { border-color: var(--brand); }
+
+.slot-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: var(--brand-soft);
+  color: var(--brand);
+  transition: transform var(--speed) var(--ease);
+}
+
+.slot-icon:hover { transform: scale(1.05); }
+
+.segmented {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+}
+
+.segment {
+  padding: 10px;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  transition: background var(--speed) var(--ease), color var(--speed) var(--ease);
+}
+
+.segment.selected { background: var(--surface); color: var(--brand); box-shadow: var(--shadow-sm); }
 
 .meal-icon {
   width: 44px;
@@ -840,24 +928,6 @@ input {
 .meal-info { min-width: 0; flex: 1; }
 .meal-info h3 { font-size: 14.5px; margin: 0 0 3px; font-family: 'DM Sans', sans-serif; font-weight: 600; letter-spacing: 0; }
 .meal-info p { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 11.5px; color: var(--muted); margin: 0; }
-
-.meal-total { text-align: right; line-height: 1.15; }
-.meal-total strong { display: block; font-family: 'Space Grotesk', sans-serif; font-size: 17px; }
-.meal-total small { display: block; font-size: 10px; color: var(--muted); }
-
-.more-button {
-  display: grid;
-  place-items: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 11px;
-  background: transparent;
-  color: var(--muted);
-  transition: background var(--speed) var(--ease), color var(--speed) var(--ease);
-}
-
-.more-button:hover { background: var(--brand-soft); color: var(--brand); }
-.more-button .icon { width: 17px; height: 17px; }
 
 .empty-meal { background: transparent; border: 1px dashed var(--line-strong); box-shadow: none; }
 .empty-meal .meal-info p { color: var(--brand); }
@@ -1256,7 +1326,13 @@ input {
   text-overflow: ellipsis;
 }
 
-.field-control select option { color: initial; }
+/* O popup nativo do select segue o tema do SISTEMA em vários navegadores, não o do app.
+   Sem cor explícita aqui, a opção herda o branco do tema escuro e cai sobre o fundo claro
+   do popup — texto invisível até passar o mouse, que aplica a cor de seleção do sistema. */
+.field-control select option {
+  color: var(--ink);
+  background-color: var(--surface);
+}
 
 .ingredient-picker {
   display: grid;

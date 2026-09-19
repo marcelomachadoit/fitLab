@@ -58,6 +58,14 @@ Os testes de cálculo rodam sem dependência nenhuma:
 node test-goals.js
 ```
 
+## Refeições do dia
+
+As refeições não são mais quatro tipos fixos no código: cada conta tem as suas, em `public.meal_slots`. O botão **Personalizar refeições**, ao lado do título "Refeições", abre a lista para renomear, acrescentar ("Ceia", "Lanche 2", "Pré-treino"), trocar o ícone e remover. Uma conta nova começa com café da manhã, almoço, lanche e jantar, que servem só de ponto de partida.
+
+O botão **+** da barra inferior registra consumo: escolha a refeição, busque o alimento, informe quantidade e medida — e o card da refeição passa a listar o item com suas calorias. O mesmo diálogo tem a aba **Receita**, que lança todos os ingredientes de uma receita salva de uma vez, cada um como um registro separado para continuar editável.
+
+Remover uma refeição apaga os registros feitos nela (`on delete cascade` em `meals.slot_id`), e o app avisa disso antes de confirmar. A coluna antiga `meals.meal_type` virou opcional e deixou de ser usada; ficou no schema para não descartar registros anteriores.
+
 ## Alimentos e receitas do usuário
 
 Além da base compartilhada, cada conta pode criar os próprios alimentos e receitas pela aba **Alimentos**:
