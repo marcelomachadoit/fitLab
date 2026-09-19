@@ -3,7 +3,9 @@ let authMode = 'login';
 function openAuthModal(mode = 'login') {
   authMode = mode;
   document.querySelector('#auth-gate').hidden = false;
-  document.querySelector('#auth-name-field').hidden = mode !== 'register';
+  const nameField = document.querySelector('#auth-name-field');
+  nameField.hidden = mode !== 'register';
+  nameField.setAttribute('aria-hidden', String(mode !== 'register'));
   document.querySelector('#auth-name').required = mode === 'register';
   document.querySelector('#auth-title').innerHTML = mode === 'login' ? 'Seu ritmo,<br><strong>seu resultado.</strong>' : 'Comece sua<br><strong>melhor fase.</strong>';
   document.querySelector('#auth-submit').textContent = mode === 'login' ? 'Entrar' : 'Criar conta';
