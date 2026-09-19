@@ -6,7 +6,7 @@ const sampleFoods = [
 
 async function searchFoods(searchTerm = '') {
   if (!hasSupabase()) return sampleFoods.filter((food) => food.name.toLowerCase().includes(searchTerm.toLowerCase()));
-  let query = supabaseClient.from('foods').select('*').order('name').limit(30);
+  let query = supabaseClient.from('foods').select('*').order('name').limit(60);
   if (searchTerm) query = query.ilike('name', `%${searchTerm}%`);
   const { data, error } = await query;
   if (error) throw error;

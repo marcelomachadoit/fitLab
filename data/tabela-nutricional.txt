@@ -1,0 +1,172 @@
+# Base nutricional do FitLab — valores de referência (aproximados).
+# Não altere os números sem instrução explícita.
+# Formato:
+# Nome | Base | kcal | Proteína(g) | Carboidrato(g) | Gordura(g) | Porção comum | kcal/porção | Proteína/porção(g) | Carboidrato/porção(g) | Gordura/porção(g)
+# Sólidos usam 100 g como base; líquidos/bebidas usam 100 ml. Bebidas alcoólicas e o energético são médias de categoria.
+
+Arroz branco cozido | 100 g | 128 | 2.5 | 28.1 | 0.2 | 1 xícara (150 g) | 192 | 3.8 | 42.2 | 0.3
+Arroz integral cozido | 100 g | 124 | 2.6 | 25.8 | 1 | 1 xícara (150 g) | 186 | 3.9 | 38.7 | 1.5
+Feijão carioca cozido | 100 g | 76 | 4.8 | 13.6 | 0.5 | 1 concha (100 g) | 76 | 4.8 | 13.6 | 0.5
+Feijão preto cozido | 100 g | 77 | 4.5 | 14 | 0.5 | 1 concha (100 g) | 77 | 4.5 | 14 | 0.5
+Lentilha cozida | 100 g | 93 | 6.3 | 16.3 | 0.5 | 1 concha (100 g) | 93 | 6.3 | 16.3 | 0.5
+Grão-de-bico cozido | 100 g | 164 | 8.9 | 27.4 | 2.6 | 1/2 xícara (82 g) | 134 | 7.3 | 22.5 | 2.1
+Ervilha cozida | 100 g | 81 | 5.4 | 14.2 | 0.4 | 1/2 xícara (80 g) | 65 | 4.3 | 11.4 | 0.3
+Milho cozido | 100 g | 98 | 3.2 | 17.1 | 1.2 | 1 espiga média (100 g) | 98 | 3.2 | 17.1 | 1.2
+Aveia em flocos | 100 g | 394 | 13.9 | 66.6 | 8.5 | 4 colheres de sopa (40 g) | 158 | 5.6 | 26.6 | 3.4
+Granola | 100 g | 450 | 10 | 65 | 16 | 1/2 xícara (40 g) | 180 | 4 | 26 | 6.4
+Macarrão cozido | 100 g | 157 | 5.8 | 30.7 | 0.9 | 1 xícara (140 g) | 220 | 8.1 | 43 | 1.3
+Espaguete cozido | 100 g | 157 | 5.8 | 30.7 | 0.9 | 1 xícara (140 g) | 220 | 8.1 | 43 | 1.3
+Pão francês | 100 g | 300 | 8 | 58.6 | 3.1 | 1 unidade (50 g) | 150 | 4 | 29.3 | 1.6
+Pão de forma | 100 g | 250 | 8 | 49 | 3 | 1 fatia (25 g) | 63 | 2 | 12.3 | 0.8
+Pão integral | 100 g | 250 | 9 | 43 | 4 | 1 fatia (25 g) | 63 | 2.3 | 10.8 | 1
+Tapioca sem recheio | 100 g | 240 | 0.2 | 59 | 0.2 | 1 unidade (50 g) | 120 | 0.1 | 29.5 | 0.1
+Cuscuz de milho cozido | 100 g | 113 | 2.2 | 25.3 | 0.7 | 1 porção (100 g) | 113 | 2.2 | 25.3 | 0.7
+Farofa de mandioca | 100 g | 365 | 2.1 | 80 | 2 | 1 colher de sopa (20 g) | 73 | 0.4 | 16 | 0.4
+Batata inglesa cozida | 100 g | 52 | 1.2 | 11.9 | 0.1 | 1 unidade média (150 g) | 78 | 1.8 | 17.9 | 0.2
+Batata-doce cozida | 100 g | 77 | 0.6 | 18.4 | 0.1 | 1 unidade média (130 g) | 100 | 0.8 | 23.9 | 0.1
+Mandioca cozida | 100 g | 125 | 0.6 | 30.1 | 0.3 | 1 pedaço médio (100 g) | 125 | 0.6 | 30.1 | 0.3
+Inhame cozido | 100 g | 97 | 2.1 | 23.2 | 0.1 | 1 unidade média (100 g) | 97 | 2.1 | 23.2 | 0.1
+Batata frita | 100 g | 267 | 3.4 | 35.6 | 12 | 1 porção (100 g) | 267 | 3.4 | 35.6 | 12
+Purê de batata | 100 g | 110 | 1.8 | 14 | 4.5 | 1 porção (150 g) | 165 | 2.7 | 21 | 6.8
+Farinha de trigo | 100 g | 360 | 9.8 | 75.1 | 1.4 | 1 xícara (120 g) | 432 | 11.8 | 90.1 | 1.7
+Farinha de mandioca | 100 g | 365 | 1.6 | 89 | 0.3 | 1 colher de sopa (20 g) | 73 | 0.3 | 17.8 | 0.1
+Açúcar | 100 g | 387 | 0 | 99.8 | 0 | 1 colher de sopa (12 g) | 46 | 0 | 12 | 0
+Mel | 100 g | 309 | 0.8 | 84 | 0 | 1 colher de sopa (21 g) | 65 | 0.2 | 17.6 | 0
+Frango grelhado | 100 g | 165 | 31 | 0 | 4 | 1 filé médio (150 g) | 248 | 46.5 | 0 | 6
+Peito de frango cozido | 100 g | 159 | 32 | 0 | 2.5 | 1 filé médio (150 g) | 239 | 48 | 0 | 3.8
+Coxa de frango assada | 100 g | 215 | 26 | 0 | 11 | 1 coxa média (100 g) | 215 | 26 | 0 | 11
+Asa de frango assada | 100 g | 254 | 23 | 0 | 17 | 2 asas médias (100 g) | 254 | 23 | 0 | 17
+Frango à milanesa | 100 g | 280 | 20 | 12 | 16 | 1 filé médio (150 g) | 420 | 30 | 18 | 24
+Patinho grelhado | 100 g | 219 | 35.9 | 0 | 7.3 | 1 bife médio (150 g) | 329 | 53.9 | 0 | 11
+Patinho cozido | 100 g | 194 | 29.7 | 0 | 7.4 | 1 porção (150 g) | 291 | 44.6 | 0 | 11.1
+Acém cozido | 100 g | 212 | 27 | 0 | 11 | 1 porção (150 g) | 318 | 40.5 | 0 | 16.5
+Coxão mole grelhado | 100 g | 220 | 32 | 0 | 9 | 1 bife médio (150 g) | 330 | 48 | 0 | 13.5
+Contrafilé grelhado | 100 g | 278 | 32 | 0 | 16 | 1 bife médio (150 g) | 417 | 48 | 0 | 24
+Picanha grelhada | 100 g | 289 | 26.4 | 0 | 19.5 | 1 fatia média (100 g) | 289 | 26.4 | 0 | 19.5
+Carne moída cozida | 100 g | 215 | 26 | 0 | 12 | 1 porção (150 g) | 323 | 39 | 0 | 18
+Carne seca cozida | 100 g | 313 | 26.9 | 0 | 21.9 | 1 porção (100 g) | 313 | 26.9 | 0 | 21.9
+Lombo suíno assado | 100 g | 210 | 32 | 0 | 9 | 1 filé médio (150 g) | 315 | 48 | 0 | 13.5
+Costela suína assada | 100 g | 300 | 25 | 0 | 22 | 1 porção (150 g) | 450 | 37.5 | 0 | 33
+Bacon frito | 100 g | 540 | 37 | 0 | 42 | 3 fatias (30 g) | 162 | 11.1 | 0 | 12.6
+Presunto | 100 g | 116 | 18 | 1.5 | 4 | 2 fatias (40 g) | 46 | 7.2 | 0.6 | 1.6
+Peito de peru | 100 g | 109 | 21 | 2 | 2 | 2 fatias (40 g) | 44 | 8.4 | 0.8 | 0.8
+Linguiça calabresa | 100 g | 300 | 14 | 2 | 26 | 1 unidade (100 g) | 300 | 14 | 2 | 26
+Salsicha | 100 g | 300 | 12 | 2 | 27 | 1 unidade (50 g) | 150 | 6 | 1 | 13.5
+Ovo cozido | 100 g | 146 | 13.3 | 0.6 | 9.5 | 1 unidade média (50 g) | 73 | 6.7 | 0.3 | 4.8
+Ovo frito | 100 g | 196 | 13 | 1 | 15 | 1 unidade média (50 g) | 98 | 6.5 | 0.5 | 7.5
+Clara de ovo | 100 g | 48 | 10.9 | 0.7 | 0.2 | 1 clara (33 g) | 16 | 3.6 | 0.2 | 0.1
+Atum em água | 100 g | 116 | 26 | 0 | 1 | 1 lata drenada (120 g) | 139 | 31.2 | 0 | 1.2
+Sardinha | 100 g | 164 | 21 | 0 | 8 | 1 porção (100 g) | 164 | 21 | 0 | 8
+Salmão grelhado | 100 g | 208 | 20 | 0 | 13 | 1 filé (150 g) | 312 | 30 | 0 | 19.5
+Tilápia grelhada | 100 g | 128 | 26 | 0 | 3 | 1 filé (120 g) | 154 | 31.2 | 0 | 3.6
+Merluza assada | 100 g | 140 | 24 | 0 | 4 | 1 filé (120 g) | 168 | 28.8 | 0 | 4.8
+Bacalhau cozido | 100 g | 105 | 23 | 0 | 1 | 1 porção (150 g) | 158 | 34.5 | 0 | 1.5
+Camarão cozido | 100 g | 99 | 24 | 0.2 | 0.3 | 1 porção (100 g) | 99 | 24 | 0.2 | 0.3
+Leite integral | 100 ml | 61 | 3.2 | 4.8 | 3.3 | 1 copo (200 ml) | 122 | 6.4 | 9.6 | 6.6
+Leite desnatado | 100 ml | 35 | 3.4 | 5 | 0.1 | 1 copo (200 ml) | 70 | 6.8 | 10 | 0.2
+Leite semidesnatado | 100 ml | 45 | 3.2 | 4.8 | 1.5 | 1 copo (200 ml) | 90 | 6.4 | 9.6 | 3
+Iogurte natural integral | 100 g | 61 | 3.5 | 4.7 | 3.3 | 1 pote (170 g) | 104 | 6 | 8 | 5.6
+Iogurte grego natural | 100 g | 100 | 9 | 4 | 5 | 1 pote (100 g) | 100 | 9 | 4 | 5
+Queijo muçarela | 100 g | 330 | 22 | 3 | 25 | 2 fatias (40 g) | 132 | 8.8 | 1.2 | 10
+Queijo minas frescal | 100 g | 264 | 17.4 | 3.2 | 20.2 | 1 fatia (40 g) | 106 | 7 | 1.3 | 8.1
+Queijo parmesão | 100 g | 453 | 35 | 4 | 33 | 1 colher de sopa (15 g) | 68 | 5.3 | 0.6 | 5
+Requeijão | 100 g | 257 | 9.6 | 2.5 | 23.4 | 1 colher de sopa (30 g) | 77 | 2.9 | 0.8 | 7
+Cream cheese | 100 g | 342 | 6 | 4 | 34 | 1 colher de sopa (30 g) | 103 | 1.8 | 1.2 | 10.2
+Manteiga | 100 g | 717 | 0.9 | 0.1 | 81 | 1 colher de sopa (10 g) | 72 | 0.1 | 0 | 8.1
+Azeite de oliva | 100 ml | 884 | 0 | 0 | 100 | 1 colher de sopa (13 ml) | 115 | 0 | 0 | 13
+Óleo de soja | 100 ml | 884 | 0 | 0 | 100 | 1 colher de sopa (13 ml) | 115 | 0 | 0 | 13
+Abacate | 100 g | 96 | 1.2 | 6 | 8.4 | 1/2 unidade (100 g) | 96 | 1.2 | 6 | 8.4
+Banana | 100 g | 98 | 1.3 | 26 | 0.1 | 1 unidade média (90 g) | 88 | 1.2 | 23.4 | 0.1
+Maçã | 100 g | 56 | 0.3 | 15.2 | 0 | 1 unidade média (130 g) | 73 | 0.4 | 19.8 | 0
+Laranja | 100 g | 37 | 1 | 8.9 | 0.1 | 1 unidade média (130 g) | 48 | 1.3 | 11.6 | 0.1
+Tangerina | 100 g | 38 | 0.8 | 9.6 | 0.1 | 1 unidade média (100 g) | 38 | 0.8 | 9.6 | 0.1
+Limão | 100 g | 29 | 1.1 | 9 | 0.3 | 1 unidade média (60 g) | 17 | 0.7 | 5.4 | 0.2
+Uva | 100 g | 53 | 0.7 | 13.6 | 0.2 | 1 xícara (150 g) | 80 | 1.1 | 20.4 | 0.3
+Manga | 100 g | 64 | 0.4 | 17 | 0.3 | 1/2 unidade (100 g) | 64 | 0.4 | 17 | 0.3
+Mamão | 100 g | 40 | 0.5 | 10.4 | 0.1 | 1 fatia (150 g) | 60 | 0.8 | 15.6 | 0.2
+Melão | 100 g | 29 | 0.7 | 7.5 | 0 | 1 fatia (150 g) | 44 | 1.1 | 11.3 | 0
+Melancia | 100 g | 33 | 0.9 | 8.1 | 0 | 1 fatia (200 g) | 66 | 1.8 | 16.2 | 0
+Morango | 100 g | 30 | 0.9 | 6.8 | 0.3 | 1 xícara (150 g) | 45 | 1.4 | 10.2 | 0.5
+Abacaxi | 100 g | 48 | 0.9 | 12.3 | 0.1 | 2 fatias (150 g) | 72 | 1.4 | 18.5 | 0.2
+Pera | 100 g | 53 | 0.4 | 14 | 0.1 | 1 unidade média (150 g) | 80 | 0.6 | 21 | 0.2
+Kiwi | 100 g | 51 | 1.3 | 11.5 | 0.6 | 1 unidade média (75 g) | 38 | 1 | 8.6 | 0.5
+Goiaba | 100 g | 54 | 1.1 | 13 | 0.4 | 1 unidade média (100 g) | 54 | 1.1 | 13 | 0.4
+Maracujá | 100 g | 68 | 2 | 12.3 | 2.1 | 1 unidade (50 g) | 34 | 1 | 6.2 | 1.1
+Coco fresco | 100 g | 354 | 3.3 | 15.2 | 33.5 | 1/2 xícara (40 g) | 142 | 1.3 | 6.1 | 13.4
+Castanha-do-pará | 100 g | 659 | 14 | 11 | 67 | 3 unidades (15 g) | 99 | 2.1 | 1.7 | 10.1
+Castanha de caju | 100 g | 553 | 18 | 30 | 44 | 1 punhado (30 g) | 166 | 5.4 | 9 | 13.2
+Amendoim | 100 g | 567 | 25.8 | 16.1 | 49.2 | 1 punhado (30 g) | 170 | 7.7 | 4.8 | 14.8
+Amêndoas | 100 g | 579 | 21.2 | 21.6 | 49.9 | 1 punhado (30 g) | 174 | 6.4 | 6.5 | 15
+Nozes | 100 g | 654 | 15.2 | 13.7 | 65.2 | 1 punhado (30 g) | 196 | 4.6 | 4.1 | 19.6
+Pasta de amendoim | 100 g | 588 | 25 | 20 | 50 | 1 colher de sopa (16 g) | 94 | 4 | 3.2 | 8
+Chia | 100 g | 486 | 16.5 | 42.1 | 30.7 | 1 colher de sopa (15 g) | 73 | 2.5 | 6.3 | 4.6
+Linhaça | 100 g | 534 | 18.3 | 28.9 | 42.2 | 1 colher de sopa (10 g) | 53 | 1.8 | 2.9 | 4.2
+Brócolis cozido | 100 g | 25 | 2.1 | 4.4 | 0.5 | 1 xícara (150 g) | 38 | 3.2 | 6.6 | 0.8
+Couve-flor cozida | 100 g | 25 | 2 | 5 | 0.3 | 1 xícara (125 g) | 31 | 2.5 | 6.3 | 0.4
+Cenoura cozida | 100 g | 30 | 0.8 | 6.7 | 0.2 | 1 unidade média (60 g) | 18 | 0.5 | 4 | 0.1
+Tomate cru | 100 g | 15 | 1.1 | 3.1 | 0.2 | 1 unidade média (100 g) | 15 | 1.1 | 3.1 | 0.2
+Alface | 100 g | 15 | 1.4 | 2.9 | 0.2 | 1 prato de folhas (50 g) | 8 | 0.7 | 1.5 | 0.1
+Couve refogada | 100 g | 90 | 2.5 | 8 | 5 | 1 porção (100 g) | 90 | 2.5 | 8 | 5
+Espinafre cozido | 100 g | 23 | 2.9 | 3.6 | 0.4 | 1/2 xícara (90 g) | 21 | 2.6 | 3.2 | 0.4
+Abobrinha cozida | 100 g | 15 | 1.1 | 3 | 0.2 | 1 xícara (120 g) | 18 | 1.3 | 3.6 | 0.2
+Chuchu cozido | 100 g | 19 | 0.7 | 4.8 | 0.1 | 1 unidade média (150 g) | 29 | 1.1 | 7.2 | 0.2
+Beterraba cozida | 100 g | 32 | 1.3 | 7.2 | 0.1 | 1 unidade média (100 g) | 32 | 1.3 | 7.2 | 0.1
+Pepino cru | 100 g | 10 | 0.7 | 2 | 0.1 | 1 unidade média (150 g) | 15 | 1.1 | 3 | 0.2
+Pimentão | 100 g | 21 | 1 | 4.6 | 0.2 | 1 unidade média (120 g) | 25 | 1.2 | 5.5 | 0.2
+Cebola crua | 100 g | 39 | 1.7 | 8.9 | 0.2 | 1 unidade média (100 g) | 39 | 1.7 | 8.9 | 0.2
+Alho | 100 g | 149 | 6.4 | 33.1 | 0.5 | 1 dente (3 g) | 4 | 0.2 | 1 | 0
+Cogumelo | 100 g | 22 | 3.1 | 3.3 | 0.3 | 1 xícara (70 g) | 15 | 2.2 | 2.3 | 0.2
+Molho de tomate | 100 g | 30 | 1.5 | 5 | 0.5 | 3 colheres de sopa (60 g) | 18 | 0.9 | 3 | 0.3
+Ketchup | 100 g | 110 | 1.2 | 26 | 0.2 | 1 colher de sopa (17 g) | 19 | 0.2 | 4.4 | 0
+Maionese | 100 g | 680 | 1 | 2 | 75 | 1 colher de sopa (15 g) | 102 | 0.2 | 0.3 | 11.3
+Mostarda | 100 g | 66 | 4 | 6 | 3.7 | 1 colher de sopa (15 g) | 10 | 0.6 | 0.9 | 0.6
+Molho barbecue | 100 g | 170 | 1 | 40 | 0.5 | 1 colher de sopa (17 g) | 29 | 0.2 | 6.8 | 0.1
+Pizza de muçarela | 100 g | 266 | 11 | 33 | 10 | 1 fatia média (100 g) | 266 | 11 | 33 | 10
+Hambúrguer bovino | 100 g | 250 | 20 | 10 | 16 | 1 unidade (100 g) | 250 | 20 | 10 | 16
+Cheeseburger | 100 g | 300 | 17 | 30 | 13 | 1 unidade (180 g) | 540 | 30.6 | 54 | 23.4
+Hot dog | 100 g | 290 | 11 | 24 | 17 | 1 unidade (150 g) | 435 | 16.5 | 36 | 25.5
+Coxinha de frango | 100 g | 283 | 9.6 | 34.5 | 11.8 | 1 unidade média (100 g) | 283 | 9.6 | 34.5 | 11.8
+Empada de frango | 100 g | 358 | 6.9 | 47.5 | 15.6 | 1 unidade (100 g) | 358 | 6.9 | 47.5 | 15.6
+Pastel de carne | 100 g | 310 | 10 | 32 | 16 | 1 unidade média (100 g) | 310 | 10 | 32 | 16
+Pão de queijo | 100 g | 330 | 6 | 40 | 15 | 1 unidade média (25 g) | 83 | 1.5 | 10 | 3.8
+Lasanha à bolonhesa | 100 g | 150 | 8 | 15 | 7 | 1 porção (300 g) | 450 | 24 | 45 | 21
+Strogonoff de frango | 100 g | 170 | 15 | 7 | 9 | 1 porção (200 g) | 340 | 30 | 14 | 18
+Macarrão ao molho de tomate | 100 g | 140 | 4.5 | 24 | 3 | 1 prato (250 g) | 350 | 11.3 | 60 | 7.5
+Arroz com feijão | 100 g | 120 | 4.5 | 22 | 1.5 | 1 prato (200 g) | 240 | 9 | 44 | 3
+Omelete simples | 100 g | 160 | 10 | 2 | 12 | 1 omelete (100 g) | 160 | 10 | 2 | 12
+Salada de alface e tomate | 100 g | 20 | 1 | 4 | 0.2 | 1 prato (150 g) | 30 | 1.5 | 6 | 0.3
+Sopa de legumes | 100 g | 45 | 2 | 8 | 0.8 | 1 prato (300 g) | 135 | 6 | 24 | 2.4
+Açaí com xarope | 100 g | 110 | 0.8 | 20 | 3 | 1 tigela (300 g) | 330 | 2.4 | 60 | 9
+Chocolate ao leite | 100 g | 535 | 7.6 | 59 | 30 | 1 barra pequena (25 g) | 134 | 1.9 | 14.8 | 7.5
+Chocolate amargo 70% | 100 g | 600 | 8 | 46 | 43 | 1 quadrado (10 g) | 60 | 0.8 | 4.6 | 4.3
+Biscoito recheado | 100 g | 480 | 6 | 68 | 21 | 3 unidades (30 g) | 144 | 1.8 | 20.4 | 6.3
+Biscoito água e sal | 100 g | 430 | 10 | 70 | 12 | 5 unidades (30 g) | 129 | 3 | 21 | 3.6
+Bolacha maisena | 100 g | 430 | 8 | 75 | 11 | 5 unidades (30 g) | 129 | 2.4 | 22.5 | 3.3
+Bolo de chocolate | 100 g | 350 | 5 | 50 | 15 | 1 fatia (80 g) | 280 | 4 | 40 | 12
+Bolo simples | 100 g | 300 | 5 | 50 | 10 | 1 fatia (80 g) | 240 | 4 | 40 | 8
+Brigadeiro | 100 g | 400 | 5 | 60 | 15 | 1 unidade (20 g) | 80 | 1 | 12 | 3
+Sorvete de creme | 100 g | 207 | 3.5 | 24 | 11 | 2 bolas (100 g) | 207 | 3.5 | 24 | 11
+Pudim de leite | 100 g | 220 | 5 | 32 | 8 | 1 fatia (100 g) | 220 | 5 | 32 | 8
+Tiramisù | 100 g | 240 | 5 | 30 | 11 | 1 porção (100 g) | 240 | 5 | 30 | 11
+Waffle | 100 g | 290 | 7 | 33 | 14 | 1 unidade (75 g) | 218 | 5.3 | 24.8 | 10.5
+Cookie com chocolate | 100 g | 480 | 6 | 64 | 22 | 1 unidade (30 g) | 144 | 1.8 | 19.2 | 6.6
+Geleia de frutas | 100 g | 250 | 0.5 | 65 | 0.2 | 1 colher de sopa (20 g) | 50 | 0.1 | 13 | 0
+Pipoca sem óleo | 100 g | 375 | 11 | 74 | 4.5 | 1 tigela (30 g) | 113 | 3.3 | 22.2 | 1.4
+Pipoca com óleo | 100 g | 450 | 8 | 58 | 20 | 1 tigela (30 g) | 135 | 2.4 | 17.4 | 6
+Cereal matinal | 100 g | 380 | 7 | 84 | 1.5 | 1 xícara (30 g) | 114 | 2.1 | 25.2 | 0.5
+Cerveja (média) | 100 ml | 43 | 0.5 | 3.6 | 0 | — | | | |
+Cerveja pilsen (média) | 100 ml | 43 | 0.5 | 3.6 | 0 | — | | | |
+Cerveja puro malte (média) | 100 ml | 45 | 0.5 | 3.8 | 0 | — | | | |
+Cerveja sem álcool (média) | 100 ml | 25 | 0.3 | 5.5 | 0 | — | | | |
+Vinho tinto (média) | 100 ml | 85 | 0.1 | 2.6 | 0 | — | | | |
+Vinho branco (média) | 100 ml | 82 | 0.1 | 2.6 | 0 | — | | | |
+Espumante (média) | 100 ml | 80 | 0.1 | 2 | 0 | — | | | |
+Whisky (média) | 100 ml | 250 | 0 | 0 | 0 | — | | | |
+Vodka (média) | 100 ml | 231 | 0 | 0 | 0 | — | | | |
+Gin (média) | 100 ml | 263 | 0 | 0 | 0 | — | | | |
+Rum (média) | 100 ml | 231 | 0 | 0 | 0 | — | | | |
+Tequila (média) | 100 ml | 231 | 0 | 0 | 0 | — | | | |
+Cachaça (média) | 100 ml | 231 | 0 | 0 | 0 | — | | | |
+Licor (média) | 100 ml | 300 | 0 | 30 | 0 | — | | | |
+Saquê (média) | 100 ml | 134 | 0.5 | 5 | 0 | — | | | |
+Energético (média) | 100 ml | 45 | 0 | 11 | 0 | 1 lata (250 ml) | 112.5 | 0 | 27.5 | 0

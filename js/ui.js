@@ -73,9 +73,19 @@ function renderFoods(foods) {
     body.className = 'food-body';
     const name = document.createElement('strong');
     name.textContent = food.name;
+    const unit = food.base_unit === 'ml' ? 'ml' : 'g';
     const nutrition = document.createElement('small');
-    nutrition.textContent = `${formatNumber(food.calories)} kcal · ${food.serving_size || 100} g`;
-    body.append(name, nutrition);
+    nutrition.textContent = `${formatNumber(food.calories)} kcal · ${food.serving_size || 100} ${unit}${food.portion_label ? ` · ${food.portion_label}` : ''}`;
+    const macros = document.createElement('span');
+    macros.className = 'food-macros';
+    [['P', food.protein], ['C', food.carbohydrates], ['G', food.fat]].forEach(([label, value]) => {
+      const chip = document.createElement('span');
+      const key = document.createElement('b');
+      key.textContent = label;
+      chip.append(key, document.createTextNode(` ${formatNumber(value)} g`));
+      macros.append(chip);
+    });
+    body.append(name, nutrition, macros);
 
     const addIcon = document.createElement('span');
     addIcon.className = 'food-add';
