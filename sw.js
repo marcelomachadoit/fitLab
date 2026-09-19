@@ -1,6 +1,6 @@
-const CACHE_NAME = 'fitlab-static-v6';
-const PREVIOUS_CACHES = ['fitlab-static-v1', 'fitlab-static-v2', 'fitlab-static-v3', 'fitlab-static-v4', 'fitlab-static-v5'];
-const STATIC_FILES = ['./', './index.html', './css/style.css', './js/app.js', './js/ui.js', './js/auth.js', './js/foods.js', './js/meals.js', './js/supabase.js', './manifest.json', './logo.png', './assets/icons/icon-192.png', './assets/icons/icon-512.png'];
+const CACHE_NAME = 'fitlab-static-v12';
+const PREVIOUS_CACHES = ['fitlab-static-v1', 'fitlab-static-v2', 'fitlab-static-v3', 'fitlab-static-v4', 'fitlab-static-v5', 'fitlab-static-v6', 'fitlab-static-v7', 'fitlab-static-v8', 'fitlab-static-v9', 'fitlab-static-v10', 'fitlab-static-v11'];
+const STATIC_FILES = ['./', './index.html', './css/style.css', './js/app.js', './js/ui.js', './js/auth.js', './js/foods.js', './js/meals.js', './js/recipes.js', './js/supabase.js', './manifest.json', './logo.png', './assets/icons/icon-192.png', './assets/icons/icon-512.png'];
 self.addEventListener('install', (event) => { event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_FILES))); self.skipWaiting(); });
 self.addEventListener('activate', (event) => {
 	event.waitUntil(Promise.all(PREVIOUS_CACHES.map((cacheName) => caches.delete(cacheName))).then(() => self.clients.claim()));

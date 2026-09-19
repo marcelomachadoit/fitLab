@@ -1,5 +1,8 @@
-function calculateNutrition(food, quantityInGrams) {
-  const factor = quantityInGrams / 100;
+// Os valores de um alimento valem para serving_size na unidade dele (100 g, 250 ml, 1 unidade...).
+// A conversão para a quantidade consumida é sempre proporcional a essa base.
+function calculateNutrition(food, quantity) {
+  const base = Number(food.serving_size) > 0 ? Number(food.serving_size) : 100;
+  const factor = quantity / base;
   return {
     calories: Math.round(food.calories * factor),
     protein: Number((food.protein * factor).toFixed(1)),

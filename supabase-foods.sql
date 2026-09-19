@@ -11,16 +11,21 @@
 alter table public.foods add column if not exists base_unit text not null default 'g';
 alter table public.foods add column if not exists portion_label text;
 alter table public.foods add column if not exists portion_amount numeric;
+alter table public.foods add column if not exists user_id uuid references auth.users(id) on delete cascade;
 
 do $$ begin
-	if not exists (select 1 from pg_constraint where conname = 'foods_base_unit_valid') then alter table public.foods add constraint foods_base_unit_valid check (base_unit in ('g', 'ml')); end if;
+	if not exists (select 1 from pg_constraint where conname = 'foods_base_unit_valid') then alter table public.foods add constraint foods_base_unit_valid check (base_unit in ('g', 'ml', 'un')); end if;
 	if not exists (select 1 from pg_constraint where conname = 'foods_portion_valid') then alter table public.foods add constraint foods_portion_valid check (portion_amount is null or portion_amount between 0.1 and 10000); end if;
 end $$;
 
--- Necessário para o upsert por nome. Se falhar por duplicatas já existentes, veja quais são com:
---   select lower(name), count(*) from public.foods group by 1 having count(*) > 1;
-create unique index if not exists foods_name_unique_idx on public.foods (lower(name));
+-- Índice parcial: a unicidade de nome vale só para a base compartilhada (user_id null),
+-- para não impedir que um usuário crie um alimento próprio com o mesmo nome.
+-- Se falhar por duplicatas já existentes, veja quais são com:
+--   select lower(name), count(*) from public.foods where user_id is null group by 1 having count(*) > 1;
+drop index if exists public.foods_name_unique_idx;
+create unique index if not exists foods_shared_name_unique_idx on public.foods (lower(name)) where user_id is null;
 
+-- user_id fica null em todas as linhas: esta é a base visível para todos os usuários.
 insert into public.foods (name, calories, protein, carbohydrates, fat, serving_size, base_unit, portion_label, portion_amount) values
   ('Arroz branco cozido', 128, 2.5, 28.1, 0.2, 100, 'g', '1 xícara (150 g)', 150),
   ('Arroz integral cozido', 124, 2.6, 25.8, 1, 100, 'g', '1 xícara (150 g)', 150),
@@ -188,7 +193,7 @@ insert into public.foods (name, calories, protein, carbohydrates, fat, serving_s
   ('Licor (média)', 300, 0, 30, 0, 100, 'ml', null, null),
   ('Saquê (média)', 134, 0.5, 5, 0, 100, 'ml', null, null),
   ('Energético (média)', 45, 0, 11, 0, 100, 'ml', '1 lata (250 ml)', 250)
-on conflict (lower(name)) do update set
+on conflict (lower(name)) where user_id is null do update set
 	calories = excluded.calories,
 	protein = excluded.protein,
 	carbohydrates = excluded.carbohydrates,

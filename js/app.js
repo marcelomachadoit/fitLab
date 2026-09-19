@@ -17,9 +17,13 @@ async function initializeApp() {
   }
   showAuthenticatedApp(user);
   updateDate();
-  renderFoods(await searchFoods());
-  await refreshDashboard();
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js?v=6').catch(() => {});
+  // Cada carga falha por conta própria: um erro em uma seção não deixa o resto da tela vazio.
+  await Promise.all([
+    loadFoodCatalog().catch(() => showToast('Não foi possível carregar os alimentos.', 'error')),
+    loadRecipes().catch(() => showToast('Não foi possível carregar suas receitas.', 'error')),
+    refreshDashboard().catch(() => showToast('Não foi possível carregar suas refeições.', 'error')),
+  ]);
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js?v=12').catch(() => {});
 }
 
 document.addEventListener('DOMContentLoaded', () => initializeApp().catch((error) => {

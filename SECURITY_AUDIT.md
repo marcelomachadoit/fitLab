@@ -8,7 +8,9 @@ Date: 2026-09-19
 - User-owned tables use RLS and explicit policies for SELECT, INSERT, UPDATE and DELETE.
 - `meals` policies require `auth.uid() = user_id` in both `USING` and `WITH CHECK` clauses.
 - `profiles` policies require `auth.uid() = id`.
-- `foods` is read-only for authenticated users from the client; no client write policies are defined.
+- `foods` rows with `user_id is null` are the shared nutrition base: readable by any authenticated user and writable by none of them from the client. Rows with `user_id = auth.uid()` are user-created foods, writable only by their owner. Because `user_id = auth.uid()` is never true for `null`, the INSERT/UPDATE/DELETE policies exclude the shared base, and a user can neither publish a food to everyone nor reassign one to another account.
+- `recipes` and `recipe_items` are private per user. Recipe items inherit ownership through an `exists` check against the parent recipe, so an item is only visible or writable when the recipe belongs to the caller.
+- Table privileges are granted explicitly to `authenticated` only. Without them PostgREST answers 42501 before any policy is evaluated; `anon` holds no privilege on application tables.
 - PostgreSQL constraints limit profile fields, food nutrition values, meal quantities and meal types.
 - An index supports queries by `meals.user_id` and date.
 - The signup trigger validates/truncates the profile name and uses a fixed `search_path`.

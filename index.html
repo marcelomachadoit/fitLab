@@ -6,6 +6,7 @@
   <meta name="theme-color" content="#f3f5fb" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#080d18" media="(prefers-color-scheme: dark)">
   <meta name="description" content="Seu acompanhamento nutricional simples e inteligente.">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="FitLab">
@@ -41,6 +42,8 @@
     <symbol id="i-logout" viewBox="0 0 24 24"><path d="M14.2 4.2h3.4a2 2 0 0 1 2 2v11.6a2 2 0 0 1-2 2h-3.4"/><path d="m9 8.4-3.6 3.6L9 15.6"/><path d="M5.6 12h9.2"/></symbol>
     <symbol id="i-sparkle" viewBox="0 0 24 24"><path d="M12 3.2 13.9 9l5.8 1.9-5.8 1.9L12 18.6 10.1 12.8 4.3 10.9 10.1 9Z"/><path d="M18.4 3.4v3M19.9 4.9h-3"/></symbol>
     <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3.2 19 6v5.4c0 4.2-2.9 7.6-7 9.4-4.1-1.8-7-5.2-7-9.4V6Z"/><path d="m9.2 12 2 2 3.6-3.8"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><path d="M4.6 19.4h3.2L19 8.2a1.6 1.6 0 0 0 0-2.3l-.9-.9a1.6 1.6 0 0 0-2.3 0L4.6 16.2Z"/><path d="m14.6 6.5 2.9 2.9"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="M6.6 6.6 17.4 17.4"/><path d="M17.4 6.6 6.6 17.4"/></symbol>
   </svg>
 
   <div class="auth-gate" id="auth-gate">
@@ -242,10 +245,35 @@
       </section>
 
       <section class="view" data-view="alimentos">
-        <div class="page-heading">
-          <p class="eyebrow">NUTRIÇÃO</p>
-          <h1>Banco de alimentos</h1>
-          <p class="muted">Encontre informações para montar sua refeição.</p>
+        <div class="page-heading heading-with-actions">
+          <div>
+            <p class="eyebrow">NUTRIÇÃO</p>
+            <h1>Banco de alimentos</h1>
+            <p class="muted">Encontre informações para montar sua refeição.</p>
+          </div>
+          <div class="heading-actions">
+            <button class="pill-button" type="button" data-action="new-food">
+              <svg class="icon"><use href="#i-plus"></use></svg>Adicionar alimento
+            </button>
+            <button class="pill-button ghost" type="button" data-action="new-recipe">
+              <svg class="icon"><use href="#i-utensils"></use></svg>Adicionar receita
+            </button>
+          </div>
+        </div>
+
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">SÓ SUAS</p>
+            <h2>Minhas receitas</h2>
+          </div>
+        </div>
+        <div class="recipe-list" id="recipe-list"></div>
+
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">CONSULTA</p>
+            <h2>Alimentos</h2>
+          </div>
         </div>
         <label class="search-box">
           <svg class="icon"><use href="#i-search"></use></svg>
@@ -308,6 +336,141 @@
     </nav>
   </div>
 
+  <dialog class="modal" id="food-dialog" aria-labelledby="food-dialog-title">
+    <form class="modal-card" id="food-form">
+      <header class="modal-header">
+        <h2 id="food-dialog-title">Novo alimento</h2>
+        <button class="modal-close" type="button" data-close-dialog="food-dialog" aria-label="Fechar">
+          <svg class="icon"><use href="#i-close"></use></svg>
+        </button>
+      </header>
+      <p class="modal-hint">Escolha a unidade e a quantidade que servem de referência. Este alimento fica visível só na sua conta.</p>
+      <div class="modal-body">
+        <label class="field">
+          <span class="field-label">Nome</span>
+          <span class="field-control">
+            <input id="food-name" type="text" required maxlength="200" placeholder="Ex.: Shake de whey">
+          </span>
+        </label>
+        <div class="field-row">
+          <label class="field">
+            <span class="field-label">Unidade</span>
+            <span class="field-control">
+              <select id="food-unit">
+                <option value="g">Gramas (g)</option>
+                <option value="ml">Mililitros (ml)</option>
+                <option value="un">Unidade</option>
+              </select>
+            </span>
+          </label>
+          <label class="field">
+            <span class="field-label">Quantidade base</span>
+            <span class="field-control">
+              <input id="food-serving" type="number" required min="0.1" max="10000" step="any" value="100">
+              <b class="field-suffix" id="food-serving-unit">g</b>
+            </span>
+          </label>
+        </div>
+        <label class="field" id="food-portion-field">
+          <span class="field-label">Peso de 1 unidade (opcional)</span>
+          <span class="field-control">
+            <input id="food-portion" type="number" min="0.1" max="10000" step="any" placeholder="Ex.: 90">
+            <b class="field-suffix" id="food-portion-unit">g</b>
+          </span>
+        </label>
+        <p class="field-note">Preencha o peso da unidade para poder lançar este alimento por unidade nas receitas. Informe os valores nutricionais correspondentes a <b id="food-base-label">100 g</b>.</p>
+        <div class="field-row">
+          <label class="field">
+            <span class="field-label">Calorias (kcal)</span>
+            <span class="field-control">
+              <input id="food-calories" type="number" required min="0" max="10000" step="any" placeholder="0">
+            </span>
+          </label>
+          <label class="field">
+            <span class="field-label">Proteína (g)</span>
+            <span class="field-control">
+              <input id="food-protein" type="number" min="0" max="1000" step="any" placeholder="0">
+            </span>
+          </label>
+          <label class="field">
+            <span class="field-label">Carboidratos (g)</span>
+            <span class="field-control">
+              <input id="food-carbs" type="number" min="0" max="1000" step="any" placeholder="0">
+            </span>
+          </label>
+          <label class="field">
+            <span class="field-label">Gordura (g)</span>
+            <span class="field-control">
+              <input id="food-fat" type="number" min="0" max="1000" step="any" placeholder="0">
+            </span>
+          </label>
+        </div>
+      </div>
+      <p class="modal-feedback" id="food-feedback"></p>
+      <footer class="modal-actions">
+        <button class="secondary-button" type="button" data-close-dialog="food-dialog">Cancelar</button>
+        <button class="primary-button" type="submit" id="food-submit">Salvar alimento</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <dialog class="modal" id="recipe-dialog" aria-labelledby="recipe-dialog-title">
+    <form class="modal-card" id="recipe-form">
+      <header class="modal-header">
+        <h2 id="recipe-dialog-title">Nova receita</h2>
+        <button class="modal-close" type="button" data-close-dialog="recipe-dialog" aria-label="Fechar">
+          <svg class="icon"><use href="#i-close"></use></svg>
+        </button>
+      </header>
+      <p class="modal-hint">Junte os alimentos que você repete sempre e salve com um nome, como “Almoço 1”.</p>
+      <div class="modal-body">
+        <label class="field">
+          <span class="field-label">Nome da receita</span>
+          <span class="field-control">
+            <input id="recipe-name" type="text" required maxlength="120" placeholder="Ex.: Almoço 1">
+          </span>
+        </label>
+        <div class="ingredient-picker">
+          <label class="field picker-search">
+            <span class="field-label">Buscar alimento</span>
+            <span class="field-control">
+              <svg class="icon"><use href="#i-search"></use></svg>
+              <input id="recipe-food-search" type="search" autocomplete="off" placeholder="Digite parte do nome...">
+            </span>
+          </label>
+          <label class="field picker-food">
+            <span class="field-label">Alimento <span class="field-count" id="recipe-food-count"></span></span>
+            <span class="field-control">
+              <select id="recipe-food"></select>
+            </span>
+          </label>
+          <label class="field picker-quantity">
+            <span class="field-label">Quantidade</span>
+            <span class="field-control">
+              <input id="recipe-quantity" type="number" min="0.01" max="100000" step="any" value="100">
+            </span>
+          </label>
+          <label class="field picker-unit">
+            <span class="field-label">Medida</span>
+            <span class="field-control">
+              <select id="recipe-unit"></select>
+            </span>
+          </label>
+          <button class="pill-button picker-action" type="button" id="recipe-add-item">
+            <svg class="icon"><use href="#i-plus"></use></svg>Incluir
+          </button>
+        </div>
+        <ul class="ingredient-list" id="recipe-items"></ul>
+        <div class="recipe-summary" id="recipe-summary"></div>
+      </div>
+      <p class="modal-feedback" id="recipe-feedback"></p>
+      <footer class="modal-actions">
+        <button class="secondary-button" type="button" data-close-dialog="recipe-dialog">Cancelar</button>
+        <button class="primary-button" type="submit" id="recipe-submit">Salvar receita</button>
+      </footer>
+    </form>
+  </dialog>
+
   <div class="toast" role="status" aria-live="polite"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -315,6 +478,7 @@
   <script src="js/auth.js"></script>
   <script src="js/foods.js"></script>
   <script src="js/meals.js"></script>
+  <script src="js/recipes.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/app.js"></script>
 </body>

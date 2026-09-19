@@ -18,6 +18,21 @@ Em **Authentication > Password Security**, defina o tamanho mínimo da senha com
 
 O login bloqueia novas tentativas por 15 minutos depois de 5 falhas no mesmo navegador para o mesmo e-mail. Essa é uma camada adicional: a proteção principal contra força bruta deve continuar sendo o rate limit do Supabase Auth. O link **Esqueci minha senha** usa `resetPasswordForEmail`; configure a URL do Cloudflare Pages em **Authentication > URL Configuration > Redirect URLs** para que o link de recuperação retorne ao app.
 
+## Alimentos e receitas do usuário
+
+Além da base compartilhada, cada conta pode criar os próprios alimentos e receitas pela aba **Alimentos**:
+
+- **Adicionar alimento** grava nome, unidade (`g`, `ml` ou `un`), a quantidade base de referência e os valores correspondentes a ela — calorias, proteína, carboidratos e gordura. A base é livre: dá para cadastrar "por 30 g", "por 250 ml" ou "por 1 unidade", não só por 100. O alimento recebe `user_id` e aparece na lista com o selo "Meu", com botões de editar e excluir.
+- **Adicionar receita** monta uma combinação fixa de alimentos com quantidade (ex.: "Almoço 1" = 100 g de arroz + 100 g de feijão + 150 g de carne), somando calorias e macros automaticamente. Serve para quem repete as mesmas refeições.
+
+O seletor de alimento tem uma busca por texto que filtra o catálogo carregado em memória, sem ir ao servidor. Ela ignora acentos e maiúsculas — "acucar" encontra "Açúcar", "pao" encontra os quatro pães — e mostra a contagem de resultados ao lado do rótulo.
+
+Ao incluir um ingrediente dá para escolher a medida: a unidade base do alimento (`g`, `ml` ou `un`) ou a porção prática, quando o alimento tem `portion_amount` — "1 unidade média (90 g)", "1 copo (200 ml)". O app converte para a unidade base antes de salvar, então `recipe_items.quantity` está sempre na mesma escala dos valores nutricionais. Medidas sem conversão conhecida não são oferecidas: transformar g em ml exigiria a densidade do alimento, e o resultado seria um número inventado. Para liberar a medida por unidade em um alimento seu, preencha "Peso de 1 unidade" no cadastro dele.
+
+Ambos são privados: a RLS entrega a um usuário apenas a base compartilhada (`foods.user_id is null`) e as próprias linhas. Um usuário não consegue ler, editar nem apagar o conteúdo de outro, e também não consegue alterar a base compartilhada — ela só muda pelo SQL Editor.
+
+Excluir um alimento o remove das receitas em que aparece (`on delete cascade`). Se ele já estiver em uma refeição registrada, o banco recusa a exclusão e o app avisa, para não apagar histórico.
+
 ## Base de alimentos
 
 A tabela `public.foods` é compartilhada por todos os usuários: qualquer conta autenticada lê, e ninguém escreve pelo aplicativo (a RLS só tem policy de `select`). A carga é feita pelo SQL Editor do Supabase.
@@ -26,7 +41,7 @@ Depois de rodar `supabase.sql`, execute `supabase-foods.sql` para inserir os 166
 
 Os valores vêm de `data/tabela-nutricional.txt`, que é a fonte da verdade — para corrigir um alimento, edite o `.txt` e gere o SQL de novo. Cada item guarda:
 
-- `calories`, `protein`, `carbohydrates` e `fat` por `serving_size` (sempre 100) na unidade de `base_unit` (`g` para sólidos, `ml` para líquidos);
+- `calories`, `protein`, `carbohydrates` e `fat` correspondentes a `serving_size` na unidade de `base_unit` (`g`, `ml` ou `un`). Na base compartilhada `serving_size` é sempre 100; nos alimentos do usuário é livre;
 - `portion_label` e `portion_amount` com a porção comum aproximada (ex.: `1 xícara (150 g)` / `150`), nula nas bebidas alcoólicas;
 - quantidades intermediárias são calculadas por regra de três em `calculateNutrition()`.
 
