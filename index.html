@@ -43,6 +43,8 @@
     <symbol id="i-sparkle" viewBox="0 0 24 24"><path d="M12 3.2 13.9 9l5.8 1.9-5.8 1.9L12 18.6 10.1 12.8 4.3 10.9 10.1 9Z"/><path d="M18.4 3.4v3M19.9 4.9h-3"/></symbol>
     <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3.2 19 6v5.4c0 4.2-2.9 7.6-7 9.4-4.1-1.8-7-5.2-7-9.4V6Z"/><path d="m9.2 12 2 2 3.6-3.8"/></symbol>
     <symbol id="i-edit" viewBox="0 0 24 24"><path d="M4.6 19.4h3.2L19 8.2a1.6 1.6 0 0 0 0-2.3l-.9-.9a1.6 1.6 0 0 0-2.3 0L4.6 16.2Z"/><path d="m14.6 6.5 2.9 2.9"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 4.3 20.8 19.6H3.2Z"/><path d="M12 10v4.4"/><path d="M12 17.3v.01"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><path d="M12 20.8a8.8 8.8 0 1 0 0-17.6 8.8 8.8 0 0 0 0 17.6Z"/><path d="M12 11.2v5.4"/><path d="M12 7.7v.01"/></symbol>
     <symbol id="i-close" viewBox="0 0 24 24"><path d="M6.6 6.6 17.4 17.4"/><path d="M17.4 6.6 6.6 17.4"/></symbol>
   </svg>
 
@@ -294,19 +296,31 @@
           <h2 id="profile-name">Marcelo Costa</h2>
           <p id="profile-email">marcelo@exemplo.com</p>
         </div>
+        <div class="goals-card">
+          <div class="goals-card-head">
+            <div>
+              <p class="eyebrow">META DIÁRIA ESTIMADA</p>
+              <h2 id="profile-target-calories">—</h2>
+              <p class="muted" id="profile-tdee">Gasto calórico estimado: —</p>
+            </div>
+            <button class="pill-button ghost" type="button" data-action="edit-goals">
+              <svg class="icon"><use href="#i-target"></use></svg>Recalcular metas
+            </button>
+          </div>
+          <div class="goals-macros" id="profile-goal-macros"></div>
+          <p class="field-note" id="profile-goal-details">Responda ao questionário para calcular suas metas.</p>
+          <div id="profile-goal-warnings"></div>
+          <p class="disclaimer">
+            <svg class="icon"><use href="#i-info"></use></svg>
+            <span>Estes números são <strong>estimativas</strong> calculadas por fórmulas populacionais e o gasto real varia de pessoa para pessoa. Não siga estas metas em situações especiais — gravidez, amamentação, doença, transtorno alimentar, uso de medicamentos ou extremos de peso e idade. <strong>A avaliação de um nutricionista ou médico é altamente recomendada.</strong></span>
+          </p>
+        </div>
         <form class="settings-form" id="profile-form">
           <label class="field">
             <span class="field-label">Nome</span>
             <span class="field-control">
               <svg class="icon"><use href="#i-user"></use></svg>
-              <input id="profile-name-input" type="text" value="Marcelo Costa">
-            </span>
-          </label>
-          <label class="field">
-            <span class="field-label">Meta diária de calorias</span>
-            <span class="field-control">
-              <svg class="icon"><use href="#i-flame"></use></svg>
-              <input id="calorie-goal-input" type="number" value="2400">
+              <input id="profile-name-input" type="text" maxlength="120" required>
             </span>
           </label>
           <button class="primary-button" type="submit">Salvar alterações</button>
@@ -471,6 +485,92 @@
     </form>
   </dialog>
 
+  <dialog class="modal" id="goals-dialog" aria-labelledby="goals-dialog-title">
+    <form class="modal-card" id="goals-form">
+      <header class="modal-header">
+        <h2 id="goals-dialog-title">Vamos calcular suas metas</h2>
+        <button class="modal-close" type="button" id="goals-close" data-close-dialog="goals-dialog" aria-label="Fechar" hidden>
+          <svg class="icon"><use href="#i-close"></use></svg>
+        </button>
+      </header>
+      <div class="steps-bar" role="presentation"><i id="goals-progress"></i></div>
+      <p class="modal-hint" id="goals-step-label">Etapa 1 de 6</p>
+
+      <div class="modal-body">
+        <section class="goal-step" data-step="0">
+          <h3>Qual é o seu peso?</h3>
+          <label class="field">
+            <span class="field-control">
+              <input id="goal-weight" type="number" min="30" max="300" step="any" inputmode="decimal" placeholder="75">
+              <b class="field-suffix">kg</b>
+            </span>
+          </label>
+          <p class="field-note">Pode usar decimais, como 74,5.</p>
+        </section>
+
+        <section class="goal-step" data-step="1" hidden>
+          <h3>Qual é a sua altura?</h3>
+          <label class="field">
+            <span class="field-control">
+              <input id="goal-height" type="number" min="100" max="250" step="1" inputmode="numeric" placeholder="175">
+              <b class="field-suffix">cm</b>
+            </span>
+          </label>
+        </section>
+
+        <section class="goal-step" data-step="2" hidden>
+          <h3>Qual é a sua idade?</h3>
+          <label class="field">
+            <span class="field-control">
+              <input id="goal-age" type="number" min="13" max="100" step="1" inputmode="numeric" placeholder="24">
+              <b class="field-suffix">anos</b>
+            </span>
+          </label>
+        </section>
+
+        <section class="goal-step" data-step="3" hidden>
+          <h3>Qual é o seu sexo?</h3>
+          <div class="option-grid" id="goal-sex-options"></div>
+          <p class="field-note">A fórmula usada tem parâmetros definidos apenas para estes dois valores.</p>
+        </section>
+
+        <section class="goal-step" data-step="4" hidden>
+          <h3>Qual é o seu nível de atividade física?</h3>
+          <div class="option-grid" id="goal-activity-options"></div>
+        </section>
+
+        <section class="goal-step" data-step="5" hidden>
+          <h3>Qual é o seu objetivo?</h3>
+          <div class="option-grid" id="goal-objective-options"></div>
+        </section>
+
+        <section class="goal-step goal-summary" data-step="6" hidden>
+          <h3>Suas metas foram calculadas!</h3>
+          <div class="summary-row">
+            <span>Gasto calórico estimado</span>
+            <strong id="summary-tdee">—</strong>
+          </div>
+          <div class="summary-row is-target">
+            <span id="summary-goal-label">Meta diária</span>
+            <strong id="summary-target">—</strong>
+          </div>
+          <div class="goals-macros" id="summary-macros"></div>
+          <div id="summary-warnings"></div>
+          <p class="disclaimer">
+            <svg class="icon"><use href="#i-info"></use></svg>
+            <span>Estes números são <strong>estimativas</strong> calculadas por fórmulas populacionais e o gasto real varia de pessoa para pessoa. Não siga estas metas em situações especiais — gravidez, amamentação, doença, transtorno alimentar, uso de medicamentos ou extremos de peso e idade. <strong>A avaliação de um nutricionista ou médico é altamente recomendada.</strong></span>
+          </p>
+        </section>
+      </div>
+
+      <p class="modal-feedback" id="goals-feedback"></p>
+      <footer class="modal-actions">
+        <button class="secondary-button" type="button" id="goals-back" hidden>Voltar</button>
+        <button class="primary-button" type="submit" id="goals-next">Continuar</button>
+      </footer>
+    </form>
+  </dialog>
+
   <div class="toast" role="status" aria-live="polite"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -479,6 +579,7 @@
   <script src="js/foods.js"></script>
   <script src="js/meals.js"></script>
   <script src="js/recipes.js"></script>
+  <script src="js/goals.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/app.js"></script>
 </body>

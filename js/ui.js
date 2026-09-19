@@ -7,6 +7,14 @@ let foodCatalog = [];
 let editingFoodId = null;
 let recipeDraft = { id: null, items: [] };
 let recipeQuantityTouched = false;
+let nutritionProfile = null;
+let goalStep = 0;
+let goalDraft = {};
+let goalsMandatory = false;
+
+const GOAL_STEPS = 6;
+// Usadas enquanto o usuario nao respondeu ao questionario.
+const DEFAULT_GOALS = { calories: 2400, protein: 170, carbohydrates: 250, fat: 70 };
 
 function createIcon(name, className = 'icon') {
   const svg = document.createElementNS(SVG_NS, 'svg');
@@ -546,6 +554,269 @@ async function loadRecipes() {
 }
 
 /* ---------------------------------------------------------
+   Metas nutricionais
+   --------------------------------------------------------- */
+
+function currentGoals() {
+  if (!isProfileComplete(nutritionProfile)) return DEFAULT_GOALS;
+  return {
+    calories: Number(nutritionProfile.target_calories),
+    protein: Number(nutritionProfile.protein_g),
+    carbohydrates: Number(nutritionProfile.carbs_g),
+    fat: Number(nutritionProfile.fat_g),
+  };
+}
+
+async function loadNutritionProfile() {
+  nutritionProfile = await getNutritionProfile();
+  applyProfileToInterface();
+  return nutritionProfile;
+}
+
+// O nome salvo em profiles tem prioridade sobre o dos metadados do Auth.
+function applyProfileToInterface() {
+  if (nutritionProfile && nutritionProfile.name) {
+    const initials = getInitials(nutritionProfile.name);
+    document.querySelector('#user-name').textContent = nutritionProfile.name;
+    document.querySelector('#profile-name').textContent = nutritionProfile.name;
+    document.querySelector('#profile-name-input').value = nutritionProfile.name;
+    document.querySelector('#profile-avatar').textContent = initials;
+    document.querySelector('[data-action="profile"]').textContent = initials;
+  }
+  renderProfileGoals();
+}
+
+function appendGoalMacros(target, protein, carbs, fat) {
+  [['Proteína', protein, 'protein'], ['Carboidratos', carbs, 'carbs'], ['Gorduras', fat, 'fats']].forEach(([label, value, kind]) => {
+    const tile = document.createElement('div');
+    tile.className = `goal-macro ${kind}`;
+    const name = document.createElement('span');
+    name.textContent = label;
+    const amount = document.createElement('strong');
+    amount.textContent = `${formatNumber(value)} g`;
+    tile.append(name, amount);
+    target.append(tile);
+  });
+}
+
+// Traduz o erro do banco em instrução. O código bruto vai junto quando não é um caso
+// conhecido: um "tente novamente" genérico esconde justamente o que precisa ser corrigido.
+function describeDatabaseError(error) {
+  if (!error) return 'Erro desconhecido.';
+  const code = error.code || '';
+  if (code === 'PGRST204' || code === '42703') {
+    return 'O banco ainda não tem as colunas do questionário. Rode o supabase.sql atualizado no SQL Editor do Supabase.';
+  }
+  if (code === '42501') {
+    return 'Sem permissão para gravar o perfil. Rode os grants do supabase.sql no SQL Editor.';
+  }
+  if (code === '23514') {
+    return 'Algum valor ficou fora dos limites aceitos pelo banco. Revise os dados informados.';
+  }
+  if (code === '23505') {
+    return 'Já existe um registro com esses dados.';
+  }
+  if (code === '42P01') {
+    return 'A tabela não existe neste projeto do Supabase. Rode o supabase.sql no SQL Editor.';
+  }
+  const message = error.message || error.details || 'sem detalhes';
+  return code ? `${message} (código ${code})` : message;
+}
+
+function renderGoalWarnings(selector, warnings) {
+  const container = document.querySelector(selector);
+  container.replaceChildren();
+  warnings.forEach((text) => {
+    const box = document.createElement('p');
+    box.className = 'warning-box';
+    box.setAttribute('role', 'alert');
+    box.append(createIcon('i-alert'), document.createTextNode(text));
+    container.append(box);
+  });
+}
+
+function renderProfileGoals() {
+  const target = document.querySelector('#profile-target-calories');
+  const tdee = document.querySelector('#profile-tdee');
+  const macros = document.querySelector('#profile-goal-macros');
+  const details = document.querySelector('#profile-goal-details');
+  macros.replaceChildren();
+  if (!isProfileComplete(nutritionProfile)) {
+    target.textContent = '—';
+    tdee.textContent = 'Gasto calórico estimado: —';
+    details.textContent = 'Responda ao questionário para calcular suas metas.';
+    renderGoalWarnings('#profile-goal-warnings', []);
+    return;
+  }
+  target.textContent = `${formatNumber(nutritionProfile.target_calories)} kcal`;
+  tdee.textContent = `Gasto calórico estimado: ${formatNumber(nutritionProfile.tdee)} kcal`;
+  appendGoalMacros(macros, nutritionProfile.protein_g, nutritionProfile.carbs_g, nutritionProfile.fat_g);
+  details.textContent = `${GOALS[nutritionProfile.goal].label} · ${ACTIVITY_LEVELS[nutritionProfile.activity_level].label} · ${formatNumber(nutritionProfile.weight)} kg, ${formatNumber(nutritionProfile.height)} cm, ${nutritionProfile.age} anos`;
+  // Os sinalizadores não são gravados: recalcula a partir das respostas para saber se
+  // algum limite de segurança entrou em ação neste perfil.
+  renderGoalWarnings('#profile-goal-warnings', describeGoalWarnings(calculateNutritionGoals(profileAnswers(nutritionProfile))));
+}
+
+/* Questionário em etapas ------------------------------------------------ */
+
+function openGoalsDialog(mandatory = false) {
+  goalsMandatory = mandatory;
+  goalDraft = {
+    weight: nutritionProfile && nutritionProfile.weight ? Number(nutritionProfile.weight) : null,
+    height: nutritionProfile && nutritionProfile.height ? Number(nutritionProfile.height) : null,
+    age: nutritionProfile && nutritionProfile.age ? Number(nutritionProfile.age) : null,
+    sex: nutritionProfile ? nutritionProfile.sex : null,
+    activity_level: nutritionProfile ? nutritionProfile.activity_level : null,
+    goal: nutritionProfile ? nutritionProfile.goal : null,
+  };
+  document.querySelector('#goal-weight').value = goalDraft.weight || '';
+  document.querySelector('#goal-height').value = goalDraft.height || '';
+  document.querySelector('#goal-age').value = goalDraft.age || '';
+  document.querySelector('#goals-close').hidden = mandatory;
+  document.querySelector('#goals-dialog-title').textContent = isProfileComplete(nutritionProfile)
+    ? 'Atualizar suas metas'
+    : 'Vamos calcular suas metas';
+  renderGoalOptions();
+  showGoalStep(0);
+  openDialog('goals-dialog');
+}
+
+function renderGoalOptions() {
+  buildOptionGrid('#goal-sex-options', Object.entries(SEX_OPTIONS).map(([value, label]) => ({ value, label })), 'sex');
+  buildOptionGrid('#goal-activity-options', Object.entries(ACTIVITY_LEVELS).map(([value, config]) => ({ value, label: config.label, hint: config.hint })), 'activity_level');
+  buildOptionGrid('#goal-objective-options', Object.entries(GOALS).map(([value, config]) => ({ value, label: config.label, hint: config.hint })), 'goal');
+}
+
+// As opções saem das constantes de goals.js: rótulos e valores não se repetem no HTML.
+function buildOptionGrid(selector, options, field) {
+  const container = document.querySelector(selector);
+  container.replaceChildren();
+  options.forEach((option) => {
+    const card = document.createElement('button');
+    card.className = `option-card${goalDraft[field] === option.value ? ' selected' : ''}`;
+    card.type = 'button';
+    card.dataset.value = option.value;
+    card.setAttribute('aria-pressed', String(goalDraft[field] === option.value));
+    const label = document.createElement('strong');
+    label.textContent = option.label;
+    card.append(label);
+    if (option.hint) {
+      const hint = document.createElement('span');
+      hint.textContent = option.hint;
+      card.append(hint);
+    }
+    card.addEventListener('click', () => {
+      goalDraft[field] = option.value;
+      container.querySelectorAll('.option-card').forEach((item) => {
+        const active = item.dataset.value === option.value;
+        item.classList.toggle('selected', active);
+        item.setAttribute('aria-pressed', String(active));
+      });
+      document.querySelector('#goals-feedback').textContent = '';
+    });
+    container.append(card);
+  });
+}
+
+function showGoalStep(step) {
+  goalStep = step;
+  const isSummary = step === GOAL_STEPS;
+  document.querySelectorAll('.goal-step').forEach((section) => { section.hidden = Number(section.dataset.step) !== step; });
+  const label = document.querySelector('#goals-step-label');
+  label.hidden = isSummary;
+  label.textContent = `Etapa ${step + 1} de ${GOAL_STEPS}`;
+  document.querySelector('#goals-progress').style.width = `${((isSummary ? GOAL_STEPS : step + 1) / GOAL_STEPS) * 100}%`;
+  document.querySelector('#goals-back').hidden = step === 0 || isSummary;
+  document.querySelector('#goals-next').textContent = isSummary ? 'Começar' : step === GOAL_STEPS - 1 ? 'Calcular metas' : 'Continuar';
+  document.querySelector('#goals-feedback').textContent = '';
+  const input = document.querySelector(`.goal-step[data-step="${step}"] input`);
+  if (input) input.focus();
+}
+
+// Guarda o que foi digitado antes de sair da etapa, para o botão Voltar não perder nada.
+function captureGoalStep(step) {
+  if (step === 0) goalDraft.weight = Number(document.querySelector('#goal-weight').value);
+  if (step === 1) goalDraft.height = Number(document.querySelector('#goal-height').value);
+  if (step === 2) goalDraft.age = Number(document.querySelector('#goal-age').value);
+}
+
+function validateGoalStep(step) {
+  if (step === 0) return validateProfileNumber(goalDraft.weight, PROFILE_LIMITS.weight) ? null : `Informe um peso entre ${PROFILE_LIMITS.weight.min} e ${PROFILE_LIMITS.weight.max} kg.`;
+  if (step === 1) return validateProfileNumber(goalDraft.height, PROFILE_LIMITS.height) ? null : `Informe uma altura entre ${PROFILE_LIMITS.height.min} e ${PROFILE_LIMITS.height.max} cm.`;
+  if (step === 2) return validateProfileNumber(goalDraft.age, PROFILE_LIMITS.age) && Number.isInteger(goalDraft.age) ? null : `Informe uma idade inteira entre ${PROFILE_LIMITS.age.min} e ${PROFILE_LIMITS.age.max} anos.`;
+  if (step === 3) return SEX_OPTIONS[goalDraft.sex] ? null : 'Escolha uma opção para continuar.';
+  if (step === 4) return ACTIVITY_LEVELS[goalDraft.activity_level] ? null : 'Escolha seu nível de atividade física.';
+  if (step === 5) return GOALS[goalDraft.goal] ? null : 'Escolha seu objetivo.';
+  return null;
+}
+
+function renderGoalsSummary(goals) {
+  document.querySelector('#summary-tdee').textContent = `${formatNumber(goals.tdee)} kcal`;
+  document.querySelector('#summary-target').textContent = `${formatNumber(goals.target_calories)} kcal`;
+  document.querySelector('#summary-goal-label').textContent = `Meta para ${(GOALS[goalDraft.goal] || GOALS.maintenance).label.toLowerCase()}`;
+  const macros = document.querySelector('#summary-macros');
+  macros.replaceChildren();
+  appendGoalMacros(macros, goals.protein_g, goals.carbs_g, goals.fat_g);
+  renderGoalWarnings('#summary-warnings', describeGoalWarnings(goals));
+}
+
+async function handleGoalsSubmit(event) {
+  event.preventDefault();
+  const feedback = document.querySelector('#goals-feedback');
+  if (goalStep === GOAL_STEPS) {
+    closeDialog('goals-dialog');
+    showView('inicio');
+    return;
+  }
+  captureGoalStep(goalStep);
+  const stepError = validateGoalStep(goalStep);
+  if (stepError) {
+    feedback.textContent = stepError;
+    return;
+  }
+  if (goalStep < GOAL_STEPS - 1) {
+    showGoalStep(goalStep + 1);
+    return;
+  }
+  // Revalida o conjunto inteiro antes de gravar, nao so a ultima etapa.
+  const invalid = validateNutritionAnswers(goalDraft);
+  if (invalid) {
+    feedback.textContent = invalid;
+    return;
+  }
+  const button = document.querySelector('#goals-next');
+  button.disabled = true;
+  try {
+    const goals = calculateNutritionGoals(goalDraft);
+    nutritionProfile = await saveNutritionProfile(goalDraft, goals, document.querySelector('#profile-name-input').value.trim());
+    renderGoalsSummary(goals);
+    applyProfileToInterface();
+    await refreshDashboard();
+    showGoalStep(GOAL_STEPS);
+  } catch (error) {
+    feedback.textContent = `Não foi possível salvar suas metas. ${describeDatabaseError(error)}`;
+  } finally {
+    button.disabled = false;
+  }
+}
+
+async function handleProfileSubmit(event) {
+  event.preventDefault();
+  const name = document.querySelector('#profile-name-input').value.trim();
+  if (!name) {
+    showToast('Informe seu nome.', 'error');
+    return;
+  }
+  try {
+    nutritionProfile = await saveProfileName(name);
+    applyProfileToInterface();
+    showToast('Perfil atualizado.');
+  } catch (error) {
+    showToast(`Não foi possível salvar o perfil. ${describeDatabaseError(error)}`, 'error');
+  }
+}
+
+/* ---------------------------------------------------------
    Refeições e resumo do dia
    --------------------------------------------------------- */
 
@@ -595,7 +866,7 @@ function renderMeals(meals) {
   });
 }
 
-function renderNutrition(meals, goals = { calories: 2400, protein: 170, carbohydrates: 250, fat: 70 }) {
+function renderNutrition(meals, goals = currentGoals()) {
   const totals = meals.reduce((result, meal) => { const nutrition = meal.foods ? calculateNutrition(meal.foods, meal.quantity) : { calories: 0, protein: 0, carbohydrates: 0, fat: 0 }; Object.keys(nutrition).forEach((key) => { result[key] += nutrition[key]; }); return result; }, { calories: 0, protein: 0, carbohydrates: 0, fat: 0 });
   const values = [['calories', totals.calories, goals.calories], ['protein', totals.protein, goals.protein], ['carbs', totals.carbohydrates, goals.carbohydrates], ['fats', totals.fat, goals.fat]];
   values.forEach(([name, value, goal]) => { const total = document.querySelector(`#${name}-total`); if (total) total.textContent = formatNumber(value); const goalElement = document.querySelector(`#${name}-goal`); if (goalElement) goalElement.textContent = formatNumber(goal); const percent = Math.min(100, Math.round((value / goal) * 100)); const progress = document.querySelector(`#${name}-progress`); if (progress) progress.style.width = `${percent}%`; const percentElement = document.querySelector(`#${name}-percent`); if (percentElement) percentElement.textContent = `${percent}% da meta`; });
@@ -647,5 +918,10 @@ document.querySelector('#auth-switch').addEventListener('click', () => openAuthM
 document.querySelector('#forgot-password').addEventListener('click', () => openAuthModal('forgot'));
 document.querySelector('#auth-password').addEventListener('input', (event) => updatePasswordRules(event.target.value));
 document.querySelector('#food-search').addEventListener('input', async (event) => { try { renderFoods(await searchFoods(event.target.value)); } catch (error) { showToast('Não foi possível carregar os alimentos.', 'error'); } });
-document.querySelector('#profile-form').addEventListener('submit', (event) => { event.preventDefault(); showToast('Perfil salvo nesta versão local.'); });
+document.querySelector('#profile-form').addEventListener('submit', handleProfileSubmit);
+document.querySelector('[data-action="edit-goals"]').addEventListener('click', () => openGoalsDialog(false));
+document.querySelector('#goals-form').addEventListener('submit', handleGoalsSubmit);
+document.querySelector('#goals-back').addEventListener('click', () => { captureGoalStep(goalStep); if (goalStep > 0) showGoalStep(goalStep - 1); });
+// Enquanto o perfil nao estiver completo, Esc nao fecha o questionario.
+document.querySelector('#goals-dialog').addEventListener('cancel', (event) => { if (goalsMandatory) event.preventDefault(); });
 window.addEventListener('scroll', () => { document.querySelector('.topbar').classList.toggle('is-stuck', window.scrollY > 8); }, { passive: true });

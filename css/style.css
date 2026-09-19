@@ -1337,6 +1337,153 @@ input {
 }
 
 /* ---------------------------------------------------------
+   Metas e questionário
+   --------------------------------------------------------- */
+
+.goals-card {
+  display: grid;
+  gap: 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 22px;
+  margin-bottom: 14px;
+  box-shadow: var(--shadow-sm);
+}
+
+.goals-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.goals-card-head h2 { margin: 0 0 4px; font-size: 30px; }
+.goals-card-head .muted { font-size: 12.5px; }
+
+.goals-macros { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+
+.goal-macro {
+  display: grid;
+  gap: 3px;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--muted);
+}
+
+.goal-macro span { font-size: 11px; color: var(--muted); }
+.goal-macro strong { font-family: 'Space Grotesk', sans-serif; font-size: 17px; }
+.goal-macro.protein { border-left-color: var(--brand); }
+.goal-macro.carbs { border-left-color: var(--amber); }
+.goal-macro.fats { border-left-color: var(--green); }
+
+.warning-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0 0 9px;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--amber-soft);
+  border: 1px solid var(--amber);
+  color: var(--ink);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.warning-box .icon { width: 18px; height: 18px; color: #d98c1f; margin-top: 1px; }
+
+.disclaimer {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-soft);
+  border: 1px dashed var(--line-strong);
+  color: var(--muted);
+  font-size: 11.5px;
+  line-height: 1.55;
+}
+
+.disclaimer .icon { width: 17px; height: 17px; margin-top: 1px; }
+.disclaimer strong { color: var(--ink); font-weight: 700; }
+
+.steps-bar {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--track);
+  overflow: hidden;
+}
+
+.steps-bar i {
+  display: block;
+  height: 100%;
+  width: 16.6%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--brand), #ff9a6b);
+  transition: width var(--speed) var(--ease);
+}
+
+.goal-step { display: grid; gap: 14px; }
+.goal-step h3 { margin: 0; font-size: 19px; line-height: 1.25; }
+.goal-step .field-control input { font-size: 24px; font-weight: 600; font-family: 'Space Grotesk', sans-serif; }
+.goal-step .field-suffix { font-size: 14px; }
+
+.goal-summary { gap: 10px; }
+.goal-summary h3 { margin-bottom: 4px; }
+
+.option-grid { display: grid; gap: 9px; }
+
+.option-card {
+  display: grid;
+  gap: 3px;
+  text-align: left;
+  padding: 14px 16px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+  transition: border-color var(--speed) var(--ease), background var(--speed) var(--ease), transform var(--speed) var(--ease);
+}
+
+.option-card:hover { transform: translateY(-1px); border-color: var(--line-strong); }
+.option-card strong { font-size: 14.5px; font-weight: 600; }
+.option-card span { font-size: 12px; color: var(--muted); }
+
+.option-card.selected {
+  background: var(--brand-soft);
+  border-color: var(--brand);
+}
+
+.option-card.selected strong { color: var(--brand); }
+
+.summary-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 15px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.summary-row strong { font-family: 'Space Grotesk', sans-serif; font-size: 20px; color: var(--ink); }
+.summary-row.is-target { background: var(--brand-soft); border-color: var(--brand); }
+.summary-row.is-target strong { color: var(--brand); font-size: 26px; }
+
+@media (max-width: 480px) {
+  .goals-macros { grid-template-columns: 1fr; }
+  .goals-card-head h2 { font-size: 26px; }
+}
+
+/* ---------------------------------------------------------
    Perfil
    --------------------------------------------------------- */
 

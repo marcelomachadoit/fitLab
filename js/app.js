@@ -17,13 +17,17 @@ async function initializeApp() {
   }
   showAuthenticatedApp(user);
   updateDate();
+  // O perfil vem primeiro: é dele que saem as metas usadas no resumo do dia.
+  await loadNutritionProfile().catch(() => showToast('Não foi possível carregar seu perfil.', 'error'));
   // Cada carga falha por conta própria: um erro em uma seção não deixa o resto da tela vazio.
   await Promise.all([
     loadFoodCatalog().catch(() => showToast('Não foi possível carregar os alimentos.', 'error')),
     loadRecipes().catch(() => showToast('Não foi possível carregar suas receitas.', 'error')),
     refreshDashboard().catch(() => showToast('Não foi possível carregar suas refeições.', 'error')),
   ]);
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js?v=12').catch(() => {});
+  // Conta nova ou perfil incompleto: o questionário abre e não pode ser dispensado.
+  if (!isProfileComplete(nutritionProfile)) openGoalsDialog(true);
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js?v=15').catch(() => {});
 }
 
 document.addEventListener('DOMContentLoaded', () => initializeApp().catch((error) => {

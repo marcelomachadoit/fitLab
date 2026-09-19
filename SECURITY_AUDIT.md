@@ -10,6 +10,8 @@ Date: 2026-09-19
 - `profiles` policies require `auth.uid() = id`.
 - `foods` rows with `user_id is null` are the shared nutrition base: readable by any authenticated user and writable by none of them from the client. Rows with `user_id = auth.uid()` are user-created foods, writable only by their owner. Because `user_id = auth.uid()` is never true for `null`, the INSERT/UPDATE/DELETE policies exclude the shared base, and a user can neither publish a food to everyone nor reassign one to another account.
 - `recipes` and `recipe_items` are private per user. Recipe items inherit ownership through an `exists` check against the parent recipe, so an item is only visible or writable when the recipe belongs to the caller.
+- The nutrition profile lives in `public.profiles`, already restricted by `auth.uid() = id` for SELECT, INSERT, UPDATE and DELETE, so one user can neither read nor change another user's weight, age or calculated goals. The client writes only through an upsert keyed by the authenticated `user.id`.
+- Goals are computed in the browser, so the stored numbers are not authoritative. CHECK constraints bound every persisted value (`profiles_sex_valid`, `profiles_activity_valid`, `profiles_goal_valid`, `profiles_targets_valid`) to plausible ranges, and a tampered value only distorts the tamperer's own dashboard. Recomputing in a database trigger would be stricter, at the cost of duplicating the formula in SQL.
 - Table privileges are granted explicitly to `authenticated` only. Without them PostgREST answers 42501 before any policy is evaluated; `anon` holds no privilege on application tables.
 - PostgreSQL constraints limit profile fields, food nutrition values, meal quantities and meal types.
 - An index supports queries by `meals.user_id` and date.
@@ -57,7 +59,7 @@ Date: 2026-09-19
 - The application cannot verify remote Supabase policies, Auth settings, backups or Cloudflare deployment headers from this repository alone.
 - The CSP allows `unsafe-inline` styles because the current UI contains inline style attributes. Moving those values into CSS would allow a stricter policy.
 - CDN availability and integrity of the Supabase SDK depend on the configured CDN URL. Pinning an exact SDK version and adding SRI is recommended before production.
-- Profile update UI is currently local-only; no sensitive profile mutation endpoint is exposed by the current frontend.
+- The profile is now written from the client (name and nutrition questionnaire). Writes are confined to the caller's own row by the `profiles` policies; the row id always comes from the authenticated session, never from user input.
 
 ## Tests performed
 

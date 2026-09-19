@@ -18,6 +18,34 @@ Em **Authentication > Password Security**, defina o tamanho mínimo da senha com
 
 O login bloqueia novas tentativas por 15 minutos depois de 5 falhas no mesmo navegador para o mesmo e-mail. Essa é uma camada adicional: a proteção principal contra força bruta deve continuar sendo o rate limit do Supabase Auth. O link **Esqueci minha senha** usa `resetPasswordForEmail`; configure a URL do Cloudflare Pages em **Authentication > URL Configuration > Redirect URLs** para que o link de recuperação retorne ao app.
 
+## Metas nutricionais
+
+No primeiro acesso, o app abre um questionário de 6 etapas (peso, altura, idade, sexo, nível de atividade e objetivo) e não deixa prosseguir até ser concluído. Quem já tem perfil completo entra direto. Na aba **Perfil**, "Recalcular metas" reabre o mesmo questionário já preenchido; ao salvar, o resumo do dia passa a usar as metas novas na hora, sem novo login.
+
+O cálculo está em `js/goals.js`, separado em funções (`calculateBMR`, `calculateTDEE`, `calculateTargetCalories`, `calculateMacros`, orquestradas por `calculateNutritionGoals`):
+
+- **BMR** pela fórmula de Mifflin-St Jeor.
+- **TDEE** = BMR × fator de atividade (1,2 a 1,9).
+- **Meta calórica** = TDEE × fator do objetivo (déficit de 10% ou 20%, manutenção, superávit de 5% ou 10%), com piso de 1200 kcal.
+- **Macros**: proteína por kg (1,8 a 2,2 conforme o objetivo), gordura a 0,9 g/kg, e o carboidrato fica com as calorias restantes. Se proteína e gordura sozinhas passarem da meta, as duas caem proporcionalmente para sobrar ao menos 5% de carboidrato.
+
+Todos esses números são constantes no topo de `js/goals.js` — para mudar a metodologia, altere lá e nada mais. São estimativas, e a interface diz isso: "gasto calórico estimado" e "meta diária estimada" aparecem separados para não serem confundidos.
+
+Dois avisos acompanham o resultado. Um é permanente, no resumo do questionário e no card do Perfil: lembra que os valores são estimativas, lista as situações em que não devem ser seguidos (gravidez, amamentação, doença, transtorno alimentar, uso de medicamentos, extremos de peso e idade) e recomenda avaliação de nutricionista ou médico. O outro é condicional, disparado por `describeGoalWarnings()` quando o cálculo aciona um limite de segurança:
+
+- **piso de 1200 kcal** — o gasto estimado é tão baixo que a meta de déficit ficaria abaixo do piso, e a meta acaba maior que o próprio gasto;
+- **macros reduzidos** — proteína e gordura precisaram ser escaladas para caber na meta, sinal de uma combinação exigente de peso e déficit.
+
+Os sinalizadores (`floor_applied`, `macros_adjusted`) não são colunas do banco: o card do Perfil os recalcula a partir das respostas salvas.
+
+Os dados ficam em `public.profiles`, que já guardava idade, peso, altura e objetivo — não há tabela separada. As colunas `bmr`, `tdee`, `target_calories`, `protein_g`, `carbs_g` e `fat_g` são gravadas junto para o dashboard ler sem recalcular. Não há histórico: cada recálculo substitui o anterior.
+
+Os testes de cálculo rodam sem dependência nenhuma:
+
+```
+node test-goals.js
+```
+
 ## Alimentos e receitas do usuário
 
 Além da base compartilhada, cada conta pode criar os próprios alimentos e receitas pela aba **Alimentos**:
