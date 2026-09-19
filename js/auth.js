@@ -173,9 +173,7 @@ function updatePasswordRules(password) {
     special: /[^A-Za-z0-9]/.test(password),
   };
   Object.entries(rules).forEach(([name, valid]) => {
-    const rule = document.querySelector(`[data-rule="${name}"]`);
-    rule.classList.toggle('valid', valid);
-    rule.textContent = `${valid ? '✓' : '○'} ${rule.textContent.replace(/^[✓○] /, '')}`;
+    document.querySelector(`[data-rule="${name}"]`).classList.toggle('valid', valid);
   });
 }
 
@@ -194,8 +192,19 @@ function showAuthenticatedApp(user) {
   document.querySelector('#auth-gate').hidden = true;
   document.querySelector('#app-shell').hidden = false;
   const name = user.user_metadata?.name || user.email.split('@')[0];
+  const initials = getInitials(name);
   document.querySelector('#user-name').textContent = name;
   document.querySelector('#profile-name').textContent = name;
   document.querySelector('#profile-email').textContent = user.email;
   document.querySelector('#profile-name-input').value = name;
+  document.querySelector('[data-action="profile"]').textContent = initials;
+  document.querySelector('#profile-avatar').textContent = initials;
+}
+
+function getInitials(name) {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return 'FL';
+  const first = parts[0][0];
+  const last = parts.length > 1 ? parts[parts.length - 1][0] : parts[0][1] || '';
+  return `${first}${last}`.toUpperCase();
 }

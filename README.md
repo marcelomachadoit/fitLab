@@ -32,6 +32,7 @@ Abra a URL publicada no Safari, toque em Compartilhar e escolha **Adicionar à T
 - Supabase Auth, busca de alimentos e leitura/exclusão de refeições preparados.
 - Dashboard mobile-first com totais nutricionais calculados a partir das refeições.
 - RLS definido em `supabase.sql` para que cada usuário veja apenas seus próprios registros.
+- Interface com design system em `css/style.css` (tokens de cor, raio, sombra e movimento), ícones SVG inline e tema claro/escuro. O tema segue a preferência do sistema e pode ser alternado no botão da barra superior; a escolha fica salva em `localStorage`.
 
 ## Próxima etapa
 

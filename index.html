@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#0c1830">
+  <meta name="theme-color" content="#f3f5fb" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#080d18" media="(prefers-color-scheme: dark)">
   <meta name="description" content="Seu acompanhamento nutricional simples e inteligente.">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -17,38 +18,304 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+  <svg class="sprite" width="0" height="0" aria-hidden="true" focusable="false">
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M3.6 10.4 12 3.7l8.4 6.7"/><path d="M6 9.6V19a1.7 1.7 0 0 0 1.7 1.7h8.6A1.7 1.7 0 0 0 18 19V9.6"/><path d="M9.9 20.7v-5.1h4.2v5.1"/></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M3 20.4h18"/></symbol>
+    <symbol id="i-bowl" viewBox="0 0 24 24"><path d="M3.2 11h17.6a8.8 8.8 0 0 1-17.6 0Z"/><path d="M6 20.5h12"/><path d="M12 7.6c-1.6-.9-1.6-3 0-3.9"/><path d="M15.6 7.6c-1.6-.9-1.6-3 0-3.9"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><path d="M12 12.2a3.9 3.9 0 1 0 0-7.8 3.9 3.9 0 0 0 0 7.8Z"/><path d="M4.6 20.4a7.6 7.6 0 0 1 14.8 0"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5.2v13.6"/><path d="M5.2 12h13.6"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 9.4a6 6 0 1 0-12 0c0 5.2-2 6.4-2 6.4h16s-2-1.2-2-6.4Z"/><path d="M10.3 19.4a2 2 0 0 0 3.4 0"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><path d="M11 18.6a7.6 7.6 0 1 0 0-15.2 7.6 7.6 0 0 0 0 15.2Z"/><path d="m20.6 20.6-4.2-4.2"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><path d="M12 16.2a4.2 4.2 0 1 0 0-8.4 4.2 4.2 0 0 0 0 8.4Z"/><path d="M12 2.4v1.8M12 19.8v1.8M4.8 4.8l1.3 1.3M17.9 17.9l1.3 1.3M2.4 12h1.8M19.8 12h1.8M4.8 19.2l1.3-1.3M17.9 6.1l1.3-1.3"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20.3 14.6A8.7 8.7 0 0 1 9.4 3.7a8.7 8.7 0 1 0 10.9 10.9Z"/></symbol>
+    <symbol id="i-sunrise" viewBox="0 0 24 24"><path d="M12 2.6v3.2"/><path d="m5.6 8.2 1.6 1.6M18.4 8.2l-1.6 1.6"/><path d="M2.6 16h2.6M18.8 16h2.6"/><path d="M7.4 16a4.6 4.6 0 0 1 9.2 0"/><path d="M3 20.4h18"/></symbol>
+    <symbol id="i-utensils" viewBox="0 0 24 24"><path d="M6.6 3v5.6a2.1 2.1 0 0 0 4.2 0V3"/><path d="M8.7 10.7V21"/><path d="M17.3 3c-1.7 1.3-2.6 3.2-2.6 5.4 0 1.5.9 2.4 2.6 2.4s2.6-.9 2.6-2.4c0-2.2-.9-4.1-2.6-5.4Z"/><path d="M17.3 10.8V21"/></symbol>
+    <symbol id="i-apple" viewBox="0 0 24 24"><path d="M12 8.4c-1.2-1-2.7-1.4-4.1-1-2.4.7-3.5 3.3-2.8 6.1.8 3.3 3.5 6.3 5.5 6.3.6 0 1-.2 1.4-.2s.8.2 1.4.2c2 0 4.7-3 5.5-6.3.7-2.8-.4-5.4-2.8-6.1-1.4-.4-2.9 0-4.1 1Z"/><path d="M12 8.4c0-2.1 1.2-3.6 3.3-4.1"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4.4 6.8h15.2"/><path d="M9.9 10.8v6M14.1 10.8v6"/><path d="M6.4 6.8 7.3 20a1.4 1.4 0 0 0 1.4 1.3h6.6a1.4 1.4 0 0 0 1.4-1.3l.9-13.2"/><path d="M9.4 6.8V5.1a1.4 1.4 0 0 1 1.4-1.4h2.4a1.4 1.4 0 0 1 1.4 1.4v1.7"/></symbol>
+    <symbol id="i-flame" viewBox="0 0 24 24"><path d="M12 3c3.2 3.8 6.2 5.6 6.2 9.4A6.2 6.2 0 0 1 5.8 12.4c0-2 .9-3.5 2.4-4.6 0 1.6.8 2.6 2 2.6 1.1 0 1.7-.9 1.7-2.2 0-1.9-1-3.4.1-5.2Z"/></symbol>
+    <symbol id="i-target" viewBox="0 0 24 24"><path d="M12 20.8a8.8 8.8 0 1 0 0-17.6 8.8 8.8 0 0 0 0 17.6Z"/><path d="M12 16.4a4.4 4.4 0 1 0 0-8.8 4.4 4.4 0 0 0 0 8.8Z"/><path d="M12 13.4a1.4 1.4 0 1 0 0-2.8 1.4 1.4 0 0 0 0 2.8Z"/></symbol>
+    <symbol id="i-trend" viewBox="0 0 24 24"><path d="m3 16.4 5.4-5.4 3.6 3.6 6-6"/><path d="M14.4 8.6H18v3.6"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24"><path d="M4.2 7.6a2 2 0 0 1 2-2h11.6a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H6.2a2 2 0 0 1-2-2Z"/><path d="M8.4 3.4v4.2M15.6 3.4v4.2M4.2 11h15.6"/></symbol>
+    <symbol id="i-mail" viewBox="0 0 24 24"><path d="M3.4 7a2 2 0 0 1 2-2h13.2a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5.4a2 2 0 0 1-2-2Z"/><path d="m3.8 7.6 8.2 5.6 8.2-5.6"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><path d="M5.6 10.6h12.8a1.4 1.4 0 0 1 1.4 1.4v7.2a1.4 1.4 0 0 1-1.4 1.4H5.6a1.4 1.4 0 0 1-1.4-1.4V12a1.4 1.4 0 0 1 1.4-1.4Z"/><path d="M7.8 10.6V7.8a4.2 4.2 0 0 1 8.4 0v2.8"/></symbol>
+    <symbol id="i-logout" viewBox="0 0 24 24"><path d="M14.2 4.2h3.4a2 2 0 0 1 2 2v11.6a2 2 0 0 1-2 2h-3.4"/><path d="m9 8.4-3.6 3.6L9 15.6"/><path d="M5.6 12h9.2"/></symbol>
+    <symbol id="i-sparkle" viewBox="0 0 24 24"><path d="M12 3.2 13.9 9l5.8 1.9-5.8 1.9L12 18.6 10.1 12.8 4.3 10.9 10.1 9Z"/><path d="M18.4 3.4v3M19.9 4.9h-3"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3.2 19 6v5.4c0 4.2-2.9 7.6-7 9.4-4.1-1.8-7-5.2-7-9.4V6Z"/><path d="m9.2 12 2 2 3.6-3.8"/></symbol>
+  </svg>
+
   <div class="auth-gate" id="auth-gate">
-    <div class="auth-gate-panel">
-      <img src="logo.png" alt="Logo FitLab">
-      <p class="eyebrow">BEM-VINDO AO FITLAB</p>
-      <h1 id="auth-title">Seu ritmo,<br><strong>seu resultado.</strong></h1>
-      <p class="auth-copy">Entre para salvar suas refeições e acompanhar sua evolução.</p>
-      <form id="auth-form">
-        <label id="auth-name-field" hidden aria-hidden="true">Seu nome<input id="auth-name" type="text" autocomplete="name" placeholder="Como podemos chamar você?"></label>
-        <label>Seu e-mail<input id="auth-email" type="email" autocomplete="email" required placeholder="voce@email.com"></label>
-        <label id="auth-password-field">Senha<input id="auth-password" type="password" autocomplete="current-password" required placeholder="Digite sua senha" aria-describedby="password-rules"></label>
-        <label id="auth-confirm-password-field" hidden aria-hidden="true">Confirme sua senha<input id="auth-confirm-password" type="password" autocomplete="new-password" placeholder="Digite a senha novamente"></label>
-        <div class="password-rules" id="password-rules" hidden aria-live="polite"><strong>Sua senha precisa ter:</strong><span data-rule="length">8 ou mais caracteres</span><span data-rule="uppercase">uma letra maiúscula</span><span data-rule="lowercase">uma letra minúscula</span><span data-rule="number">um número</span><span data-rule="special">um caractere especial</span></div>
-        <button class="primary-button" type="submit" id="auth-submit">Entrar</button>
-      </form>
-      <button class="forgot-password" type="button" id="forgot-password">Esqueci minha senha</button>
-      <button class="auth-switch" type="button" id="auth-switch">Ainda não tenho uma conta</button>
-      <p class="auth-feedback" id="auth-feedback"></p>
+    <div class="aurora" aria-hidden="true"><span></span><span></span><span></span></div>
+    <div class="auth-layout">
+      <aside class="auth-showcase">
+        <div class="auth-brand">
+          <img src="logo.png" alt="" width="44" height="44" decoding="async">
+          <span>Fit<b>Lab</b></span>
+        </div>
+        <h2>Nutrição que acompanha<br>o <em>seu ritmo</em>.</h2>
+        <ul class="auth-highlights">
+          <li>
+            <svg class="icon"><use href="#i-flame"></use></svg>
+            <div><strong>Metas diárias</strong><span>Calorias e macros num só lugar.</span></div>
+          </li>
+          <li>
+            <svg class="icon"><use href="#i-trend"></use></svg>
+            <div><strong>Progresso real</strong><span>Veja sua evolução semana a semana.</span></div>
+          </li>
+          <li>
+            <svg class="icon"><use href="#i-shield"></use></svg>
+            <div><strong>Dados protegidos</strong><span>Cada conta enxerga só os próprios registros.</span></div>
+          </li>
+        </ul>
+      </aside>
+
+      <div class="auth-gate-panel">
+        <img class="auth-logo" src="logo.png" alt="Logo FitLab" width="56" height="56" decoding="async">
+        <p class="eyebrow">BEM-VINDO AO FITLAB</p>
+        <h1 id="auth-title">Seu ritmo,<br><strong>seu resultado.</strong></h1>
+        <p class="auth-copy">Entre para salvar suas refeições e acompanhar sua evolução.</p>
+        <form id="auth-form">
+          <label class="field" id="auth-name-field" hidden aria-hidden="true">
+            <span class="field-label">Seu nome</span>
+            <span class="field-control">
+              <svg class="icon"><use href="#i-user"></use></svg>
+              <input id="auth-name" type="text" autocomplete="name" placeholder="Como podemos chamar você?">
+            </span>
+          </label>
+          <label class="field">
+            <span class="field-label">Seu e-mail</span>
+            <span class="field-control">
+              <svg class="icon"><use href="#i-mail"></use></svg>
+              <input id="auth-email" type="email" autocomplete="email" required placeholder="voce@email.com">
+            </span>
+          </label>
+          <label class="field" id="auth-password-field">
+            <span class="field-label">Senha</span>
+            <span class="field-control">
+              <svg class="icon"><use href="#i-lock"></use></svg>
+              <input id="auth-password" type="password" autocomplete="current-password" required placeholder="Digite sua senha" aria-describedby="password-rules">
+            </span>
+          </label>
+          <label class="field" id="auth-confirm-password-field" hidden aria-hidden="true">
+            <span class="field-label">Confirme sua senha</span>
+            <span class="field-control">
+              <svg class="icon"><use href="#i-lock"></use></svg>
+              <input id="auth-confirm-password" type="password" autocomplete="new-password" placeholder="Digite a senha novamente">
+            </span>
+          </label>
+          <div class="password-rules" id="password-rules" hidden aria-live="polite">
+            <strong>Sua senha precisa ter:</strong>
+            <div class="rule-grid">
+              <span data-rule="length">8 ou mais caracteres</span>
+              <span data-rule="uppercase">uma letra maiúscula</span>
+              <span data-rule="lowercase">uma letra minúscula</span>
+              <span data-rule="number">um número</span>
+              <span data-rule="special">um caractere especial</span>
+            </div>
+          </div>
+          <button class="primary-button" type="submit" id="auth-submit">Entrar</button>
+        </form>
+        <button class="forgot-password" type="button" id="forgot-password">Esqueci minha senha</button>
+        <button class="auth-switch" type="button" id="auth-switch">Ainda não tenho uma conta</button>
+        <p class="auth-feedback" id="auth-feedback"></p>
+      </div>
     </div>
   </div>
+
   <div class="app-shell" id="app-shell" hidden>
-    <header class="topbar"><a class="brand" href="#inicio" aria-label="FitLab, início"><img src="logo.png" alt="Logo FitLab"><span>Fit<span>Lab</span></span></a><div class="topbar-actions"><button class="icon-button" type="button" aria-label="Notificações">♧<i></i></button><button class="profile-button" type="button" data-action="profile" aria-label="Abrir perfil">MC</button></div></header>
+    <header class="topbar">
+      <a class="brand" href="#inicio" aria-label="FitLab, início">
+        <img src="logo.png" alt="" width="40" height="40" decoding="async">
+        <span>Fit<span>Lab</span></span>
+      </a>
+      <div class="topbar-actions">
+        <button class="icon-button theme-button" type="button" data-action="theme" aria-label="Alternar tema claro e escuro">
+          <svg class="icon icon-sun"><use href="#i-sun"></use></svg>
+          <svg class="icon icon-moon"><use href="#i-moon"></use></svg>
+        </button>
+        <button class="icon-button" type="button" aria-label="Notificações">
+          <svg class="icon"><use href="#i-bell"></use></svg>
+          <i></i>
+        </button>
+        <button class="profile-button" type="button" data-action="profile" aria-label="Abrir perfil">MC</button>
+      </div>
+    </header>
+
     <main id="main-content">
-      <section class="view active" data-view="inicio"><div class="welcome-row"><div><p class="eyebrow" id="today-label">HOJE</p><h1>Olá, <span id="user-name">Marcelo</span> <span>✦</span></h1><p class="muted">Pronto para cuidar do seu ritmo hoje?</p></div><button class="date-button" type="button" aria-label="Data atual"><span id="day-number">18</span><small id="month-label">SET</small></button></div>
-        <section class="hero-card"><div><p class="card-kicker">RESUMO DE HOJE</p><h2>Seu corpo merece<br><strong>consistência.</strong></h2><p class="hero-note">Cada escolha de hoje constrói o resultado de amanhã.</p></div><div class="calorie-ring" id="calorie-ring"><div><strong id="calories-total">0</strong><span>de <b id="calories-goal">2.400</b> kcal</span></div></div></section>
-        <section class="metric-grid" aria-label="Macronutrientes"><article class="metric-card protein"><div class="metric-heading"><b>P</b><span>Proteína</span></div><strong><span id="protein-total">0</span> <small>/ <span id="protein-goal">170</span> g</small></strong><div class="progress"><i id="protein-progress"></i></div><p id="protein-percent">0% da meta</p></article><article class="metric-card carbs"><div class="metric-heading"><b>C</b><span>Carboidratos</span></div><strong><span id="carbs-total">0</span> <small>/ <span id="carbs-goal">250</span> g</small></strong><div class="progress"><i id="carbs-progress"></i></div><p id="carbs-percent">0% da meta</p></article><article class="metric-card fats"><div class="metric-heading"><b>G</b><span>Gorduras</span></div><strong><span id="fats-total">0</span> <small>/ <span id="fats-goal">70</span> g</small></strong><div class="progress"><i id="fats-progress"></i></div><p id="fats-percent">0% da meta</p></article></section>
-        <div class="section-heading"><div><p class="eyebrow">SEU DIA</p><h2>Refeições</h2></div><button class="text-button" type="button" data-action="add-meal">+ Adicionar</button></div>
+      <section class="view active" data-view="inicio">
+        <div class="welcome-row">
+          <div>
+            <p class="eyebrow" id="today-label">HOJE</p>
+            <h1>Olá, <span id="user-name">Marcelo</span></h1>
+            <p class="muted">Pronto para cuidar do seu ritmo hoje?</p>
+          </div>
+          <button class="date-button" type="button" aria-label="Data atual">
+            <svg class="icon"><use href="#i-calendar"></use></svg>
+            <span><b id="day-number">18</b><small id="month-label">SET</small></span>
+          </button>
+        </div>
+
+        <section class="hero-card">
+          <div class="hero-content">
+            <p class="card-kicker"><svg class="icon"><use href="#i-sparkle"></use></svg>RESUMO DE HOJE</p>
+            <h2>Seu corpo merece<br><strong>consistência.</strong></h2>
+            <div class="hero-stats">
+              <div><span>Restante</span><strong id="calories-remaining">0 kcal</strong></div>
+              <div><span>Da meta</span><strong id="calories-share">0%</strong></div>
+            </div>
+          </div>
+          <div class="calorie-ring" id="calorie-ring">
+            <svg viewBox="0 0 120 120" aria-hidden="true">
+              <defs>
+                <linearGradient id="ring-gradient" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="#ff5f6d"></stop>
+                  <stop offset="100%" stop-color="#ffb457"></stop>
+                </linearGradient>
+              </defs>
+              <circle class="ring-track" cx="60" cy="60" r="52"></circle>
+              <circle class="ring-value" id="calorie-ring-progress" cx="60" cy="60" r="52"></circle>
+            </svg>
+            <div class="ring-center">
+              <strong id="calories-total">0</strong>
+              <span>de <b id="calories-goal">2.400</b> kcal</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="metric-grid" aria-label="Macronutrientes">
+          <article class="metric-card protein">
+            <div class="metric-heading"><b>P</b><span>Proteína</span></div>
+            <strong><span id="protein-total">0</span> <small>/ <span id="protein-goal">170</span> g</small></strong>
+            <div class="progress"><i id="protein-progress"></i></div>
+            <p id="protein-percent">0% da meta</p>
+          </article>
+          <article class="metric-card carbs">
+            <div class="metric-heading"><b>C</b><span>Carboidratos</span></div>
+            <strong><span id="carbs-total">0</span> <small>/ <span id="carbs-goal">250</span> g</small></strong>
+            <div class="progress"><i id="carbs-progress"></i></div>
+            <p id="carbs-percent">0% da meta</p>
+          </article>
+          <article class="metric-card fats">
+            <div class="metric-heading"><b>G</b><span>Gorduras</span></div>
+            <strong><span id="fats-total">0</span> <small>/ <span id="fats-goal">70</span> g</small></strong>
+            <div class="progress"><i id="fats-progress"></i></div>
+            <p id="fats-percent">0% da meta</p>
+          </article>
+        </section>
+
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">SEU DIA</p>
+            <h2>Refeições</h2>
+          </div>
+          <button class="text-button" type="button" data-action="add-meal">
+            <svg class="icon"><use href="#i-plus"></use></svg>Adicionar
+          </button>
+        </div>
         <section class="meal-list" id="meal-list" aria-label="Refeições do dia"></section>
       </section>
-      <section class="view" data-view="progresso"><div class="page-heading"><p class="eyebrow">EVOLUÇÃO</p><h1>Seu progresso</h1><p class="muted">Pequenos passos, grandes mudanças.</p></div><div class="chart-card"><div class="chart-header"><div><span class="muted">Peso atual</span><strong>78,4 kg</strong></div><span class="trend">↓ 2,6 kg</span></div><div class="chart"><i style="height:45%"></i><i style="height:58%"></i><i style="height:53%"></i><i style="height:72%"></i><i style="height:66%"></i><i style="height:81%"></i><i style="height:88%"></i></div><div class="chart-labels"><span>12 ago</span><span>26 ago</span><span>Hoje</span></div></div><div class="goal-card"><span class="goal-badge">META</span><h2>Você está 61% mais perto do seu objetivo</h2><div class="progress"><i style="width:61%"></i></div><p>Meta: 72 kg</p></div></section>
-      <section class="view" data-view="alimentos"><div class="page-heading"><p class="eyebrow">NUTRIÇÃO</p><h1>Banco de alimentos</h1><p class="muted">Encontre informações para montar sua refeição.</p></div><label class="search-box"><span>⌕</span><input id="food-search" type="search" placeholder="Pesquisar alimento..." aria-label="Pesquisar alimento"></label><div class="food-list" id="food-list"></div></section>
-      <section class="view" data-view="perfil"><div class="page-heading"><p class="eyebrow">SUA CONTA</p><h1>Perfil</h1><p class="muted">Ajuste seus dados e metas.</p></div><div class="profile-card"><img src="logo.png" alt="Logo FitLab"><h2 id="profile-name">Marcelo Costa</h2><p id="profile-email">marcelo@exemplo.com</p></div><form class="settings-form" id="profile-form"><label>Nome<input id="profile-name-input" type="text" value="Marcelo Costa"></label><label>Meta diária de calorias<input id="calorie-goal-input" type="number" value="2400"></label><button class="primary-button" type="submit">Salvar alterações</button><button class="secondary-button" type="button" data-action="logout">Sair da conta</button></form></section>
+
+      <section class="view" data-view="progresso">
+        <div class="page-heading">
+          <p class="eyebrow">EVOLUÇÃO</p>
+          <h1>Seu progresso</h1>
+          <p class="muted">Pequenos passos, grandes mudanças.</p>
+        </div>
+        <div class="chart-card">
+          <div class="chart-header">
+            <div>
+              <span class="muted">Peso atual</span>
+              <strong>78,4 kg</strong>
+            </div>
+            <span class="trend"><svg class="icon"><use href="#i-trend"></use></svg>2,6 kg</span>
+          </div>
+          <div class="chart">
+            <i style="--bar:45%"></i><i style="--bar:58%"></i><i style="--bar:53%"></i><i style="--bar:72%"></i><i style="--bar:66%"></i><i style="--bar:81%"></i><i class="is-now" style="--bar:88%"></i>
+          </div>
+          <div class="chart-labels"><span>12 ago</span><span>26 ago</span><span>Hoje</span></div>
+        </div>
+        <div class="goal-card">
+          <span class="goal-badge"><svg class="icon"><use href="#i-target"></use></svg>META</span>
+          <h2>Você está 61% mais perto do seu objetivo</h2>
+          <div class="progress"><i style="width:61%"></i></div>
+          <p>Meta: 72 kg</p>
+        </div>
+      </section>
+
+      <section class="view" data-view="alimentos">
+        <div class="page-heading">
+          <p class="eyebrow">NUTRIÇÃO</p>
+          <h1>Banco de alimentos</h1>
+          <p class="muted">Encontre informações para montar sua refeição.</p>
+        </div>
+        <label class="search-box">
+          <svg class="icon"><use href="#i-search"></use></svg>
+          <input id="food-search" type="search" placeholder="Pesquisar alimento..." aria-label="Pesquisar alimento">
+        </label>
+        <div class="food-list" id="food-list"></div>
+      </section>
+
+      <section class="view" data-view="perfil">
+        <div class="page-heading">
+          <p class="eyebrow">SUA CONTA</p>
+          <h1>Perfil</h1>
+          <p class="muted">Ajuste seus dados e metas.</p>
+        </div>
+        <div class="profile-card">
+          <div class="profile-cover" aria-hidden="true"></div>
+          <p class="profile-avatar" id="profile-avatar">MC</p>
+          <h2 id="profile-name">Marcelo Costa</h2>
+          <p id="profile-email">marcelo@exemplo.com</p>
+        </div>
+        <form class="settings-form" id="profile-form">
+          <label class="field">
+            <span class="field-label">Nome</span>
+            <span class="field-control">
+              <svg class="icon"><use href="#i-user"></use></svg>
+              <input id="profile-name-input" type="text" value="Marcelo Costa">
+            </span>
+          </label>
+          <label class="field">
+            <span class="field-label">Meta diária de calorias</span>
+            <span class="field-control">
+              <svg class="icon"><use href="#i-flame"></use></svg>
+              <input id="calorie-goal-input" type="number" value="2400">
+            </span>
+          </label>
+          <button class="primary-button" type="submit">Salvar alterações</button>
+          <button class="secondary-button" type="button" data-action="logout">
+            <svg class="icon"><use href="#i-logout"></use></svg>Sair da conta
+          </button>
+        </form>
+      </section>
     </main>
-    <nav class="bottom-nav" aria-label="Navegação principal"><button class="nav-item active" data-target="inicio"><span>⌂</span><small>Início</small></button><button class="nav-item" data-target="progresso"><span>◔</span><small>Progresso</small></button><button class="nav-add" type="button" data-action="add-meal" aria-label="Adicionar alimento">+</button><button class="nav-item" data-target="alimentos"><span>◫</span><small>Alimentos</small></button><button class="nav-item" data-target="perfil"><span>○</span><small>Perfil</small></button></nav>
-  </div><div class="toast" role="status" aria-live="polite"></div><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="js/supabase.js"></script><script src="js/auth.js"></script><script src="js/foods.js"></script><script src="js/meals.js"></script><script src="js/ui.js"></script><script src="js/app.js"></script>
-</body></html>
+
+    <nav class="bottom-nav" aria-label="Navegação principal">
+      <button class="nav-item active" type="button" data-target="inicio">
+        <svg class="icon"><use href="#i-home"></use></svg><small>Início</small>
+      </button>
+      <button class="nav-item" type="button" data-target="progresso">
+        <svg class="icon"><use href="#i-chart"></use></svg><small>Progresso</small>
+      </button>
+      <button class="nav-add" type="button" data-action="add-meal" aria-label="Adicionar alimento">
+        <svg class="icon"><use href="#i-plus"></use></svg>
+      </button>
+      <button class="nav-item" type="button" data-target="alimentos">
+        <svg class="icon"><use href="#i-bowl"></use></svg><small>Alimentos</small>
+      </button>
+      <button class="nav-item" type="button" data-target="perfil">
+        <svg class="icon"><use href="#i-user"></use></svg><small>Perfil</small>
+      </button>
+    </nav>
+  </div>
+
+  <div class="toast" role="status" aria-live="polite"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/foods.js"></script>
+  <script src="js/meals.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
