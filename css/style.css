@@ -1,3 +1,4 @@
+.auth-gate [hidden]{display:none!important}
 .auth-switch{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;background:#f1f3f7;border:1px solid #e1e5ec;color:var(--navy);font-weight:700;font-size:12px;margin:16px auto 0;padding:12px 14px;border-radius:12px;transition:background .2s,border-color .2s,transform .2s}.auth-switch::after{content:'→';font-size:16px;color:var(--red);transition:transform .2s}.auth-switch:hover{background:#fff0f1;border-color:#ffc4ca}.auth-switch:hover::after{transform:translateX(3px)}.auth-switch:active{transform:scale(.98)}
 /* Protected first screen */
 .app-shell[hidden],.auth-gate[hidden]{display:none}
