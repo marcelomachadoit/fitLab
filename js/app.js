@@ -15,7 +15,7 @@ async function initializeApp() {
   updateDate();
   renderFoods(await searchFoods());
   await refreshDashboard();
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js?v=2').catch(() => {});
 }
 
 document.addEventListener('DOMContentLoaded', () => initializeApp().catch((error) => {
