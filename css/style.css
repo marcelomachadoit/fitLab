@@ -1,5 +1,8 @@
 .auth-gate [hidden]{display:none!important}
+.forgot-password{display:block;border:0;background:transparent;color:var(--muted);font-size:11px;font-weight:700;margin:14px auto 0;padding:4px 8px}.forgot-password:hover{color:var(--red)}
+.password-rules{display:grid;gap:4px;padding:10px 12px;margin-top:-6px;border-radius:10px;background:#f7f8fa;color:var(--muted);font-size:11px}.password-rules strong{color:var(--ink);font-size:11px;margin-bottom:2px}.password-rules span.valid{color:var(--green);font-weight:700}
 .auth-switch{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;background:#f1f3f7;border:1px solid #e1e5ec;color:var(--navy);font-weight:700;font-size:12px;margin:16px auto 0;padding:12px 14px;border-radius:12px;transition:background .2s,border-color .2s,transform .2s}.auth-switch::after{content:'→';font-size:16px;color:var(--red);transition:transform .2s}.auth-switch:hover{background:#fff0f1;border-color:#ffc4ca}.auth-switch:hover::after{transform:translateX(3px)}.auth-switch:active{transform:scale(.98)}
+.auth-gate-panel .auth-switch{display:flex;background:#f1f3f7;border:1px solid #e1e5ec;color:var(--navy);padding:12px 14px;border-radius:12px}
 /* Protected first screen */
 .app-shell[hidden],.auth-gate[hidden]{display:none}
 .auth-gate{min-height:100vh;display:grid;place-items:center;padding:24px;background:radial-gradient(circle at 100% 0,#ffd8d1 0,transparent 35%),var(--navy)}

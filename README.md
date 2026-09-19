@@ -14,6 +14,10 @@ Em um site estático do Cloudflare Pages, variáveis `.env` não são injetadas 
 
 No Supabase, em **Authentication > URL Configuration**, defina **Site URL** como a URL do Cloudflare Pages e adicione essa mesma URL em **Redirect URLs**. Execute todo o arquivo `supabase.sql` no SQL Editor para ativar RLS e criar o perfil automaticamente no cadastro.
 
+Em **Authentication > Password Security**, defina o tamanho mínimo da senha como `8` e mantenha a proteção contra senhas vazadas habilitada. O frontend também exige uma letra maiúscula, uma minúscula, um número e um caractere especial antes de chamar o cadastro.
+
+O login bloqueia novas tentativas por 15 minutos depois de 5 falhas no mesmo navegador para o mesmo e-mail. Essa é uma camada adicional: a proteção principal contra força bruta deve continuar sendo o rate limit do Supabase Auth. O link **Esqueci minha senha** usa `resetPasswordForEmail`; configure a URL do Cloudflare Pages em **Authentication > URL Configuration > Redirect URLs** para que o link de recuperação retorne ao app.
+
 ## Cloudflare Pages
 
 Envie o projeto para GitHub, conecte o repositório no Cloudflare Pages, deixe o comando de build vazio e use a raiz como diretório de saída.

@@ -18,21 +18,80 @@ function formatNumber(value) {
 
 function renderFoods(foods) {
   const list = document.querySelector('#food-list');
-  list.innerHTML = foods.length ? foods.map((food) => `<button class="food-item" type="button" data-food-id="${food.id}"><span>🥗</span><strong>${food.name}<small>${formatNumber(food.calories)} kcal · ${food.serving_size || 100} g</small></strong><b>＋</b></button>`).join('') : '<p class="empty-state">Nenhum alimento encontrado.</p>';
-  list.querySelectorAll('[data-food-id]').forEach((button) => button.addEventListener('click', () => showToast('Selecione “Adicionar” na tela inicial para registrar uma refeição.')));
+  list.replaceChildren();
+  if (!foods.length) {
+    const emptyState = document.createElement('p');
+    emptyState.className = 'empty-state';
+    emptyState.textContent = 'Nenhum alimento encontrado.';
+    list.append(emptyState);
+    return;
+  }
+  foods.forEach((food) => {
+    const button = document.createElement('button');
+    button.className = 'food-item';
+    button.type = 'button';
+    button.dataset.foodId = String(food.id);
+    const icon = document.createElement('span');
+    icon.textContent = '🥗';
+    const details = document.createElement('strong');
+    details.textContent = food.name;
+    const nutrition = document.createElement('small');
+    nutrition.textContent = `${formatNumber(food.calories)} kcal · ${food.serving_size || 100} g`;
+    details.append(nutrition);
+    const addIcon = document.createElement('b');
+    addIcon.textContent = '＋';
+    button.append(icon, details, addIcon);
+    button.addEventListener('click', () => showToast('Selecione “Adicionar” na tela inicial para registrar uma refeição.'));
+    list.append(button);
+  });
 }
 
 function renderMeals(meals) {
   const list = document.querySelector('#meal-list');
   const types = { breakfast: ['Café da manhã', '☀', 'breakfast'], lunch: ['Almoço', '◒', 'lunch'], snack: ['Lanches', '✦', 'snack'], dinner: ['Jantar', '☾', 'dinner'] };
-  const grouped = Object.entries(types).map(([type, [label, icon, className]]) => {
+  list.replaceChildren();
+  Object.entries(types).forEach(([type, [label, icon, className]]) => {
     const items = meals.filter((meal) => meal.meal_type === type);
     const calories = items.reduce((sum, meal) => sum + (meal.foods ? calculateNutrition(meal.foods, meal.quantity).calories : 0), 0);
-    return `<article class="meal-card ${items.length ? '' : 'empty-meal'}"><div class="meal-icon ${className}">${icon}</div><div class="meal-info"><h3>${label}</h3><p>${items.length ? items.map((meal) => `${meal.foods.name} (${meal.quantity} g)`).join(', ') : 'Adicione sua próxima refeição'}</p></div>${items.length ? `<div class="meal-total"><strong>${calories}</strong><small>kcal</small></div><button class="more-button" data-delete-meal="${items[0].id}" aria-label="Excluir refeição">•••</button>` : '<button class="add-small" type="button" data-action="add-meal">+</button>'}</article>`;
+    const card = document.createElement('article');
+    card.className = `meal-card${items.length ? '' : ' empty-meal'}`;
+    const mealIcon = document.createElement('div');
+    mealIcon.className = `meal-icon ${className}`;
+    mealIcon.textContent = icon;
+    const mealInfo = document.createElement('div');
+    mealInfo.className = 'meal-info';
+    const heading = document.createElement('h3');
+    heading.textContent = label;
+    const description = document.createElement('p');
+    description.textContent = items.length ? items.map((meal) => `${meal.foods.name} (${meal.quantity} g)`).join(', ') : 'Adicione sua próxima refeição';
+    mealInfo.append(heading, description);
+    card.append(mealIcon, mealInfo);
+    if (items.length) {
+      const total = document.createElement('div');
+      total.className = 'meal-total';
+      const caloriesValue = document.createElement('strong');
+      caloriesValue.textContent = calories;
+      const caloriesUnit = document.createElement('small');
+      caloriesUnit.textContent = 'kcal';
+      total.append(caloriesValue, caloriesUnit);
+      const deleteButton = document.createElement('button');
+      deleteButton.className = 'more-button';
+      deleteButton.type = 'button';
+      deleteButton.dataset.deleteMeal = String(items[0].id);
+      deleteButton.setAttribute('aria-label', 'Excluir refeição');
+      deleteButton.textContent = '•••';
+      deleteButton.addEventListener('click', async () => { try { await deleteMeal(items[0].id); showToast('Refeição removida.'); await refreshDashboard(); } catch (error) { showToast('Não foi possível remover a refeição.'); } });
+      card.append(total, deleteButton);
+    } else {
+      const addButton = document.createElement('button');
+      addButton.className = 'add-small';
+      addButton.type = 'button';
+      addButton.textContent = '+';
+      addButton.addEventListener('click', () => showToast('A seleção de alimento será aberta na próxima atualização.'));
+      card.append(addButton);
+    }
+    list.append(card);
   });
-  list.innerHTML = grouped.join('');
-  list.querySelectorAll('[data-delete-meal]').forEach((button) => button.addEventListener('click', async () => { try { await deleteMeal(button.dataset.deleteMeal); showToast('Refeição removida.'); await refreshDashboard(); } catch (error) { showToast(error.message, 'error'); } }));
-  list.querySelectorAll('[data-action="add-meal"]').forEach((button) => button.addEventListener('click', () => showToast('A seleção de alimento será aberta na próxima atualização.')));
 }
 
 function renderNutrition(meals, goals = { calories: 2400, protein: 170, carbohydrates: 250, fat: 70 }) {
@@ -53,5 +112,7 @@ document.querySelector('[data-action="profile"]').addEventListener('click', () =
 document.querySelector('[data-action="logout"]').addEventListener('click', signOut);
 document.querySelector('#auth-form').addEventListener('submit', handleAuthSubmit);
 document.querySelector('#auth-switch').addEventListener('click', () => openAuthModal(authMode === 'login' ? 'register' : 'login'));
-document.querySelector('#food-search').addEventListener('input', async (event) => { try { renderFoods(await searchFoods(event.target.value)); } catch (error) { showToast(error.message, 'error'); } });
+document.querySelector('#forgot-password').addEventListener('click', () => openAuthModal('forgot'));
+document.querySelector('#auth-password').addEventListener('input', (event) => updatePasswordRules(event.target.value));
+document.querySelector('#food-search').addEventListener('input', async (event) => { try { renderFoods(await searchFoods(event.target.value)); } catch (error) { showToast('Não foi possível carregar os alimentos.', 'error'); } });
 document.querySelector('#profile-form').addEventListener('submit', (event) => { event.preventDefault(); showToast('Perfil salvo nesta versão local.'); });

@@ -26,9 +26,12 @@
       <form id="auth-form">
         <label id="auth-name-field" hidden aria-hidden="true">Seu nome<input id="auth-name" type="text" autocomplete="name" placeholder="Como podemos chamar você?"></label>
         <label>Seu e-mail<input id="auth-email" type="email" autocomplete="email" required placeholder="voce@email.com"></label>
-        <label>Senha<input id="auth-password" type="password" autocomplete="current-password" required placeholder="Mínimo de 6 caracteres"></label>
+        <label id="auth-password-field">Senha<input id="auth-password" type="password" autocomplete="current-password" required placeholder="Digite sua senha" aria-describedby="password-rules"></label>
+        <label id="auth-confirm-password-field" hidden aria-hidden="true">Confirme sua senha<input id="auth-confirm-password" type="password" autocomplete="new-password" placeholder="Digite a senha novamente"></label>
+        <div class="password-rules" id="password-rules" hidden aria-live="polite"><strong>Sua senha precisa ter:</strong><span data-rule="length">8 ou mais caracteres</span><span data-rule="uppercase">uma letra maiúscula</span><span data-rule="lowercase">uma letra minúscula</span><span data-rule="number">um número</span><span data-rule="special">um caractere especial</span></div>
         <button class="primary-button" type="submit" id="auth-submit">Entrar</button>
       </form>
+      <button class="forgot-password" type="button" id="forgot-password">Esqueci minha senha</button>
       <button class="auth-switch" type="button" id="auth-switch">Ainda não tenho uma conta</button>
       <p class="auth-feedback" id="auth-feedback"></p>
     </div>

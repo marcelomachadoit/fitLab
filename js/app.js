@@ -6,6 +6,10 @@ function updateDate() {
 }
 
 async function initializeApp() {
+  if (window.location.hash.includes('type=recovery')) {
+    openAuthModal('reset');
+    return;
+  }
   const user = await getCurrentUser();
   if (!user) {
     openAuthModal();
@@ -15,9 +19,9 @@ async function initializeApp() {
   updateDate();
   renderFoods(await searchFoods());
   await refreshDashboard();
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js?v=3').catch(() => {});
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js?v=4').catch(() => {});
 }
 
 document.addEventListener('DOMContentLoaded', () => initializeApp().catch((error) => {
-  document.querySelector('#auth-feedback').textContent = error.message;
+  document.querySelector('#auth-feedback').textContent = 'Não foi possível carregar o aplicativo. Tente novamente.';
 }));
