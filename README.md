@@ -16,6 +16,18 @@ No Supabase, em **Authentication > URL Configuration**, defina **Site URL** como
 
 Em **Authentication > Password Security**, defina o tamanho mínimo da senha como `8` e mantenha a proteção contra senhas vazadas habilitada. O frontend também exige uma letra maiúscula, uma minúscula, um número e um caractere especial antes de chamar o cadastro.
 
+### Links de e-mail (confirmação de cadastro e redefinição de senha)
+
+Se o link do e-mail abre uma página com **"error: requested path is invalid"**, a URL de retorno não está liberada no projeto. Em **Authentication > URL Configuration**:
+
+1. **Site URL**: a URL de produção do Cloudflare Pages, com `https://` e sem barra no fim.
+2. **Redirect URLs**: adicione uma entrada por ambiente, com curinga para cobrir subcaminhos:
+   - `https://seu-site.pages.dev/**`
+   - `http://127.0.0.1:5500/**` (ou a porta que o Live Server usar)
+   - `http://localhost:5500/**`
+
+O app envia como retorno `window.location.origin + window.location.pathname`, ou seja, a própria página de onde o pedido saiu — por isso o endereço local precisa estar na lista para testar fora de produção. O Supabase valida essa URL **antes** de redirecionar, então enquanto ela não estiver liberada o erro aparece na página dele e o aplicativo nem chega a ser carregado.
+
 O login bloqueia novas tentativas por 15 minutos depois de 5 falhas no mesmo navegador para o mesmo e-mail. Essa é uma camada adicional: a proteção principal contra força bruta deve continuar sendo o rate limit do Supabase Auth. O link **Esqueci minha senha** usa `resetPasswordForEmail`; configure a URL do Cloudflare Pages em **Authentication > URL Configuration > Redirect URLs** para que o link de recuperação retorne ao app.
 
 ## Metas nutricionais

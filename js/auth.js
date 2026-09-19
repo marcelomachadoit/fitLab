@@ -2,6 +2,50 @@ let authMode = 'login';
 const MAX_LOGIN_ATTEMPTS = 5;
 const LOCKOUT_TIME_MS = 15 * 60 * 1000;
 
+// Aberto como file://, o navegador reporta origin "null" e não existe endereço de retorno
+// válido: o link do e-mail apontaria para "null/C:/..." e o Supabase recusa com
+// "requested path is invalid". Manifest e service worker também não carregam assim.
+function isFileProtocol() {
+  return window.location.protocol === 'file:';
+}
+
+const FILE_PROTOCOL_MESSAGE = 'Abra o app por um servidor local (Live Server, em http://127.0.0.1:5500) em vez de abrir o arquivo direto. Em file:// o link do e-mail, o manifest e o modo offline não funcionam.';
+
+// Para onde o link do e-mail devolve o usuário. Precisa estar liberada em
+// Authentication > URL Configuration > Redirect URLs, senão o Supabase responde
+// "requested path is invalid" antes mesmo de chegar até aqui.
+function authRedirectUrl() {
+  return window.location.origin + window.location.pathname;
+}
+
+// O Supabase devolve os parâmetros no hash (fluxo implícito) ou na query (fluxo PKCE),
+// e usa os mesmos campos para avisar que o link expirou.
+function readAuthRedirect() {
+  const hash = new URLSearchParams((window.location.hash || '').replace(/^#/, ''));
+  const query = new URLSearchParams(window.location.search || '');
+  const pick = (name) => hash.get(name) || query.get(name);
+  return {
+    type: pick('type'),
+    error: pick('error_description') || pick('error'),
+  };
+}
+
+function translateRedirectError(message) {
+  const texto = String(message || '').toLowerCase();
+  if (texto.includes('expired') || texto.includes('otp_expired')) {
+    return 'O link do e-mail expirou ou já foi usado. Peça um novo abaixo.';
+  }
+  if (texto.includes('invalid')) {
+    return 'O link do e-mail não é válido. Peça um novo abaixo.';
+  }
+  return 'Não foi possível validar o link do e-mail. Peça um novo abaixo.';
+}
+
+// Limpa o token da barra de endereços depois de usá-lo.
+function clearAuthRedirect() {
+  window.history.replaceState(null, '', window.location.pathname);
+}
+
 function openAuthModal(mode = 'login') {
   authMode = mode;
   document.querySelector('#auth-gate').hidden = false;
@@ -56,6 +100,11 @@ async function handleAuthSubmit(event) {
     feedback.textContent = 'Adicione a URL e a anon key em js/supabase.js.';
     return;
   }
+  // Cadastro, recuperação e redefinição dependem de uma URL de retorno válida.
+  if (isFileProtocol() && authMode !== 'login') {
+    feedback.textContent = FILE_PROTOCOL_MESSAGE;
+    return;
+  }
   button.disabled = true;
   feedback.textContent = 'Aguarde...';
   const name = document.querySelector('#auth-name').value.trim();
@@ -76,10 +125,19 @@ async function handleAuthSubmit(event) {
     feedback.textContent = 'As senhas não coincidem.';
     return;
   }
+  if (authMode === 'forgot' || authMode === 'register') {
+    const espera = remainingEmailCooldown(email);
+    if (espera > 0) {
+      button.disabled = false;
+      feedback.textContent = `Já enviamos um e-mail para este endereço. Aguarde ${Math.ceil(espera / 1000)} segundos antes de pedir outro.`;
+      return;
+    }
+  }
   try {
     if (authMode === 'forgot') {
-      const { error } = await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + window.location.pathname });
+      const { error } = await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo: authRedirectUrl() });
       if (error) throw error;
+      markEmailSent(email);
       feedback.textContent = 'Se esse e-mail existir, enviaremos um link para redefinir sua senha.';
       return;
     }
@@ -87,7 +145,7 @@ async function handleAuthSubmit(event) {
       const { error } = await supabaseClient.auth.updateUser({ password });
       if (error) throw error;
       feedback.textContent = 'Senha atualizada. Faça login novamente.';
-      window.history.replaceState(null, '', window.location.pathname);
+      clearAuthRedirect();
       openAuthModal('login');
       return;
     }
@@ -98,7 +156,7 @@ async function handleAuthSubmit(event) {
         password,
         options: {
           data: { name },
-          emailRedirectTo: window.location.origin + window.location.pathname,
+          emailRedirectTo: authRedirectUrl(),
         },
       });
     if (result.error) {
@@ -107,6 +165,7 @@ async function handleAuthSubmit(event) {
       return;
     }
     if (authMode === 'register' && !result.data.session) {
+      markEmailSent(email);
       feedback.textContent = 'Cadastro criado. Verifique seu e-mail para confirmar a conta.';
       document.querySelector('#auth-form').reset();
       return;
@@ -115,10 +174,29 @@ async function handleAuthSubmit(event) {
     clearLoginFailures(email);
     window.location.reload();
   } catch (error) {
-    feedback.textContent = 'Não foi possível conectar ao Supabase. Verifique a URL, a chave pública e sua conexão.';
+    feedback.textContent = translateAuthError(error);
   } finally {
     button.disabled = false;
   }
+}
+
+// Cada pedido de e-mail consome cota do projeto. Segurar o reenvio por um minuto aqui
+// evita queimar o limite com cliques repetidos e receber 429 do servidor.
+const EMAIL_COOLDOWN_MS = 60 * 1000;
+
+function getEmailCooldownKey(email) { return `fitlab-email-sent:${email}`; }
+
+function remainingEmailCooldown(email) {
+  try {
+    const last = Number(localStorage.getItem(getEmailCooldownKey(email))) || 0;
+    return Math.max(0, EMAIL_COOLDOWN_MS - (Date.now() - last));
+  } catch {
+    return 0;
+  }
+}
+
+function markEmailSent(email) {
+  try { localStorage.setItem(getEmailCooldownKey(email), String(Date.now())); } catch {}
 }
 
 function getAttemptKey(email) { return `fitlab-login-attempts:${email}`; }
@@ -147,13 +225,44 @@ function clearLoginFailures(email) {
   try { localStorage.removeItem(getAttemptKey(email)); } catch {}
 }
 
+// Traduz tanto o erro devolvido pelo SDK quanto a exceção lançada na chamada.
+// O texto bruto entra no fim quando o caso não é conhecido: uma frase genérica esconde
+// justamente a informação necessária para corrigir a configuração do projeto.
 function translateAuthError(error) {
   const messages = {
     'Invalid login credentials': 'E-mail ou senha incorretos.',
     'User already registered': 'Este e-mail já está cadastrado. Tente entrar.',
     'Password should be at least 6 characters': 'A senha precisa ter pelo menos 8 caracteres.',
+    'Email not confirmed': 'Confirme seu e-mail antes de entrar. Procure a mensagem de confirmação na caixa de entrada.',
   };
-  return messages[error.message] || 'Não foi possível concluir a autenticação. Tente novamente.';
+  if (messages[error && error.message]) return messages[error.message];
+
+  const texto = String((error && error.message) || '').toLowerCase();
+  const status = (error && (error.status || error.code)) || '';
+
+  if (texto.includes('redirect')) {
+    return 'A URL de retorno não está liberada no projeto. Adicione este endereço em Authentication > URL Configuration > Redirect URLs.';
+  }
+  if (status === 429 || texto.includes('rate limit') || texto.includes('for security purposes') || texto.includes('too many')) {
+    // O próprio Supabase costuma dizer quantos segundos faltam: repassa o número.
+    const espera = texto.match(/after (\d+) seconds?/);
+    const quando = espera ? `${espera[1]} segundos` : 'alguns minutos';
+    return `Limite de envio de e-mails atingido. Aguarde ${quando} antes de pedir outro. O serviço de e-mail padrão do Supabase tem cota baixa; para uso real configure um SMTP próprio em Authentication > Emails.`;
+  }
+  if (texto.includes('sending') && texto.includes('mail')) {
+    return 'O Supabase não conseguiu enviar o e-mail. Verifique o provedor de e-mail do projeto em Authentication > Emails.';
+  }
+  if (texto.includes('failed to fetch') || texto.includes('networkerror') || texto.includes('load failed')) {
+    return 'Sem conexão com o Supabase. Verifique sua internet e a URL do projeto em js/supabase.js.';
+  }
+  if (texto.includes('should be different') || texto.includes('same password')) {
+    return 'A nova senha precisa ser diferente da anterior.';
+  }
+  if (texto.includes('session') || texto.includes('jwt')) {
+    return 'A sessão do link expirou. Peça um novo e-mail de redefinição.';
+  }
+  const detalhe = (error && error.message) || 'sem detalhes';
+  return `Não foi possível concluir a autenticação: ${detalhe}${status ? ` (${status})` : ''}`;
 }
 
 function isStrongPassword(password) {
@@ -207,4 +316,12 @@ function getInitials(name) {
   const first = parts[0][0];
   const last = parts.length > 1 ? parts[parts.length - 1][0] : parts[0][1] || '';
   return `${first}${last}`.toUpperCase();
+}
+
+// No fluxo PKCE o link de recuperação volta apenas como ?code=..., sem type=recovery.
+// Este evento dispara em qualquer um dos fluxos assim que a sessão de recuperação é criada.
+if (hasSupabase()) {
+  supabaseClient.auth.onAuthStateChange((event) => {
+    if (event === 'PASSWORD_RECOVERY') openAuthModal('reset');
+  });
 }

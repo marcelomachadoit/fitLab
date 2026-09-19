@@ -6,7 +6,15 @@ function updateDate() {
 }
 
 async function initializeApp() {
-  if (window.location.hash.includes('type=recovery')) {
+  const redirect = readAuthRedirect();
+  // Link expirado ou recusado: explica em vez de cair na tela de login sem dizer nada.
+  if (redirect.error) {
+    openAuthModal('login');
+    document.querySelector('#auth-feedback').textContent = translateRedirectError(redirect.error);
+    clearAuthRedirect();
+    return;
+  }
+  if (redirect.type === 'recovery') {
     openAuthModal('reset');
     return;
   }
@@ -27,9 +35,18 @@ async function initializeApp() {
   ]);
   // Conta nova ou perfil incompleto: o questionário abre e não pode ser dispensado.
   if (!isProfileComplete(nutritionProfile)) openGoalsDialog(true);
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js?v=15').catch(() => {});
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js?v=19').catch(() => {});
 }
 
-document.addEventListener('DOMContentLoaded', () => initializeApp().catch((error) => {
-  document.querySelector('#auth-feedback').textContent = 'Não foi possível carregar o aplicativo. Tente novamente.';
-}));
+// Avisa uma vez, depois que a tela já decidiu o que mostrar.
+function reportFileProtocol() {
+  if (!isFileProtocol()) return;
+  document.querySelector('#auth-feedback').textContent = FILE_PROTOCOL_MESSAGE;
+  showToast('Abra o app por um servidor local, não pelo arquivo.', 'error');
+}
+
+document.addEventListener('DOMContentLoaded', () => initializeApp()
+  .then(reportFileProtocol)
+  .catch(() => {
+    document.querySelector('#auth-feedback').textContent = 'Não foi possível carregar o aplicativo. Tente novamente.';
+  }));
