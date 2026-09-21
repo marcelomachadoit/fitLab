@@ -33,6 +33,13 @@
   --green-soft: rgba(22, 199, 154, .14);
   --violet: #6f7dff;
 
+  /* gráfico da semana: tons validados para daltonismo contra a superfície clara */
+  --chart-protein: #c60036;
+  --chart-carbs: #d48314;
+  --chart-fats: #00a176;
+  --chart-other: #8a94a8;
+  --chart-weight: #3d5bd9;
+
   /* layout: a coluna de conteúdo é a mesma da topbar à navegação inferior */
   --shell: 1120px;
   --content: 960px;
@@ -73,6 +80,10 @@
     --brand-soft: rgba(255, 94, 114, .18);
     --amber-soft: rgba(255, 171, 76, .18);
     --green-soft: rgba(22, 199, 154, .18);
+    --chart-protein: #d53450;
+    --chart-carbs: #d0800c;
+    --chart-fats: #00a176;
+    --chart-weight: #6f86ec;
     --shadow-sm: 0 2px 10px -4px rgba(0, 0, 0, .6);
     --shadow-md: 0 18px 38px -24px rgba(0, 0, 0, .8);
     --shadow-lg: 0 34px 70px -32px rgba(0, 0, 0, .85);
@@ -97,6 +108,10 @@
   --brand-soft: rgba(255, 94, 114, .18);
   --amber-soft: rgba(255, 171, 76, .18);
   --green-soft: rgba(22, 199, 154, .18);
+  --chart-protein: #d53450;
+  --chart-carbs: #d0800c;
+  --chart-fats: #00a176;
+  --chart-weight: #6f86ec;
   --shadow-sm: 0 2px 10px -4px rgba(0, 0, 0, .6);
   --shadow-md: 0 18px 38px -24px rgba(0, 0, 0, .8);
   --shadow-lg: 0 34px 70px -32px rgba(0, 0, 0, .85);
@@ -970,7 +985,6 @@ input {
    --------------------------------------------------------- */
 
 .chart-card,
-.goal-card,
 .profile-card {
   background: var(--surface);
   border: 1px solid var(--line);
@@ -979,92 +993,6 @@ input {
   margin-bottom: 14px;
   box-shadow: var(--shadow-sm);
 }
-
-.chart-header { display: flex; justify-content: space-between; align-items: flex-end; }
-.chart-header span,
-.chart-header strong { display: block; }
-.chart-header .muted { font-size: 12px; }
-.chart-header strong { font-family: 'Space Grotesk', sans-serif; font-size: 30px; margin-top: 4px; }
-
-.trend {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--green);
-  background: var(--green-soft);
-  border-radius: 999px;
-  padding: 6px 12px;
-  font-size: 12.5px;
-  font-weight: 700;
-}
-
-.trend .icon { width: 15px; height: 15px; transform: scaleY(-1); }
-
-.chart {
-  height: 190px;
-  display: flex;
-  align-items: flex-end;
-  gap: 10px;
-  padding: 22px 4px 0;
-  margin-top: 6px;
-  border-bottom: 1px solid var(--line);
-  background: repeating-linear-gradient(to bottom, transparent 0, transparent 46px, var(--line) 46px, var(--line) 47px);
-}
-
-.chart i {
-  display: block;
-  flex: 1;
-  height: var(--bar, 50%);
-  border-radius: 10px 10px 4px 4px;
-  background: linear-gradient(180deg, rgba(255, 77, 99, .55), rgba(255, 77, 99, .1));
-  transform-origin: bottom;
-  animation: grow .7s var(--ease) both;
-}
-
-.chart i.is-now {
-  background: linear-gradient(180deg, var(--brand), #ff9a6b);
-  box-shadow: 0 10px 22px -12px rgba(255, 77, 99, .8);
-}
-
-@keyframes grow {
-  from { transform: scaleY(0); opacity: 0; }
-  to { transform: scaleY(1); opacity: 1; }
-}
-
-.chart-labels { display: flex; justify-content: space-between; color: var(--muted); font-size: 10.5px; margin-top: 10px; }
-
-.goal-card { position: relative; overflow: hidden; }
-
-.goal-card::before {
-  content: '';
-  position: absolute;
-  width: 220px;
-  height: 220px;
-  right: -90px;
-  top: -110px;
-  border-radius: 50%;
-  background: var(--brand-soft);
-}
-
-.goal-badge {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 10px;
-  color: var(--brand);
-  background: var(--brand-soft);
-  border-radius: 999px;
-  padding: 6px 11px;
-  font-weight: 700;
-  letter-spacing: .12em;
-}
-
-.goal-badge .icon { width: 13px; height: 13px; }
-.goal-card h2 { position: relative; font-size: 20px; max-width: 380px; margin: 14px 0 16px; line-height: 1.25; }
-.goal-card .progress { position: relative; height: 9px; }
-.goal-card .progress i { background: linear-gradient(90deg, var(--brand), #ff9a6b); }
-.goal-card p { position: relative; color: var(--muted); font-size: 12.5px; margin: 12px 0 0; }
 
 /* ---------------------------------------------------------
    Alimentos
@@ -1566,6 +1494,301 @@ input {
 @media (max-width: 480px) {
   .goals-macros { grid-template-columns: 1fr; }
   .goals-card-head h2 { font-size: 26px; }
+}
+
+/* ---------------------------------------------------------
+   Navegação entre dias e calendário
+   --------------------------------------------------------- */
+
+.day-nav { display: flex; align-items: center; gap: 6px; flex: none; }
+.day-nav .icon-button { width: 36px; height: 36px; border-radius: 12px; }
+.icon-button:disabled { opacity: .35; cursor: default; transform: none; }
+.back-today { margin-top: 12px; }
+
+.calendar-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.calendar-head strong { font-family: 'Space Grotesk', sans-serif; font-size: 16px; }
+
+.calendar-weekdays,
+.calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+
+.calendar-weekdays span { text-align: center; font-size: 11px; font-weight: 700; color: var(--muted); padding: 4px 0; }
+
+.calendar-day {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 500;
+  transition: background var(--speed) var(--ease), color var(--speed) var(--ease);
+}
+
+.calendar-day:hover:not(:disabled) { background: var(--surface-soft); }
+.calendar-day:disabled { opacity: .3; cursor: default; }
+.calendar-day.is-today { box-shadow: inset 0 0 0 1.5px var(--brand); font-weight: 700; }
+.calendar-day.is-selected { background: var(--brand); color: #fff; font-weight: 700; }
+
+/* Ponto discreto nos dias com registro; o rótulo acessível diz o mesmo em texto. */
+.calendar-day.has-data::after,
+.calendar-dot {
+  content: '';
+  display: block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--brand);
+}
+
+.calendar-day.has-data::after { position: absolute; left: 50%; bottom: 6px; transform: translateX(-50%); }
+.calendar-day.is-selected.has-data::after { background: #fff; }
+.calendar-note { display: flex; align-items: center; gap: 8px; margin: 0; }
+
+/* ---------------------------------------------------------
+   Progresso: consumo da semana
+   --------------------------------------------------------- */
+
+.week-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.week-head h2 { margin: 0; font-size: 19px; }
+.week-nav { display: flex; gap: 8px; flex: none; }
+
+.week-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 18px 0 14px; }
+
+.week-stats div {
+  display: grid;
+  gap: 2px;
+  padding: 11px 13px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+}
+
+.week-stats span { font-size: 11px; color: var(--muted); }
+.week-stats strong { font-family: 'Space Grotesk', sans-serif; font-size: 16px; }
+
+.week-legend { list-style: none; display: flex; flex-wrap: wrap; gap: 6px 16px; padding: 0; margin: 0 0 10px; font-size: 12px; color: var(--muted); }
+.week-legend li { display: flex; align-items: center; gap: 6px; }
+.swatch { display: inline-block; width: 10px; height: 10px; border-radius: 3px; }
+.swatch.protein { background: var(--chart-protein); }
+.swatch.carbs { background: var(--chart-carbs); }
+.swatch.fats { background: var(--chart-fats); }
+.swatch.goal { height: 0; width: 14px; border-top: 1.5px dashed var(--muted); border-radius: 0; }
+
+.week-chart { height: 230px; }
+
+/* A altura dos rótulos fica numa variável para a linha da meta e a base serem
+   posicionadas sobre a área das barras, e não sobre a coluna inteira. */
+.week-plot {
+  --label-h: 38px;
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  height: 100%;
+}
+
+.week-plot::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: var(--label-h);
+  border-top: 1px solid var(--line-strong);
+  pointer-events: none;
+}
+
+.week-goal-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 1.5px dashed var(--muted);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.week-goal-line span {
+  position: absolute;
+  right: 0;
+  bottom: 3px;
+  padding: 0 4px;
+  border-radius: 4px;
+  background: var(--surface);
+  font-size: 10.5px;
+  color: var(--muted);
+}
+
+.week-col {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border-radius: 12px;
+  background: transparent;
+  transition: background var(--speed) var(--ease);
+}
+
+.week-col:hover:not(:disabled),
+.week-col.is-focus { background: var(--surface-soft); }
+.week-col:disabled { opacity: .4; cursor: default; }
+
+.week-bar-area { flex: 1; display: flex; align-items: flex-end; justify-content: center; min-height: 0; }
+
+.week-stack {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 2px;
+  width: min(62%, 34px);
+  transition: height .6s var(--ease);
+}
+
+.seg { display: block; flex-basis: 0; min-height: 0; }
+.seg.protein { background: var(--chart-protein); }
+.seg.carbs { background: var(--chart-carbs); }
+.seg.fats { background: var(--chart-fats); }
+.seg.other { background: var(--chart-other); }
+/* Em column-reverse o último filho fica no topo: só ele ganha a ponta arredondada. */
+.week-stack .seg:last-child { border-radius: 4px 4px 0 0; }
+
+.week-label {
+  display: grid;
+  place-items: center;
+  height: var(--label-h);
+  line-height: 1.15;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.week-label b { font-weight: 600; }
+.week-label small { font-size: 11px; }
+.week-col.is-today .week-label { color: var(--ink); }
+.week-col.is-today .week-label b { font-weight: 800; }
+
+.week-detail {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+  margin-top: 14px;
+  padding: 13px 15px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+}
+
+.week-detail:empty { display: none; }
+.week-detail-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
+.week-detail-head strong { font-size: 14.5px; }
+.week-detail-head span { font-size: 12.5px; color: var(--muted); }
+.week-detail .food-macros { margin-top: 0; }
+
+.week-table { margin-top: 12px; font-size: 12.5px; }
+.week-table summary { cursor: pointer; color: var(--muted); font-weight: 600; padding: 4px 0; }
+.table-scroll { overflow-x: auto; margin-top: 8px; }
+.week-table table { width: 100%; border-collapse: collapse; }
+.week-table th,
+.week-table td { padding: 8px 6px; text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.week-table th:first-child { text-align: left; }
+.week-table thead th { color: var(--muted); font-weight: 600; }
+.week-table tbody th { font-weight: 500; }
+
+@media (max-width: 480px) {
+  .week-stats { grid-template-columns: 1fr 1fr; }
+  .week-stats div:last-child { grid-column: 1 / -1; }
+  .week-chart { height: 210px; }
+}
+
+/* ---------------------------------------------------------
+   Progresso: acompanhamento de peso
+   --------------------------------------------------------- */
+
+.weight-card { margin-top: 14px; }
+.weight-range { grid-template-columns: repeat(3, auto); flex: none; }
+.weight-range .segment { padding: 8px 12px; font-size: 12px; white-space: nowrap; }
+
+.weight-chart { position: relative; margin-top: 4px; }
+.weight-chart svg { display: block; overflow: visible; }
+
+.weight-grid { stroke: var(--line); stroke-width: 1; }
+.weight-axis { fill: var(--muted); font-size: 11px; font-family: 'DM Sans', system-ui, sans-serif; }
+.weight-target-line { stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.weight-line { fill: none; stroke: var(--chart-weight); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+/* Anel da cor da superfície separa o ponto da linha que passa por ele. */
+.weight-point { fill: var(--chart-weight); stroke: var(--surface); stroke-width: 2; }
+.weight-point.is-active { stroke-width: 3; }
+.weight-crosshair { stroke: var(--line-strong); stroke-width: 1; }
+.weight-hit { fill: transparent; cursor: crosshair; touch-action: pan-y; }
+
+.weight-tooltip {
+  position: absolute;
+  top: 0;
+  display: grid;
+  gap: 1px;
+  padding: 8px 11px;
+  border-radius: 10px;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  box-shadow: var(--shadow-md);
+  font-size: 11.5px;
+  color: var(--muted);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.weight-tooltip strong { font-family: 'Space Grotesk', sans-serif; font-size: 16px; color: var(--ink); }
+
+.weight-goal { display: grid; gap: 8px; margin-top: 14px; }
+.weight-goal:empty { display: none; }
+.weight-goal-text { margin: 0; font-weight: 600; font-size: 14px; }
+.weight-goal .progress { margin-top: 0; height: 9px; }
+.weight-goal .progress i { background: linear-gradient(90deg, var(--brand), #ff9a6b); }
+.weight-goal .field-note { margin: 0; }
+
+.weight-recalc {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  padding: 11px 13px;
+  border-radius: var(--radius-sm);
+  background: var(--amber-soft);
+  border: 1px solid var(--amber);
+  font-size: 12.5px;
+}
+
+.weight-form,
+.weight-target {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: end;
+  margin-top: 16px;
+}
+
+.weight-target { grid-template-columns: minmax(0, 1fr) auto; margin-top: 4px; }
+.weight-form .pill-button,
+.weight-target .pill-button { height: 49px; }
+#weight-feedback { margin: 6px 0 0; }
+#weight-feedback:empty { display: none; }
+.weight-card .week-table td:last-child { width: 1%; }
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@media (max-width: 620px) {
+  .weight-form { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .weight-form .pill-button { grid-column: 1 / -1; justify-content: center; }
+}
+
+@media (max-width: 480px) {
+  .week-head:has(.weight-range) { flex-direction: column; }
 }
 
 /* ---------------------------------------------------------

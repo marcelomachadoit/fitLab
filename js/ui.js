@@ -7,6 +7,14 @@ let foodCatalog = [];
 let editingFoodId = null;
 let recipeDraft = { id: null, items: [] };
 let recipeQuantityTouched = false;
+let selectedDate = todayKey();
+let weekStart = weekStartKey(selectedDate);
+let weekDays = [];
+let weekFocus = null;
+let calendarMonth = null;
+let calendarRequest = 0;
+let weightLogs = [];
+let weightRange = '30';
 let mealSlots = [];
 let slotDraft = [];
 let recipeList = [];
@@ -65,6 +73,10 @@ function showView(viewName) {
   document.querySelectorAll('.view').forEach((view) => view.classList.toggle('active', view.dataset.view === viewName));
   document.querySelectorAll('.nav-item').forEach((item) => item.classList.toggle('active', item.dataset.target === viewName));
   window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (viewName === 'progresso') {
+    loadWeek().catch((error) => showToast(`Não foi possível carregar a semana. ${describeDatabaseError(error)}`, 'error'));
+    loadWeight().catch((error) => showToast(`Não foi possível carregar o peso. ${describeDatabaseError(error)}`, 'error'));
+  }
 }
 
 function showToast(message, type = '') {
@@ -621,6 +633,19 @@ async function loadNutritionProfile() {
   return nutritionProfile;
 }
 
+// "Pronta" para quem informou sexo feminino no questionário; em outro dia que não hoje,
+// a frase com "hoje" deixaria de fazer sentido.
+function renderGreeting() {
+  const nota = document.querySelector('#greeting-note');
+  if (!nota) return;
+  if (selectedDate !== todayKey()) {
+    nota.textContent = 'Revise ou complete o que você comeu neste dia.';
+    return;
+  }
+  const pronto = nutritionProfile && nutritionProfile.sex === 'female' ? 'Pronta' : 'Pronto';
+  nota.textContent = `${pronto} para cuidar da sua alimentação hoje?`;
+}
+
 // O nome salvo em profiles tem prioridade sobre o dos metadados do Auth.
 function applyProfileToInterface() {
   if (nutritionProfile && nutritionProfile.name) {
@@ -632,6 +657,7 @@ function applyProfileToInterface() {
     document.querySelector('[data-action="profile"]').textContent = initials;
   }
   renderProfileGoals();
+  renderGreeting();
 }
 
 function appendGoalMacros(target, protein, carbs, fat) {
@@ -837,9 +863,13 @@ async function handleGoalsSubmit(event) {
   try {
     const goals = calculateNutritionGoals(goalDraft);
     nutritionProfile = await saveNutritionProfile(goalDraft, goals, document.querySelector('#profile-name-input').value.trim());
+    // O peso informado no questionário também entra no histórico, com a data de hoje.
+    await saveWeightLog(todayKey(), goalDraft.weight)
+      .catch((error) => showToast(`Metas salvas, mas o peso não entrou no histórico. ${describeDatabaseError(error)}`, 'error'));
     renderGoalsSummary(goals);
     applyProfileToInterface();
     await refreshDashboard();
+    await loadWeight().catch(() => {});
     showGoalStep(GOAL_STEPS);
   } catch (error) {
     feedback.textContent = `Não foi possível salvar suas metas. ${describeDatabaseError(error)}`;
@@ -861,6 +891,659 @@ async function handleProfileSubmit(event) {
     showToast('Perfil atualizado.');
   } catch (error) {
     showToast(`Não foi possível salvar o perfil. ${describeDatabaseError(error)}`, 'error');
+  }
+}
+
+/* ---------------------------------------------------------
+   Dia selecionado
+   --------------------------------------------------------- */
+
+const WEEKDAY_SHORT = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+const WEEKDAY_LONG = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+
+function formatDayMonth(key) {
+  return parseDateKey(key).toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' }).replace('.', '').replace(' de ', ' ');
+}
+
+function formatLongDay(key) {
+  const data = parseDateKey(key);
+  return `${WEEKDAY_LONG[data.getDay()]}, ${formatDayMonth(key)}`;
+}
+
+function renderSelectedDate() {
+  const data = parseDateKey(selectedDate);
+  const hoje = selectedDate === todayKey();
+  document.querySelector('#day-number').textContent = data.getDate();
+  document.querySelector('#month-label').textContent = data.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '').toUpperCase();
+  const extenso = data.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' }).toUpperCase();
+  document.querySelector('#today-label').textContent = hoje ? `HOJE · ${extenso}` : extenso;
+  document.querySelector('#summary-kicker').textContent = hoje ? 'RESUMO DE HOJE' : `RESUMO DE ${formatDayMonth(selectedDate).toUpperCase()}`;
+  document.querySelector('[data-action="go-today"]').hidden = hoje;
+  renderGreeting();
+  // Não existe consumo registrado no futuro: o avanço para no dia de hoje.
+  document.querySelector('[data-action="next-day"]').disabled = selectedDate >= todayKey();
+}
+
+async function setSelectedDate(key) {
+  selectedDate = key > todayKey() ? todayKey() : key;
+  weekStart = weekStartKey(selectedDate);
+  weekFocus = selectedDate;
+  renderSelectedDate();
+  await refreshDashboard();
+}
+
+function changeSelectedDate(key) {
+  setSelectedDate(key).catch((error) => showToast(`Não foi possível carregar o dia. ${describeDatabaseError(error)}`, 'error'));
+}
+
+/* Calendário ------------------------------------------------------------ */
+
+function openCalendar() {
+  const data = parseDateKey(selectedDate);
+  calendarMonth = new Date(data.getFullYear(), data.getMonth(), 1);
+  renderCalendar();
+  openDialog('calendar-dialog');
+}
+
+function shiftCalendarMonth(delta) {
+  calendarMonth = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + delta, 1);
+  renderCalendar();
+}
+
+function renderCalendar() {
+  const ano = calendarMonth.getFullYear();
+  const mes = calendarMonth.getMonth();
+  const hoje = todayKey();
+  const primeiro = toDateKey(new Date(ano, mes, 1));
+  const ultimo = toDateKey(new Date(ano, mes + 1, 0));
+  const titulo = calendarMonth.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+  document.querySelector('#calendar-month').textContent = titulo.charAt(0).toUpperCase() + titulo.slice(1);
+  document.querySelector('[data-action="next-month"]').disabled = primeiro >= toDateKey(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
+
+  const grid = document.querySelector('#calendar-grid');
+  grid.replaceChildren();
+  // Semana começa na segunda: domingo ocupa a sétima coluna.
+  const vazios = (new Date(ano, mes, 1).getDay() + 6) % 7;
+  for (let i = 0; i < vazios; i += 1) grid.append(document.createElement('span'));
+
+  const totalDias = new Date(ano, mes + 1, 0).getDate();
+  for (let dia = 1; dia <= totalDias; dia += 1) {
+    const key = toDateKey(new Date(ano, mes, dia));
+    const botao = document.createElement('button');
+    botao.type = 'button';
+    botao.className = 'calendar-day';
+    botao.dataset.date = key;
+    botao.textContent = String(dia);
+    botao.setAttribute('aria-label', formatLongDay(key));
+    if (key === hoje) {
+      botao.classList.add('is-today');
+      botao.setAttribute('aria-current', 'date');
+    }
+    if (key === selectedDate) {
+      botao.classList.add('is-selected');
+      botao.setAttribute('aria-pressed', 'true');
+    }
+    if (key > hoje) botao.disabled = true;
+    botao.addEventListener('click', () => {
+      closeDialog('calendar-dialog');
+      changeSelectedDate(key);
+    });
+    grid.append(botao);
+  }
+
+  // Marca os dias com registro depois de desenhar a grade; uma troca rápida de mês
+  // descarta a resposta atrasada do mês anterior.
+  const pedido = ++calendarRequest;
+  getLoggedDates(primeiro, ultimo)
+    .then((datas) => {
+      if (pedido !== calendarRequest) return;
+      grid.querySelectorAll('.calendar-day').forEach((botao) => {
+        const temDado = datas.has(botao.dataset.date);
+        botao.classList.toggle('has-data', temDado);
+        if (temDado) botao.setAttribute('aria-label', `${formatLongDay(botao.dataset.date)}, com registros`);
+      });
+    })
+    .catch(() => {});
+}
+
+/* ---------------------------------------------------------
+   Progresso: consumo da semana (segunda a domingo)
+   --------------------------------------------------------- */
+
+const MACRO_SERIES = [
+  { key: 'protein', label: 'Proteína', kcal: 4, className: 'protein' },
+  { key: 'carbohydrates', label: 'Carboidratos', kcal: 4, className: 'carbs' },
+  { key: 'fat', label: 'Gorduras', kcal: 9, className: 'fats' },
+];
+
+async function loadWeek() {
+  const fim = addDaysToKey(weekStart, 6);
+  const meals = await getMealsInRange(weekStart, fim);
+  weekDays = summarizeByDay(meals, weekStart);
+  if (!weekFocus || weekFocus < weekStart || weekFocus > fim) {
+    const hoje = todayKey();
+    const comDado = [...weekDays].reverse().find((dia) => dia.calories > 0);
+    weekFocus = hoje >= weekStart && hoje <= fim ? hoje : (comDado ? comDado.date : weekStart);
+  }
+  renderWeek();
+}
+
+function shiftWeek(delta) {
+  weekStart = addDaysToKey(weekStart, delta * 7);
+  weekFocus = null;
+  loadWeek().catch((error) => showToast(`Não foi possível carregar a semana. ${describeDatabaseError(error)}`, 'error'));
+}
+
+function renderWeek() {
+  const fim = addDaysToKey(weekStart, 6);
+  const hoje = todayKey();
+  const semanaAtual = weekStart === weekStartKey(hoje);
+  document.querySelector('#week-title').textContent = semanaAtual
+    ? `Esta semana · ${formatDayMonth(weekStart)} – ${formatDayMonth(fim)}`
+    : `${formatDayMonth(weekStart)} – ${formatDayMonth(fim)}`;
+  document.querySelector('[data-action="next-week"]').disabled = semanaAtual;
+
+  renderWeekStats();
+  renderWeekChart(hoje);
+  renderWeekDetail();
+  renderWeekTable();
+}
+
+function renderWeekStats() {
+  const registrados = weekDays.filter((dia) => dia.calories > 0);
+  const total = weekDays.reduce((soma, dia) => soma + dia.calories, 0);
+  const media = registrados.length ? total / registrados.length : 0;
+  const stats = document.querySelector('#week-stats');
+  stats.replaceChildren();
+  [
+    ['Total da semana', `${formatNumber(total)} kcal`],
+    ['Média por dia registrado', `${formatNumber(Math.round(media))} kcal`],
+    ['Dias registrados', `${registrados.length} de 7`],
+  ].forEach(([rotulo, valor]) => {
+    const item = document.createElement('div');
+    const nome = document.createElement('span');
+    nome.textContent = rotulo;
+    const numero = document.createElement('strong');
+    numero.textContent = valor;
+    item.append(nome, numero);
+    stats.append(item);
+  });
+}
+
+// Uma barra por dia, com altura = calorias do dia. Os segmentos dividem essa altura na
+// proporção das calorias vindas de cada macro — assim a barra mostra o total e a
+// composição num eixo só, sem segundo eixo. Dia sem registro fica com barra zero.
+function renderWeekChart(hoje) {
+  const chart = document.querySelector('#week-chart');
+  chart.replaceChildren();
+  const meta = currentGoals().calories;
+  const maior = Math.max(meta, ...weekDays.map((dia) => dia.calories));
+  const teto = maior * 1.12;
+
+  const plot = document.createElement('div');
+  plot.className = 'week-plot';
+
+  const linhaMeta = document.createElement('div');
+  linhaMeta.className = 'week-goal-line';
+  // Mesmo referencial das barras: a área acima da faixa de rótulos (--label-h).
+  linhaMeta.style.bottom = `calc(var(--label-h) + (100% - var(--label-h)) * ${(meta / teto).toFixed(4)})`;
+  const rotuloMeta = document.createElement('span');
+  rotuloMeta.textContent = `Meta ${formatNumber(meta)} kcal`;
+  linhaMeta.append(rotuloMeta);
+  plot.append(linhaMeta);
+
+  weekDays.forEach((dia) => {
+    const data = parseDateKey(dia.date);
+    const futuro = dia.date > hoje;
+    const coluna = document.createElement('button');
+    coluna.type = 'button';
+    coluna.className = 'week-col';
+    coluna.dataset.date = dia.date;
+    if (dia.date === hoje) coluna.classList.add('is-today');
+    if (dia.date === weekFocus) coluna.classList.add('is-focus');
+    if (futuro) coluna.disabled = true;
+    coluna.setAttribute('aria-label', futuro
+      ? `${formatLongDay(dia.date)}: ainda não chegou`
+      : `${formatLongDay(dia.date)}: ${formatNumber(dia.calories)} kcal, proteína ${formatNumber(dia.protein)} g, carboidratos ${formatNumber(dia.carbohydrates)} g, gorduras ${formatNumber(dia.fat)} g`);
+
+    const area = document.createElement('span');
+    area.className = 'week-bar-area';
+    const pilha = document.createElement('span');
+    pilha.className = 'week-stack';
+    pilha.style.height = `${(dia.calories / teto) * 100}%`;
+
+    const kcalMacros = MACRO_SERIES.map((serie) => dia[serie.key] * serie.kcal);
+    const somaMacros = kcalMacros.reduce((a, b) => a + b, 0);
+    MACRO_SERIES.forEach((serie, i) => {
+      if (!kcalMacros[i] || !somaMacros) return;
+      const segmento = document.createElement('i');
+      segmento.className = `seg ${serie.className}`;
+      segmento.style.flexGrow = String(kcalMacros[i] / somaMacros);
+      pilha.append(segmento);
+    });
+    // Calorias sem macro associado (alimento cadastrado só com kcal): segmento neutro.
+    if (dia.calories > 0 && !somaMacros) {
+      const neutro = document.createElement('i');
+      neutro.className = 'seg other';
+      neutro.style.flexGrow = '1';
+      pilha.append(neutro);
+    }
+    area.append(pilha);
+
+    const rotulo = document.createElement('span');
+    rotulo.className = 'week-label';
+    const nomeDia = document.createElement('b');
+    nomeDia.textContent = WEEKDAY_SHORT[data.getDay()];
+    const numero = document.createElement('small');
+    numero.textContent = String(data.getDate());
+    rotulo.append(nomeDia, numero);
+
+    coluna.append(area, rotulo);
+    // Passar o mouse ou focar pelo teclado mostra o dia; no toque, o clique faz o mesmo.
+    const focar = () => setWeekFocus(dia.date);
+    coluna.addEventListener('pointerenter', focar);
+    coluna.addEventListener('focus', focar);
+    coluna.addEventListener('click', focar);
+    plot.append(coluna);
+  });
+
+  chart.append(plot);
+}
+
+function setWeekFocus(key) {
+  if (weekFocus === key) return;
+  weekFocus = key;
+  document.querySelectorAll('.week-col').forEach((coluna) => coluna.classList.toggle('is-focus', coluna.dataset.date === key));
+  renderWeekDetail();
+}
+
+function renderWeekDetail() {
+  const detalhe = document.querySelector('#week-detail');
+  detalhe.replaceChildren();
+  const dia = weekDays.find((item) => item.date === weekFocus);
+  if (!dia) return;
+  const meta = currentGoals().calories;
+
+  const titulo = document.createElement('div');
+  titulo.className = 'week-detail-head';
+  const nome = document.createElement('strong');
+  nome.textContent = formatLongDay(dia.date);
+  const kcal = document.createElement('span');
+  kcal.textContent = dia.calories
+    ? `${formatNumber(dia.calories)} kcal · ${Math.round((dia.calories / meta) * 100)}% da meta`
+    : 'Nenhum alimento registrado';
+  titulo.append(nome, kcal);
+  detalhe.append(titulo);
+
+  if (dia.calories) {
+    const macros = document.createElement('span');
+    macros.className = 'food-macros';
+    appendMacroChips(macros, dia);
+    detalhe.append(macros);
+  }
+
+  const abrir = document.createElement('button');
+  abrir.type = 'button';
+  abrir.className = 'text-button';
+  abrir.append(createIcon('i-calendar'), document.createTextNode(dia.calories ? 'Ver refeições deste dia' : 'Registrar neste dia'));
+  abrir.addEventListener('click', () => {
+    showView('inicio');
+    changeSelectedDate(dia.date);
+  });
+  detalhe.append(abrir);
+}
+
+function renderWeekTable() {
+  const corpo = document.querySelector('#week-table-body');
+  corpo.replaceChildren();
+  weekDays.forEach((dia) => {
+    const linha = document.createElement('tr');
+    [formatLongDay(dia.date), formatNumber(dia.calories), `${formatNumber(dia.protein)} g`, `${formatNumber(dia.carbohydrates)} g`, `${formatNumber(dia.fat)} g`]
+      .forEach((valor, i) => {
+        const celula = document.createElement(i === 0 ? 'th' : 'td');
+        if (i === 0) celula.scope = 'row';
+        celula.textContent = valor;
+        linha.append(celula);
+      });
+    corpo.append(linha);
+  });
+}
+
+/* ---------------------------------------------------------
+   Progresso: acompanhamento de peso
+   --------------------------------------------------------- */
+
+function formatKg(valor) {
+  return `${new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(valor)} kg`;
+}
+
+function formatVariation(delta) {
+  if (Math.abs(delta) < 0.05) return 'estável';
+  return `${delta > 0 ? '+' : '−'}${formatKg(Math.abs(delta))}`;
+}
+
+async function loadWeight() {
+  weightLogs = await getWeightLogs();
+  renderWeight();
+}
+
+// O gráfico e as estatísticas usam só a janela escolhida; o progresso até a meta
+// usa a primeira pesagem de todo o histórico como ponto de partida.
+function logsInRange() {
+  const dias = WEIGHT_RANGES[weightRange];
+  if (!dias) return weightLogs;
+  const inicio = addDaysToKey(todayKey(), -(dias - 1));
+  return weightLogs.filter((log) => log.date >= inicio);
+}
+
+function renderWeight() {
+  const periodo = logsInRange();
+  const alvo = nutritionProfile && nutritionProfile.target_weight ? Number(nutritionProfile.target_weight) : null;
+  const dateInput = document.querySelector('#weight-date');
+  dateInput.max = todayKey();
+  if (!dateInput.value) dateInput.value = todayKey();
+  document.querySelector('#weight-target-input').value = alvo || '';
+  document.querySelectorAll('[data-weight-range]').forEach((botao) => {
+    const ativo = botao.dataset.weightRange === weightRange;
+    botao.classList.toggle('selected', ativo);
+    botao.setAttribute('aria-selected', String(ativo));
+  });
+
+  renderWeightStats(periodo);
+  renderWeightChart(periodo, alvo);
+  renderWeightGoal(alvo);
+  renderWeightTable();
+}
+
+function renderWeightStats(periodo) {
+  const stats = document.querySelector('#weight-stats');
+  stats.replaceChildren();
+  const atual = weightLogs[weightLogs.length - 1];
+  const variacao = periodo.length > 1 ? periodo[periodo.length - 1].weight_kg - periodo[0].weight_kg : null;
+  [
+    ['Peso atual', atual ? formatKg(atual.weight_kg) : '—'],
+    ['Variação no período', variacao === null ? '—' : formatVariation(variacao)],
+    ['Pesagens no período', String(periodo.length)],
+  ].forEach(([rotulo, valor]) => {
+    const item = document.createElement('div');
+    const nome = document.createElement('span');
+    nome.textContent = rotulo;
+    const numero = document.createElement('strong');
+    numero.textContent = valor;
+    item.append(nome, numero);
+    stats.append(item);
+  });
+}
+
+function svgEl(tag, atributos = {}) {
+  const el = document.createElementNS(SVG_NS, tag);
+  Object.entries(atributos).forEach(([nome, valor]) => el.setAttribute(nome, String(valor)));
+  return el;
+}
+
+// Passo "redondo" para as linhas de grade: 0,5 / 1 / 2 / 5 / 10 kg...
+function niceStep(bruto) {
+  const potencia = 10 ** Math.floor(Math.log10(bruto));
+  const fracao = bruto / potencia;
+  const passo = fracao <= 1 ? 1 : fracao <= 2 ? 2 : fracao <= 5 ? 5 : 10;
+  return passo * potencia;
+}
+
+// Linha do peso ao longo do tempo, com a meta como referência tracejada. As posições
+// são calculadas em pixels reais da largura atual, então círculos não deformam.
+function renderWeightChart(logs, alvo) {
+  const caixa = document.querySelector('#weight-chart');
+  caixa.replaceChildren();
+  if (!logs.length) {
+    const vazio = document.createElement('p');
+    vazio.className = 'empty-state';
+    vazio.textContent = weightLogs.length
+      ? 'Nenhuma pesagem neste período. Escolha um período maior ou registre seu peso abaixo.'
+      : 'Registre seu peso abaixo para começar a acompanhar a evolução.';
+    caixa.append(vazio);
+    return;
+  }
+
+  const largura = Math.max(280, Math.round(caixa.clientWidth || 600));
+  const altura = 210;
+  const m = { top: 16, right: 16, bottom: 28, left: 44 };
+  const plotW = largura - m.left - m.right;
+  const plotH = altura - m.top - m.bottom;
+
+  const valores = logs.map((log) => log.weight_kg);
+  if (alvo) valores.push(alvo);
+  const folga = Math.max(0.5, (Math.max(...valores) - Math.min(...valores)) * 0.15);
+  let min = Math.min(...valores) - folga;
+  let max = Math.max(...valores) + folga;
+  const passo = niceStep((max - min) / 3);
+  min = Math.floor(min / passo) * passo;
+  max = Math.ceil(max / passo) * passo;
+
+  const t0 = parseDateKey(logs[0].date).getTime();
+  const t1 = parseDateKey(logs[logs.length - 1].date).getTime();
+  const xDe = (key) => (logs.length === 1 || t1 === t0
+    ? m.left + (plotW / 2)
+    : m.left + (((parseDateKey(key).getTime() - t0) / (t1 - t0)) * plotW));
+  const yDe = (kg) => m.top + ((1 - ((kg - min) / (max - min))) * plotH);
+
+  const atual = logs[logs.length - 1];
+  const svg = svgEl('svg', {
+    viewBox: `0 0 ${largura} ${altura}`,
+    width: '100%',
+    height: altura,
+    role: 'img',
+    'aria-label': `Peso de ${formatDayMonth(logs[0].date)} a ${formatDayMonth(atual.date)}: de ${formatKg(logs[0].weight_kg)} para ${formatKg(atual.weight_kg)}.`,
+  });
+
+  for (let v = min; v <= max + (passo / 2); v += passo) {
+    const y = yDe(v);
+    svg.append(svgEl('line', { x1: m.left, x2: largura - m.right, y1: y, y2: y, class: 'weight-grid' }));
+    const rotulo = svgEl('text', { x: m.left - 8, y: y + 4, class: 'weight-axis', 'text-anchor': 'end' });
+    rotulo.textContent = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 }).format(v);
+    svg.append(rotulo);
+  }
+
+  if (alvo) {
+    const y = yDe(alvo);
+    svg.append(svgEl('line', { x1: m.left, x2: largura - m.right, y1: y, y2: y, class: 'weight-target-line' }));
+    const rotulo = svgEl('text', { x: largura - m.right, y: y - 6, class: 'weight-axis', 'text-anchor': 'end' });
+    rotulo.textContent = `Meta ${formatKg(alvo)}`;
+    svg.append(rotulo);
+  }
+
+  const pontos = logs.map((log) => [xDe(log.date), yDe(log.weight_kg)]);
+  if (pontos.length > 1) {
+    svg.append(svgEl('path', { d: pontos.map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(1)} ${y.toFixed(1)}`).join(' '), class: 'weight-line' }));
+  }
+  pontos.forEach(([x, y]) => svg.append(svgEl('circle', { cx: x, cy: y, r: 4, class: 'weight-point' })));
+
+  // Rótulos de data só nas pontas (e no meio quando cabe): selecionar, não rotular tudo.
+  const marcas = logs.length > 2 ? [0, Math.floor((logs.length - 1) / 2), logs.length - 1] : [...new Set([0, logs.length - 1])];
+  marcas.forEach((i) => {
+    const anchor = i === 0 && logs.length > 1 ? 'start' : i === logs.length - 1 && logs.length > 1 ? 'end' : 'middle';
+    const texto = svgEl('text', { x: pontos[i][0], y: altura - 8, class: 'weight-axis', 'text-anchor': anchor });
+    texto.textContent = formatDayMonth(logs[i].date);
+    svg.append(texto);
+  });
+
+  // Camada de hover: linha vertical + ponto destacado + dica, no ponto mais próximo do cursor/dedo.
+  const cruz = svgEl('line', { y1: m.top, y2: altura - m.bottom, class: 'weight-crosshair', visibility: 'hidden' });
+  const destaque = svgEl('circle', { r: 6, class: 'weight-point is-active', visibility: 'hidden' });
+  svg.append(cruz, destaque);
+  const alvoToque = svgEl('rect', { x: m.left - 12, y: 0, width: plotW + 24, height: altura, class: 'weight-hit' });
+  svg.append(alvoToque);
+
+  const dica = document.createElement('div');
+  dica.className = 'weight-tooltip';
+  dica.hidden = true;
+
+  const mostrar = (evento) => {
+    const caixaSvg = svg.getBoundingClientRect();
+    const xCursor = ((evento.clientX - caixaSvg.left) / caixaSvg.width) * largura;
+    let indice = 0;
+    pontos.forEach(([x], i) => { if (Math.abs(x - xCursor) < Math.abs(pontos[indice][0] - xCursor)) indice = i; });
+    const [x, y] = pontos[indice];
+    const log = logs[indice];
+    cruz.setAttribute('x1', x);
+    cruz.setAttribute('x2', x);
+    cruz.setAttribute('visibility', 'visible');
+    destaque.setAttribute('cx', x);
+    destaque.setAttribute('cy', y);
+    destaque.setAttribute('visibility', 'visible');
+    const anterior = indice > 0 ? logs[indice - 1] : null;
+    dica.replaceChildren();
+    const data = document.createElement('span');
+    data.textContent = formatLongDay(log.date);
+    const peso = document.createElement('strong');
+    peso.textContent = formatKg(log.weight_kg);
+    dica.append(data, peso);
+    if (anterior) {
+      const delta = document.createElement('span');
+      delta.textContent = `${formatVariation(log.weight_kg - anterior.weight_kg)} desde ${formatDayMonth(anterior.date)}`;
+      dica.append(delta);
+    }
+    dica.hidden = false;
+    const proporcao = x / largura;
+    dica.style.left = `${proporcao * 100}%`;
+    dica.style.transform = `translateX(${proporcao > 0.7 ? '-100%' : proporcao < 0.3 ? '0' : '-50%'})`;
+  };
+  const esconder = () => {
+    cruz.setAttribute('visibility', 'hidden');
+    destaque.setAttribute('visibility', 'hidden');
+    dica.hidden = true;
+  };
+  alvoToque.addEventListener('pointermove', mostrar);
+  alvoToque.addEventListener('pointerdown', mostrar);
+  alvoToque.addEventListener('pointerleave', esconder);
+
+  caixa.append(svg, dica);
+}
+
+function renderWeightGoal(alvo) {
+  const caixa = document.querySelector('#weight-goal');
+  caixa.replaceChildren();
+  const atual = weightLogs[weightLogs.length - 1];
+
+  if (alvo && atual) {
+    const inicio = weightLogs[0].weight_kg;
+    const progresso = weightProgress(inicio, atual.weight_kg, alvo);
+    const falta = alvo - atual.weight_kg;
+    const titulo = document.createElement('p');
+    titulo.className = 'weight-goal-text';
+    titulo.textContent = Math.abs(falta) < 0.05 || progresso === 100
+      ? `Meta de ${formatKg(alvo)} alcançada.`
+      : `Faltam ${formatKg(Math.abs(falta))} para a meta de ${formatKg(alvo)}.`;
+    const barra = document.createElement('div');
+    barra.className = 'progress';
+    barra.setAttribute('role', 'progressbar');
+    barra.setAttribute('aria-valuemin', '0');
+    barra.setAttribute('aria-valuemax', '100');
+    barra.setAttribute('aria-valuenow', String(progresso));
+    barra.setAttribute('aria-label', 'Progresso até o peso-meta');
+    const preenchido = document.createElement('i');
+    preenchido.style.width = `${progresso}%`;
+    barra.append(preenchido);
+    const nota = document.createElement('p');
+    nota.className = 'field-note';
+    nota.textContent = `${progresso}% do caminho desde a primeira pesagem (${formatKg(inicio)}).`;
+    caixa.append(titulo, barra, nota);
+  }
+
+  // Peso mudou bastante desde o cálculo das metas: as calorias podem estar defasadas.
+  if (atual && isProfileComplete(nutritionProfile)) {
+    const diferenca = atual.weight_kg - Number(nutritionProfile.weight);
+    if (Math.abs(diferenca) >= 2) {
+      const aviso = document.createElement('div');
+      aviso.className = 'weight-recalc';
+      const texto = document.createElement('span');
+      texto.textContent = `Seu peso mudou ${formatVariation(diferenca)} desde o último cálculo de metas.`;
+      const botao = document.createElement('button');
+      botao.type = 'button';
+      botao.className = 'text-button';
+      botao.append(createIcon('i-target'), document.createTextNode('Recalcular metas'));
+      botao.addEventListener('click', () => {
+        openGoalsDialog(false);
+        goalDraft.weight = atual.weight_kg;
+        document.querySelector('#goal-weight').value = atual.weight_kg;
+      });
+      aviso.append(texto, botao);
+      caixa.append(aviso);
+    }
+  }
+}
+
+function renderWeightTable() {
+  const corpo = document.querySelector('#weight-table-body');
+  corpo.replaceChildren();
+  [...weightLogs].reverse().forEach((log, i, lista) => {
+    const anterior = lista[i + 1];
+    const linha = document.createElement('tr');
+    const data = document.createElement('th');
+    data.scope = 'row';
+    data.textContent = formatLongDay(log.date);
+    const peso = document.createElement('td');
+    peso.textContent = formatKg(log.weight_kg);
+    const variacao = document.createElement('td');
+    variacao.textContent = anterior ? formatVariation(log.weight_kg - anterior.weight_kg) : '—';
+    const acoes = document.createElement('td');
+    acoes.append(createIconButton('i-trash', 'ghost-button danger', `Excluir pesagem de ${formatLongDay(log.date)}`, async () => {
+      if (!window.confirm(`Excluir a pesagem de ${formatLongDay(log.date)} (${formatKg(log.weight_kg)})?`)) return;
+      try {
+        await deleteWeightLog(log.id);
+        showToast('Pesagem excluída.');
+        await loadWeight();
+      } catch (error) {
+        showToast(`Não foi possível excluir. ${describeDatabaseError(error)}`, 'error');
+      }
+    }));
+    linha.append(data, peso, variacao, acoes);
+    corpo.append(linha);
+  });
+}
+
+async function handleWeightSubmit(event) {
+  event.preventDefault();
+  const feedback = document.querySelector('#weight-feedback');
+  const botao = document.querySelector('#weight-submit');
+  const peso = Number(document.querySelector('#weight-input').value);
+  const data = document.querySelector('#weight-date').value;
+  if (!validateProfileNumber(peso, PROFILE_LIMITS.weight)) {
+    feedback.textContent = `Informe um peso entre ${PROFILE_LIMITS.weight.min} e ${PROFILE_LIMITS.weight.max} kg.`;
+    return;
+  }
+  if (!data || data > todayKey()) {
+    feedback.textContent = 'Escolha uma data até hoje.';
+    return;
+  }
+  botao.disabled = true;
+  feedback.textContent = '';
+  try {
+    const existia = weightLogs.some((log) => log.date === data);
+    await saveWeightLog(data, peso);
+    document.querySelector('#weight-input').value = '';
+    showToast(existia ? 'Pesagem do dia atualizada.' : 'Peso registrado.');
+    await loadWeight();
+  } catch (error) {
+    feedback.textContent = `Não foi possível registrar. ${describeDatabaseError(error)}`;
+  } finally {
+    botao.disabled = false;
+  }
+}
+
+async function handleTargetSubmit(event) {
+  event.preventDefault();
+  const bruto = document.querySelector('#weight-target-input').value.trim();
+  const alvo = bruto === '' ? null : Number(bruto);
+  if (alvo !== null && !validateProfileNumber(alvo, PROFILE_LIMITS.weight)) {
+    showToast(`O peso-meta precisa estar entre ${PROFILE_LIMITS.weight.min} e ${PROFILE_LIMITS.weight.max} kg.`, 'error');
+    return;
+  }
+  try {
+    nutritionProfile = await saveTargetWeight(alvo);
+    showToast(alvo === null ? 'Peso-meta removido.' : 'Peso-meta salvo.');
+    renderWeight();
+  } catch (error) {
+    showToast(`Não foi possível salvar a meta. ${describeDatabaseError(error)}`, 'error');
   }
 }
 
@@ -1109,6 +1792,9 @@ function openEntryDialog(slotId = null) {
     return;
   }
   entryQuantityTouched = false;
+  document.querySelector('#entry-dialog-title').textContent = selectedDate === todayKey()
+    ? 'Registrar consumo'
+    : `Registrar em ${formatDayMonth(selectedDate)}`;
   document.querySelector('#entry-food-search').value = '';
   document.querySelector('#entry-feedback').textContent = '';
   fillSlotSelect(slotId);
@@ -1232,7 +1918,7 @@ async function handleEntrySubmit(event) {
         feedback.textContent = 'Escolha uma receita que tenha ingredientes.';
         return;
       }
-      await addRecipeMeals(items.map((item) => ({ food_id: item.food_id, quantity: Number(item.quantity) })), slotId);
+      await addRecipeMeals(items.map((item) => ({ food_id: item.food_id, quantity: Number(item.quantity) })), slotId, selectedDate);
       showToast(`${recipe.name} registrada.`);
     } else {
       const food = selectedEntryFood();
@@ -1251,7 +1937,7 @@ async function handleEntrySubmit(event) {
         feedback.textContent = 'Quantidade muito alta para este alimento.';
         return;
       }
-      await addMeal(food.id, quantidade, slotId);
+      await addMeal(food.id, quantidade, slotId, selectedDate);
       showToast(`${food.name} registrado.`);
     }
     closeDialog('entry-dialog');
@@ -1278,9 +1964,11 @@ function renderNutrition(meals, goals = currentGoals()) {
 }
 
 async function refreshDashboard() {
-  const [meals, slots] = await Promise.all([getTodayMeals(), loadMealSlots()]);
+  const [meals, slots] = await Promise.all([getMealsForDate(selectedDate), loadMealSlots()]);
   renderMeals(meals, slots);
   renderNutrition(meals);
+  // O gráfico da semana acompanha qualquer registro novo, removido ou de outro dia.
+  await loadWeek().catch((error) => showToast(`Não foi possível atualizar a semana. ${describeDatabaseError(error)}`, 'error'));
 }
 
 /* ---------------------------------------------------------
@@ -1317,6 +2005,40 @@ document.addEventListener('focusout', () => {
 
 document.querySelectorAll('[data-target]').forEach((button) => button.addEventListener('click', () => showView(button.dataset.target)));
 document.querySelector('[data-action="edit-slots"]').addEventListener('click', openSlotsDialog);
+document.querySelector('[data-action="prev-day"]').addEventListener('click', () => changeSelectedDate(addDaysToKey(selectedDate, -1)));
+document.querySelector('[data-action="next-day"]').addEventListener('click', () => changeSelectedDate(addDaysToKey(selectedDate, 1)));
+document.querySelector('[data-action="go-today"]').addEventListener('click', () => changeSelectedDate(todayKey()));
+document.querySelector('[data-action="open-calendar"]').addEventListener('click', openCalendar);
+document.querySelector('[data-action="prev-month"]').addEventListener('click', () => shiftCalendarMonth(-1));
+document.querySelector('[data-action="next-month"]').addEventListener('click', () => shiftCalendarMonth(1));
+document.querySelector('[data-action="calendar-today"]').addEventListener('click', () => { closeDialog('calendar-dialog'); changeSelectedDate(todayKey()); });
+document.querySelector('[data-action="prev-week"]').addEventListener('click', () => shiftWeek(-1));
+document.querySelector('#weight-form').addEventListener('submit', handleWeightSubmit);
+document.querySelector('#weight-target-form').addEventListener('submit', handleTargetSubmit);
+document.querySelectorAll('[data-weight-range]').forEach((botao) => botao.addEventListener('click', () => {
+  weightRange = botao.dataset.weightRange;
+  renderWeight();
+}));
+// O gráfico de peso é desenhado na largura real: redesenha quando a tela muda de tamanho.
+let weightResizeTimer = null;
+window.addEventListener('resize', () => {
+  window.clearTimeout(weightResizeTimer);
+  weightResizeTimer = window.setTimeout(() => {
+    if (document.querySelector('[data-view="progresso"]').classList.contains('active')) renderWeight();
+  }, 150);
+});
+document.querySelector('[data-action="next-week"]').addEventListener('click', () => shiftWeek(1));
+// App aberto de um dia para o outro: quem estava em "hoje" passa para o novo hoje,
+// senão o próximo registro cairia no dia anterior.
+let lastKnownToday = todayKey();
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState !== 'visible') return;
+  const agora = todayKey();
+  if (agora === lastKnownToday) return;
+  const estavaEmHoje = selectedDate === lastKnownToday;
+  lastKnownToday = agora;
+  if (estavaEmHoje) changeSelectedDate(agora);
+});
 document.querySelector('[data-action="log-meal"]').addEventListener('click', () => openEntryDialog());
 document.querySelector('#slot-add').addEventListener('click', addSlotDraftRow);
 document.querySelector('#slots-form').addEventListener('submit', handleSlotsSubmit);

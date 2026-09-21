@@ -12,6 +12,7 @@ Date: 2026-09-19
 - `recipes` and `recipe_items` are private per user. Recipe items inherit ownership through an `exists` check against the parent recipe, so an item is only visible or writable when the recipe belongs to the caller.
 - The nutrition profile lives in `public.profiles`, already restricted by `auth.uid() = id` for SELECT, INSERT, UPDATE and DELETE, so one user can neither read nor change another user's weight, age or calculated goals. The client writes only through an upsert keyed by the authenticated `user.id`.
 - Goals are computed in the browser, so the stored numbers are not authoritative. CHECK constraints bound every persisted value (`profiles_sex_valid`, `profiles_activity_valid`, `profiles_goal_valid`, `profiles_targets_valid`) to plausible ranges, and a tampered value only distorts the tamperer's own dashboard. Recomputing in a database trigger would be stricter, at the cost of duplicating the formula in SQL.
+- `weight_logs` and `meal_slots` are private per user with the same `auth.uid() = user_id` policies for SELECT, INSERT, UPDATE and DELETE; weights are bounded to 30-300 kg by CHECK constraints, and `profiles.target_weight` likewise.
 - Table privileges are granted explicitly to `authenticated` only. Without them PostgREST answers 42501 before any policy is evaluated; `anon` holds no privilege on application tables.
 - PostgreSQL constraints limit profile fields, food nutrition values, meal quantities and meal types.
 - An index supports queries by `meals.user_id` and date.

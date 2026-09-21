@@ -47,6 +47,8 @@
     <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 4.3 20.8 19.6H3.2Z"/><path d="M12 10v4.4"/><path d="M12 17.3v.01"/></symbol>
     <symbol id="i-info" viewBox="0 0 24 24"><path d="M12 20.8a8.8 8.8 0 1 0 0-17.6 8.8 8.8 0 0 0 0 17.6Z"/><path d="M12 11.2v5.4"/><path d="M12 7.7v.01"/></symbol>
     <symbol id="i-grip" viewBox="0 0 24 24"><path d="M5 9.2h14"/><path d="M5 14.8h14"/></symbol>
+    <symbol id="i-chevron-left" viewBox="0 0 24 24"><path d="m14.6 5.6-6.4 6.4 6.4 6.4"/></symbol>
+    <symbol id="i-chevron-right" viewBox="0 0 24 24"><path d="m9.4 5.6 6.4 6.4-6.4 6.4"/></symbol>
     <symbol id="i-close" viewBox="0 0 24 24"><path d="M6.6 6.6 17.4 17.4"/><path d="M17.4 6.6 6.6 17.4"/></symbol>
   </svg>
 
@@ -153,17 +155,28 @@
           <div>
             <p class="eyebrow" id="today-label">HOJE</p>
             <h1>Olá, <span id="user-name">Marcelo</span></h1>
-            <p class="muted">Pronto para cuidar da sua alimentação hoje?</p>
+            <p class="muted" id="greeting-note">Pronto para cuidar da sua alimentação hoje?</p>
           </div>
-          <button class="date-button" type="button" aria-label="Data atual">
-            <svg class="icon"><use href="#i-calendar"></use></svg>
-            <span><b id="day-number">18</b><small id="month-label">SET</small></span>
-          </button>
+          <div class="day-nav">
+            <button class="icon-button" type="button" data-action="prev-day" aria-label="Dia anterior">
+              <svg class="icon"><use href="#i-chevron-left"></use></svg>
+            </button>
+            <button class="date-button" type="button" data-action="open-calendar" aria-label="Escolher data no calendário">
+              <svg class="icon"><use href="#i-calendar"></use></svg>
+              <span><b id="day-number">18</b><small id="month-label">SET</small></span>
+            </button>
+            <button class="icon-button" type="button" data-action="next-day" aria-label="Próximo dia">
+              <svg class="icon"><use href="#i-chevron-right"></use></svg>
+            </button>
+          </div>
         </div>
+        <button class="text-button back-today" type="button" data-action="go-today" hidden>
+          <svg class="icon"><use href="#i-calendar"></use></svg>Voltar para hoje
+        </button>
 
         <section class="hero-card">
           <div class="hero-content">
-            <p class="card-kicker"><svg class="icon"><use href="#i-sparkle"></use></svg>RESUMO DE HOJE</p>
+            <p class="card-kicker"><svg class="icon"><use href="#i-sparkle"></use></svg><span id="summary-kicker">RESUMO DE HOJE</span></p>
             <h2>Seu corpo merece<br><strong>consistência.</strong></h2>
             <div class="hero-stats">
               <div><span>Restante</span><strong id="calories-remaining">0 kcal</strong></div>
@@ -227,25 +240,98 @@
           <h1>Seu progresso</h1>
           <p class="muted">Pequenos passos, grandes mudanças.</p>
         </div>
-        <div class="chart-card">
-          <div class="chart-header">
+        <section class="chart-card" aria-labelledby="week-title">
+          <div class="week-head">
             <div>
-              <span class="muted">Peso atual</span>
-              <strong>78,4 kg</strong>
+              <p class="eyebrow">CONSUMO DA SEMANA</p>
+              <h2 id="week-title">Esta semana</h2>
             </div>
-            <span class="trend"><svg class="icon"><use href="#i-trend"></use></svg>2,6 kg</span>
+            <div class="week-nav">
+              <button class="icon-button" type="button" data-action="prev-week" aria-label="Semana anterior">
+                <svg class="icon"><use href="#i-chevron-left"></use></svg>
+              </button>
+              <button class="icon-button" type="button" data-action="next-week" aria-label="Próxima semana">
+                <svg class="icon"><use href="#i-chevron-right"></use></svg>
+              </button>
+            </div>
           </div>
-          <div class="chart">
-            <i style="--bar:45%"></i><i style="--bar:58%"></i><i style="--bar:53%"></i><i style="--bar:72%"></i><i style="--bar:66%"></i><i style="--bar:81%"></i><i class="is-now" style="--bar:88%"></i>
+          <div class="week-stats" id="week-stats"></div>
+          <ul class="week-legend" aria-label="Legenda">
+            <li><i class="swatch protein"></i>Proteína</li>
+            <li><i class="swatch carbs"></i>Carboidratos</li>
+            <li><i class="swatch fats"></i>Gorduras</li>
+            <li><i class="swatch goal"></i>Meta diária</li>
+          </ul>
+          <div class="week-chart" id="week-chart"></div>
+          <div class="week-detail" id="week-detail" aria-live="polite"></div>
+          <details class="week-table">
+            <summary>Ver em tabela</summary>
+            <div class="table-scroll">
+              <table>
+                <thead><tr><th scope="col">Dia</th><th scope="col">kcal</th><th scope="col">Proteína</th><th scope="col">Carb.</th><th scope="col">Gordura</th></tr></thead>
+                <tbody id="week-table-body"></tbody>
+              </table>
+            </div>
+          </details>
+        </section>
+        <section class="chart-card weight-card" aria-labelledby="weight-title">
+          <div class="week-head">
+            <div>
+              <p class="eyebrow">PESO</p>
+              <h2 id="weight-title">Acompanhamento de peso</h2>
+            </div>
+            <div class="segmented weight-range" role="tablist" aria-label="Período do gráfico">
+              <button class="segment selected" type="button" data-weight-range="30" role="tab" aria-selected="true">30 dias</button>
+              <button class="segment" type="button" data-weight-range="90" role="tab" aria-selected="false">90 dias</button>
+              <button class="segment" type="button" data-weight-range="all" role="tab" aria-selected="false">Tudo</button>
+            </div>
           </div>
-          <div class="chart-labels"><span>12 ago</span><span>26 ago</span><span>Hoje</span></div>
-        </div>
-        <div class="goal-card">
-          <span class="goal-badge"><svg class="icon"><use href="#i-target"></use></svg>META</span>
-          <h2>Você está 61% mais perto do seu objetivo</h2>
-          <div class="progress"><i style="width:61%"></i></div>
-          <p>Meta: 72 kg</p>
-        </div>
+
+          <div class="week-stats" id="weight-stats"></div>
+          <div class="weight-chart" id="weight-chart"></div>
+          <div class="weight-goal" id="weight-goal"></div>
+
+          <form class="weight-form" id="weight-form">
+            <label class="field">
+              <span class="field-label">Peso</span>
+              <span class="field-control">
+                <input id="weight-input" type="number" min="30" max="300" step="any" inputmode="decimal" placeholder="75,0" required>
+                <b class="field-suffix">kg</b>
+              </span>
+            </label>
+            <label class="field">
+              <span class="field-label">Data</span>
+              <span class="field-control">
+                <input id="weight-date" type="date" required>
+              </span>
+            </label>
+            <button class="pill-button" type="submit" id="weight-submit">
+              <svg class="icon"><use href="#i-plus"></use></svg>Registrar peso
+            </button>
+          </form>
+          <p class="modal-feedback" id="weight-feedback"></p>
+
+          <form class="weight-target" id="weight-target-form">
+            <label class="field">
+              <span class="field-label">Peso-meta (opcional)</span>
+              <span class="field-control">
+                <input id="weight-target-input" type="number" min="30" max="300" step="any" inputmode="decimal" placeholder="Ex.: 72">
+                <b class="field-suffix">kg</b>
+              </span>
+            </label>
+            <button class="pill-button ghost" type="submit">Salvar meta</button>
+          </form>
+
+          <details class="week-table">
+            <summary>Ver registros</summary>
+            <div class="table-scroll">
+              <table>
+                <thead><tr><th scope="col">Data</th><th scope="col">Peso</th><th scope="col">Variação</th><th scope="col"><span class="visually-hidden">Ações</span></th></tr></thead>
+                <tbody id="weight-table-body"></tbody>
+              </table>
+            </div>
+          </details>
+        </section>
       </section>
 
       <section class="view" data-view="alimentos">
@@ -665,6 +751,34 @@
     </form>
   </dialog>
 
+  <dialog class="modal" id="calendar-dialog" aria-labelledby="calendar-dialog-title">
+    <div class="modal-card">
+      <header class="modal-header">
+        <h2 id="calendar-dialog-title">Escolher data</h2>
+        <button class="modal-close" type="button" data-close-dialog="calendar-dialog" aria-label="Fechar">
+          <svg class="icon"><use href="#i-close"></use></svg>
+        </button>
+      </header>
+      <div class="calendar-head">
+        <button class="icon-button" type="button" data-action="prev-month" aria-label="Mês anterior">
+          <svg class="icon"><use href="#i-chevron-left"></use></svg>
+        </button>
+        <strong id="calendar-month">setembro de 2026</strong>
+        <button class="icon-button" type="button" data-action="next-month" aria-label="Próximo mês">
+          <svg class="icon"><use href="#i-chevron-right"></use></svg>
+        </button>
+      </div>
+      <div class="calendar-weekdays" aria-hidden="true">
+        <span>S</span><span>T</span><span>Q</span><span>Q</span><span>S</span><span>S</span><span>D</span>
+      </div>
+      <div class="calendar-grid" id="calendar-grid"></div>
+      <p class="field-note calendar-note"><i class="calendar-dot"></i>Dias com alimentos registrados</p>
+      <footer class="modal-actions">
+        <button class="secondary-button" type="button" data-action="calendar-today">Ir para hoje</button>
+      </footer>
+    </div>
+  </dialog>
+
   <div class="toast" role="status" aria-live="polite"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -674,6 +788,7 @@
   <script src="js/meals.js"></script>
   <script src="js/recipes.js"></script>
   <script src="js/goals.js"></script>
+  <script src="js/weight.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/app.js"></script>
 </body>

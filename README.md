@@ -66,6 +66,18 @@ O botão **+** da barra inferior registra consumo: escolha a refeição, busque 
 
 Remover uma refeição apaga os registros feitos nela (`on delete cascade` em `meals.slot_id`), e o app avisa disso antes de confirmar. A coluna antiga `meals.meal_type` virou opcional e deixou de ser usada; ficou no schema para não descartar registros anteriores.
 
+## Calendário e progresso
+
+Na aba **Início**, as setas ao lado da data passam para o dia anterior ou seguinte, e o botão da data abre um calendário mensal: dias com alimentos registrados têm um ponto, e dias futuros ficam bloqueados. Todo o resumo, as refeições e o registro pelo **+** passam a valer para o dia escolhido, o que permite lançar algo esquecido de ontem. "Voltar para hoje" aparece sempre que o dia exibido não é o atual.
+
+As datas são sempre as do fuso do aparelho (`toDateKey()` em `js/meals.js`). Antes o app usava a data em UTC, e no Brasil registros feitos depois das 21h caíam no dia seguinte.
+
+Na aba **Progresso**, o gráfico mostra a semana de segunda a domingo: uma barra por dia com a altura das calorias consumidas, dividida pela contribuição de proteína, carboidratos e gorduras, com a meta diária como linha tracejada. Dias sem registro ficam em zero. As setas navegam para semanas anteriores; tocar ou passar o mouse numa barra mostra os valores do dia, com um atalho para abrir esse dia no Início, e "Ver em tabela" traz os mesmos números em formato de tabela. O gráfico é recalculado a cada registro, remoção ou troca de dia.
+
+Abaixo, o **acompanhamento de peso** substituiu o card de meta que tinha números fixos no código. Cada pesagem fica em `public.weight_logs`, uma por dia (registrar de novo no mesmo dia substitui o valor), privada de cada conta. O card mostra o peso atual, a variação no período e um gráfico de linha de 30 dias, 90 dias ou todo o histórico, com o ponto de cada pesagem e detalhe ao passar o mouse ou tocar. Um peso-meta opcional (`profiles.target_weight`) aparece como linha tracejada e alimenta a barra de progresso, que conta a partir da primeira pesagem e funciona tanto para perder quanto para ganhar peso. Concluir o questionário de metas já registra o peso informado. Quando o peso atual se afasta 2 kg ou mais do peso usado no cálculo das metas, o card sugere recalculá-las.
+
+As cores do gráfico são tokens próprios (`--chart-protein`, `--chart-carbs`, `--chart-fats`), validados para daltonismo e luminosidade contra a superfície de cada tema.
+
 ## Alimentos e receitas do usuário
 
 Além da base compartilhada, cada conta pode criar os próprios alimentos e receitas pela aba **Alimentos**:
