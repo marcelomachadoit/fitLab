@@ -1289,6 +1289,32 @@ async function refreshDashboard() {
 
 applyTheme(getStoredTheme());
 
+// iPhone/iPad: o Safari amplia a página ao focar um campo e, depois que o teclado fecha,
+// não volta à escala original. maximum-scale=1 desliga só esse zoom automático — o iOS
+// continua permitindo ampliar com dois dedos. Fica restrito ao iOS porque no Android a
+// mesma regra bloquearia a pinça, que é um recurso de acessibilidade.
+function isIOS() {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent)
+    || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+}
+
+if (isIOS()) {
+  const viewport = document.querySelector('meta[name="viewport"]');
+  if (viewport && !viewport.content.includes('maximum-scale')) {
+    viewport.content = `${viewport.content}, maximum-scale=1`;
+  }
+}
+
+// Quando o teclado fecha, o iOS às vezes deixa a página deslocada para o lado.
+// Ao sair de um campo sem entrar em outro, devolve a tela à posição horizontal original.
+document.addEventListener('focusout', () => {
+  window.setTimeout(() => {
+    const ativo = document.activeElement;
+    if (ativo && ativo.matches('input, select, textarea')) return;
+    if (window.scrollX !== 0) window.scrollTo(0, window.scrollY);
+  }, 120);
+});
+
 document.querySelectorAll('[data-target]').forEach((button) => button.addEventListener('click', () => showView(button.dataset.target)));
 document.querySelector('[data-action="edit-slots"]').addEventListener('click', openSlotsDialog);
 document.querySelector('[data-action="log-meal"]').addEventListener('click', () => openEntryDialog());

@@ -35,7 +35,21 @@ async function initializeApp() {
   ]);
   // Conta nova ou perfil incompleto: o questionário abre e não pode ser dispensado.
   if (!isProfileComplete(nutritionProfile)) openGoalsDialog(true);
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js?v=23').catch(() => {});
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js?v=24').catch(() => {});
+}
+
+// CSS e JS vêm do cache primeiro. Quando um service worker novo assume a página, os
+// arquivos em uso ainda são os antigos: recarrega uma vez para a correção entrar na hora,
+// em vez de só na próxima abertura. Na primeira visita não havia controlador, então não
+// recarrega à toa.
+if ('serviceWorker' in navigator) {
+  const tinhaControlador = Boolean(navigator.serviceWorker.controller);
+  let recarregou = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!tinhaControlador || recarregou) return;
+    recarregou = true;
+    window.location.reload();
+  });
 }
 
 // Avisa uma vez, depois que a tela já decidiu o que mostrar.

@@ -113,6 +113,10 @@
 html {
   background: var(--bg);
   -webkit-text-size-adjust: 100%;
+  /* Nada no app deve rolar para o lado. Fica só no html (propaga para a janela):
+     aplicado também no body, ele viraria um contêiner de rolagem e quebraria a
+     barra superior sticky. */
+  overflow-x: hidden;
 }
 
 body {
@@ -499,6 +503,8 @@ input {
    --------------------------------------------------------- */
 
 .app-shell {
+  /* clip corta o excesso lateral sem criar contêiner de rolagem: o sticky continua valendo. */
+  overflow-x: clip;
   max-width: var(--shell);
   min-height: 100vh;
   margin: auto;
