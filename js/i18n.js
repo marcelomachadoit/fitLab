@@ -384,6 +384,8 @@ const TRANSLATIONS = [
   ['Ajuste seus dados e metas.', 'Adjust your details and goals.', 'Ajusta tus datos y metas.'],
   ['META DIÁRIA ESTIMADA', 'ESTIMATED DAILY GOAL', 'META DIARIA ESTIMADA'],
   ['Recalcular metas', 'Recalculate goals', 'Recalcular metas'],
+  ['Dispensar por 7 dias', 'Dismiss for 7 days', 'Descartar por 7 días'],
+  ['Aviso ocultado por 7 dias.', 'Notice hidden for 7 days.', 'Aviso ocultado por 7 días.'],
   ['Gasto calórico estimado: —', 'Estimated calorie expenditure: —', 'Gasto calórico estimado: —'],
   ['Gasto calórico estimado: {0} kcal', 'Estimated calorie expenditure: {0} kcal', 'Gasto calórico estimado: {0} kcal'],
   ['Responda ao questionário para calcular suas metas.', 'Answer the questionnaire to calculate your goals.', 'Responde el cuestionario para calcular tus metas.'],

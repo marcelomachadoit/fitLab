@@ -1522,6 +1522,22 @@ function renderWeightChart(logs, alvo) {
   caixa.append(svg, dica);
 }
 
+// Aviso de recálculo dispensado: some por 7 dias neste aparelho. A chave inclui a conta,
+// então duas pessoas usando o mesmo celular não escondem o aviso uma da outra.
+const RECALC_DISMISS_DAYS = 7;
+
+function recalcDismissKey() {
+  return `fitlab-recalc-dismissed:${(nutritionProfile && nutritionProfile.id) || 'sem-conta'}`;
+}
+
+function isRecalcDismissed() {
+  try { return Number(localStorage.getItem(recalcDismissKey())) > Date.now(); } catch { return false; }
+}
+
+function dismissRecalc() {
+  try { localStorage.setItem(recalcDismissKey(), String(Date.now() + (RECALC_DISMISS_DAYS * 24 * 60 * 60 * 1000))); } catch {}
+}
+
 function renderWeightGoal(alvo) {
   const caixa = document.querySelector('#weight-goal');
   caixa.replaceChildren();
@@ -1553,7 +1569,7 @@ function renderWeightGoal(alvo) {
   }
 
   // Peso mudou bastante desde o cálculo das metas: as calorias podem estar defasadas.
-  if (atual && isProfileComplete(nutritionProfile)) {
+  if (atual && isProfileComplete(nutritionProfile) && !isRecalcDismissed()) {
     const diferenca = atual.weight_kg - Number(nutritionProfile.weight);
     if (Math.abs(diferenca) >= 2) {
       const aviso = document.createElement('div');
@@ -1569,7 +1585,15 @@ function renderWeightGoal(alvo) {
         goalDraft.weight = atual.weight_kg;
         document.querySelector('#goal-weight').value = atual.weight_kg;
       });
-      aviso.append(texto, botao);
+      const fechar = createIconButton('i-close', 'ghost-button', t('Dispensar por 7 dias'), () => {
+        dismissRecalc();
+        aviso.remove();
+        showToast(t('Aviso ocultado por 7 dias.'));
+      });
+      const acoes = document.createElement('span');
+      acoes.className = 'weight-recalc-actions';
+      acoes.append(botao, fechar);
+      aviso.append(texto, acoes);
       caixa.append(aviso);
     }
   }

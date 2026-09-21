@@ -1746,6 +1746,8 @@ input {
   font-size: 12.5px;
 }
 
+.weight-recalc-actions { display: flex; align-items: center; gap: 4px; }
+
 .weight-form,
 .weight-target {
   display: grid;
