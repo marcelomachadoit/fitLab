@@ -35,7 +35,7 @@ async function initializeApp() {
   ]);
   // Conta nova ou perfil incompleto: o questionário abre e não pode ser dispensado.
   if (!isProfileComplete(nutritionProfile)) openGoalsDialog(true);
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js?v=22').catch(() => {});
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js?v=23').catch(() => {});
 }
 
 // Avisa uma vez, depois que a tela já decidiu o que mostrar.
