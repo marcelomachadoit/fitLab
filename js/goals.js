@@ -109,10 +109,10 @@ function calculateNutritionGoals(answers) {
 function describeGoalWarnings(goals) {
   const avisos = [];
   if (goals.floor_applied) {
-    avisos.push(`A meta parou no piso de ${MIN_TARGET_CALORIES.toLocaleString('pt-BR')} kcal, acima do seu gasto estimado de ${goals.tdee.toLocaleString('pt-BR')} kcal. Reduzir calorias a partir de um gasto tão baixo não é seguro por conta própria: procure um nutricionista ou médico antes de seguir com esse objetivo.`);
+    avisos.push(t('A meta parou no piso de {0} kcal, acima do seu gasto estimado de {1} kcal. Reduzir calorias a partir de um gasto tão baixo não é seguro por conta própria: procure um nutricionista ou médico antes de seguir com esse objetivo.', MIN_TARGET_CALORIES.toLocaleString(appLocale()), goals.tdee.toLocaleString(appLocale())));
   }
   if (goals.macros_adjusted) {
-    avisos.push('A proteína e a gordura precisaram ser reduzidas para caber na meta calórica, o que indica uma combinação exigente de peso e déficit. A distribuição adequada para o seu caso deve ser definida por um profissional.');
+    avisos.push(t('A proteína e a gordura precisaram ser reduzidas para caber na meta calórica, o que indica uma combinação exigente de peso e déficit. A distribuição adequada para o seu caso deve ser definida por um profissional.'));
   }
   return avisos;
 }
@@ -140,17 +140,17 @@ function validateProfileNumber(value, limits) {
 // Devolve a mensagem do primeiro problema encontrado, ou null quando está tudo válido.
 function validateNutritionAnswers(answers) {
   if (!validateProfileNumber(answers.weight, PROFILE_LIMITS.weight)) {
-    return `Informe um peso entre ${PROFILE_LIMITS.weight.min} e ${PROFILE_LIMITS.weight.max} kg.`;
+    return t('Informe um peso entre {0} e {1} kg.', PROFILE_LIMITS.weight.min, PROFILE_LIMITS.weight.max);
   }
   if (!validateProfileNumber(answers.height, PROFILE_LIMITS.height)) {
-    return `Informe uma altura entre ${PROFILE_LIMITS.height.min} e ${PROFILE_LIMITS.height.max} cm.`;
+    return t('Informe uma altura entre {0} e {1} cm.', PROFILE_LIMITS.height.min, PROFILE_LIMITS.height.max);
   }
   if (!validateProfileNumber(answers.age, PROFILE_LIMITS.age) || !Number.isInteger(answers.age)) {
-    return `Informe uma idade inteira entre ${PROFILE_LIMITS.age.min} e ${PROFILE_LIMITS.age.max} anos.`;
+    return t('Informe uma idade inteira entre {0} e {1} anos.', PROFILE_LIMITS.age.min, PROFILE_LIMITS.age.max);
   }
-  if (!SEX_OPTIONS[answers.sex]) return 'Escolha uma opção de sexo.';
-  if (!ACTIVITY_LEVELS[answers.activity_level]) return 'Escolha seu nível de atividade física.';
-  if (!GOALS[answers.goal]) return 'Escolha seu objetivo.';
+  if (!SEX_OPTIONS[answers.sex]) return t('Escolha uma opção de sexo.');
+  if (!ACTIVITY_LEVELS[answers.activity_level]) return t('Escolha seu nível de atividade física.');
+  if (!GOALS[answers.goal]) return t('Escolha seu objetivo.');
   return null;
 }
 
@@ -195,6 +195,18 @@ async function saveNutritionProfile(answers, goals, fallbackName = '') {
   const { data, error } = await supabaseClient.from('profiles').upsert(payload, { onConflict: 'id' }).select('*').single();
   if (error) throw error;
   return data;
+}
+
+// O idioma escolhido também vai para a conta: assim ele acompanha o usuário em outro aparelho.
+async function saveLanguagePreference(language) {
+  const user = await getCurrentUser();
+  if (!user) return null;
+  const { error } = await supabaseClient
+    .from('profiles')
+    .update({ language, updated_at: new Date().toISOString() })
+    .eq('id', user.id);
+  if (error) throw error;
+  return language;
 }
 
 async function saveProfileName(name) {

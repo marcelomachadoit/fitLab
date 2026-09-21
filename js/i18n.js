@@ -1,0 +1,543 @@
+// Idiomas do app: português (base), inglês e espanhol.
+//
+// A chave de cada texto é o próprio texto em português: o código continua legível e,
+// se faltar uma tradução, a interface mostra o português em vez de um identificador.
+// Valores variáveis entram como {0}, {1}... na ordem dos argumentos de t().
+//
+// O que NÃO é traduzido: dados — nomes de alimentos da base compartilhada, porções
+// ("1 xícara (150 g)"), nomes de refeições e receitas criados pelo usuário.
+
+const LANGUAGES = {
+  pt: { label: 'Português', short: 'PT', locale: 'pt-BR', htmlLang: 'pt-BR' },
+  en: { label: 'English', short: 'EN', locale: 'en-US', htmlLang: 'en' },
+  es: { label: 'Español', short: 'ES', locale: 'es-ES', htmlLang: 'es' },
+};
+const LANGUAGE_KEY = 'fitlab-language';
+
+// [português, inglês, espanhol]
+const TRANSLATIONS = [
+  // Geral / carregamento
+  ['FitLab | Seu progresso, do seu jeito', 'FitLab | Your progress, your way', 'FitLab | Tu progreso, a tu manera'],
+  ['Não foi possível carregar seu perfil.', "Couldn't load your profile.", 'No se pudo cargar tu perfil.'],
+  ['Não foi possível carregar os alimentos.', "Couldn't load foods.", 'No se pudieron cargar los alimentos.'],
+  ['Não foi possível carregar suas receitas.', "Couldn't load your recipes.", 'No se pudieron cargar tus recetas.'],
+  ['Não foi possível carregar suas refeições.', "Couldn't load your meals.", 'No se pudieron cargar tus comidas.'],
+  ['Não foi possível carregar seu histórico de peso.', "Couldn't load your weight history.", 'No se pudo cargar tu historial de peso.'],
+  ['Abra o app por um servidor local, não pelo arquivo.', 'Open the app through a local server, not the file.', 'Abre la app desde un servidor local, no desde el archivo.'],
+  ['Abra o app por um servidor local (Live Server, em http://127.0.0.1:5500) em vez de abrir o arquivo direto. Em file:// o link do e-mail, o manifest e o modo offline não funcionam.',
+    'Open the app through a local server (Live Server, at http://127.0.0.1:5500) instead of opening the file directly. Over file:// the email link, the manifest and offline mode don\'t work.',
+    'Abre la app desde un servidor local (Live Server, en http://127.0.0.1:5500) en lugar de abrir el archivo directamente. Con file:// el enlace del correo, el manifest y el modo sin conexión no funcionan.'],
+  ['Não foi possível carregar o aplicativo. Tente novamente.', "Couldn't load the app. Please try again.", 'No se pudo cargar la aplicación. Inténtalo de nuevo.'],
+
+  ['Aguarde...', 'Please wait...', 'Espera...'],
+  ['{0} (meu)', '{0} (mine)', '{0} (mío)'],
+  ['{0} desde {1}', '{0} since {1}', '{0} desde el {1}'],
+
+  ['anos', 'years', 'años'],
+  ['FitLab, início', 'FitLab, home', 'FitLab, inicio'],
+  ['Logo FitLab', 'FitLab logo', 'Logo de FitLab'],
+
+  // Idioma
+  ['Idioma', 'Language', 'Idioma'],
+  ['Mudar idioma', 'Change language', 'Cambiar idioma'],
+  ['Idioma alterado.', 'Language changed.', 'Idioma cambiado.'],
+
+  // Tela de acesso
+  ['Nutrição que acompanha', 'Nutrition that keeps up', 'Nutrición que se adapta'],
+  ['o', 'with', 'a'],
+  ['seu ritmo', 'your pace', 'tu ritmo'],
+  ['Metas diárias', 'Daily goals', 'Metas diarias'],
+  ['Calorias e macros num só lugar.', 'Calories and macros in one place.', 'Calorías y macros en un solo lugar.'],
+  ['Progresso real', 'Real progress', 'Progreso real'],
+  ['Veja sua evolução semana a semana.', 'See your progress week by week.', 'Mira tu evolución semana a semana.'],
+  ['Dados protegidos', 'Protected data', 'Datos protegidos'],
+  ['Cada conta enxerga só os próprios registros.', 'Each account only sees its own records.', 'Cada cuenta solo ve sus propios registros.'],
+  ['BEM-VINDO AO FITLAB', 'WELCOME TO FITLAB', 'BIENVENIDO A FITLAB'],
+  ['Entre para salvar suas refeições e acompanhar sua evolução.', 'Sign in to save your meals and track your progress.', 'Inicia sesión para guardar tus comidas y seguir tu evolución.'],
+  ['Seu nome', 'Your name', 'Tu nombre'],
+  ['Como podemos chamar você?', 'What should we call you?', '¿Cómo te llamamos?'],
+  ['Seu e-mail', 'Your email', 'Tu correo'],
+  ['Senha', 'Password', 'Contraseña'],
+  ['Digite sua senha', 'Enter your password', 'Escribe tu contraseña'],
+  ['Confirme sua senha', 'Confirm your password', 'Confirma tu contraseña'],
+  ['Digite a senha novamente', 'Enter the password again', 'Escribe la contraseña de nuevo'],
+  ['Sua senha precisa ter:', 'Your password needs:', 'Tu contraseña debe tener:'],
+  ['8 ou mais caracteres', '8 or more characters', '8 o más caracteres'],
+  ['uma letra maiúscula', 'an uppercase letter', 'una letra mayúscula'],
+  ['uma letra minúscula', 'a lowercase letter', 'una letra minúscula'],
+  ['um número', 'a number', 'un número'],
+  ['um caractere especial', 'a special character', 'un carácter especial'],
+  ['Esqueci minha senha', 'I forgot my password', 'Olvidé mi contraseña'],
+  ['Comece sua', 'Start your', 'Empieza tu'],
+  ['melhor fase.', 'best chapter.', 'mejor etapa.'],
+  ['Recupere seu', 'Recover your', 'Recupera tu'],
+  ['acesso.', 'access.', 'acceso.'],
+  ['Crie uma', 'Create a', 'Crea una'],
+  ['nova senha.', 'new password.', 'nueva contraseña.'],
+  ['Seu ritmo,', 'Your pace,', 'Tu ritmo,'],
+  ['seu resultado.', 'your results.', 'tu resultado.'],
+  ['Criar conta', 'Create account', 'Crear cuenta'],
+  ['Enviar link', 'Send link', 'Enviar enlace'],
+  ['Salvar nova senha', 'Save new password', 'Guardar nueva contraseña'],
+  ['Entrar', 'Sign in', 'Entrar'],
+  ['Já tenho uma conta', 'I already have an account', 'Ya tengo una cuenta'],
+  ['Voltar para entrar', 'Back to sign in', 'Volver a iniciar sesión'],
+  ['Ainda não tenho uma conta', "I don't have an account yet", 'Todavía no tengo una cuenta'],
+  ['Configure o Supabase para ativar sua conta.', 'Set up Supabase to enable your account.', 'Configura Supabase para activar tu cuenta.'],
+  ['Adicione a URL e a anon key em js/supabase.js.', 'Add the URL and anon key in js/supabase.js.', 'Agrega la URL y la anon key en js/supabase.js.'],
+  ['Escolha uma senha que cumpra todos os requisitos indicados.', 'Choose a password that meets all the listed requirements.', 'Elige una contraseña que cumpla todos los requisitos indicados.'],
+  ['As senhas não coincidem.', "Passwords don't match.", 'Las contraseñas no coinciden.'],
+  ['Já enviamos um e-mail para este endereço. Aguarde {0} segundos antes de pedir outro.', 'We already sent an email to this address. Wait {0} seconds before requesting another.', 'Ya enviamos un correo a esta dirección. Espera {0} segundos antes de pedir otro.'],
+  ['Se esse e-mail existir, enviaremos um link para redefinir sua senha.', "If this email exists, we'll send a link to reset your password.", 'Si este correo existe, enviaremos un enlace para restablecer tu contraseña.'],
+  ['Senha atualizada. Faça login novamente.', 'Password updated. Please sign in again.', 'Contraseña actualizada. Inicia sesión de nuevo.'],
+  ['Cadastro criado. Verifique seu e-mail para confirmar a conta.', 'Account created. Check your email to confirm it.', 'Cuenta creada. Revisa tu correo para confirmarla.'],
+  ['Login realizado.', 'Signed in.', 'Sesión iniciada.'],
+  ['Muitas tentativas. Aguarde {0} minuto{1} antes de tentar novamente.', 'Too many attempts. Wait {0} minute{1} before trying again.', 'Demasiados intentos. Espera {0} minuto{1} antes de volver a intentarlo.'],
+  ['E-mail ou senha incorretos.', 'Incorrect email or password.', 'Correo o contraseña incorrectos.'],
+  ['Este e-mail já está cadastrado. Tente entrar.', 'This email is already registered. Try signing in.', 'Este correo ya está registrado. Intenta iniciar sesión.'],
+  ['A senha precisa ter pelo menos 8 caracteres.', 'The password must be at least 8 characters long.', 'La contraseña debe tener al menos 8 caracteres.'],
+  ['Confirme seu e-mail antes de entrar. Procure a mensagem de confirmação na caixa de entrada.', 'Confirm your email before signing in. Look for the confirmation message in your inbox.', 'Confirma tu correo antes de entrar. Busca el mensaje de confirmación en tu bandeja de entrada.'],
+  ['A URL de retorno não está liberada no projeto. Adicione este endereço em Authentication > URL Configuration > Redirect URLs.', "The return URL isn't allowed in the project. Add this address under Authentication > URL Configuration > Redirect URLs.", 'La URL de retorno no está permitida en el proyecto. Agrega esta dirección en Authentication > URL Configuration > Redirect URLs.'],
+  ['{0} segundos', '{0} seconds', '{0} segundos'],
+  ['alguns minutos', 'a few minutes', 'unos minutos'],
+  ['Limite de envio de e-mails atingido. Aguarde {0} antes de pedir outro. O serviço de e-mail padrão do Supabase tem cota baixa; para uso real configure um SMTP próprio em Authentication > Emails.',
+    "Email sending limit reached. Wait {0} before requesting another. Supabase's default email service has a low quota; for real use, set up your own SMTP under Authentication > Emails.",
+    'Se alcanzó el límite de envío de correos. Espera {0} antes de pedir otro. El servicio de correo predeterminado de Supabase tiene una cuota baja; para uso real, configura tu propio SMTP en Authentication > Emails.'],
+  ['O Supabase não conseguiu enviar o e-mail. Verifique o provedor de e-mail do projeto em Authentication > Emails.', "Supabase couldn't send the email. Check the project's email provider under Authentication > Emails.", 'Supabase no pudo enviar el correo. Revisa el proveedor de correo del proyecto en Authentication > Emails.'],
+  ['Sem conexão com o Supabase. Verifique sua internet e a URL do projeto em js/supabase.js.', 'No connection to Supabase. Check your internet and the project URL in js/supabase.js.', 'Sin conexión con Supabase. Revisa tu internet y la URL del proyecto en js/supabase.js.'],
+  ['A nova senha precisa ser diferente da anterior.', 'The new password must be different from the old one.', 'La nueva contraseña debe ser distinta de la anterior.'],
+  ['A sessão do link expirou. Peça um novo e-mail de redefinição.', 'The link session has expired. Request a new reset email.', 'La sesión del enlace expiró. Solicita un nuevo correo de restablecimiento.'],
+  ['sem detalhes', 'no details', 'sin detalles'],
+  ['Não foi possível concluir a autenticação: {0}{1}', "Couldn't complete authentication: {0}{1}", 'No se pudo completar la autenticación: {0}{1}'],
+  ['O link do e-mail expirou ou já foi usado. Peça um novo abaixo.', 'The email link has expired or was already used. Request a new one below.', 'El enlace del correo expiró o ya se usó. Solicita uno nuevo abajo.'],
+  ['O link do e-mail não é válido. Peça um novo abaixo.', "The email link isn't valid. Request a new one below.", 'El enlace del correo no es válido. Solicita uno nuevo abajo.'],
+  ['Não foi possível validar o link do e-mail. Peça um novo abaixo.', "Couldn't verify the email link. Request a new one below.", 'No se pudo validar el enlace del correo. Solicita uno nuevo abajo.'],
+
+  // Barra superior e navegação
+  ['Alternar tema claro e escuro', 'Toggle light and dark theme', 'Cambiar entre tema claro y oscuro'],
+  ['Tema escuro ativado.', 'Dark theme on.', 'Tema oscuro activado.'],
+  ['Tema claro ativado.', 'Light theme on.', 'Tema claro activado.'],
+  ['Abrir perfil', 'Open profile', 'Abrir perfil'],
+  ['Navegação principal', 'Main navigation', 'Navegación principal'],
+  ['Início', 'Home', 'Inicio'],
+  ['Progresso', 'Progress', 'Progreso'],
+  ['Alimentos', 'Foods', 'Alimentos'],
+  ['Perfil', 'Profile', 'Perfil'],
+  ['Fechar', 'Close', 'Cerrar'],
+  ['Cancelar', 'Cancel', 'Cancelar'],
+  ['Voltar', 'Back', 'Atrás'],
+
+  // Início
+  ['HOJE', 'TODAY', 'HOY'],
+  ['HOJE · {0}', 'TODAY · {0}', 'HOY · {0}'],
+  ['Olá,', 'Hi,', 'Hola,'],
+  ['Pronto para cuidar da sua alimentação hoje?', 'Ready to take care of your eating today?', '¿Listo para cuidar tu alimentación hoy?'],
+  ['Pronto', 'Ready', 'Listo'],
+  ['Pronta', 'Ready', 'Lista'],
+  ['{0} para cuidar da sua alimentação hoje?', '{0} to take care of your eating today?', '¿{0} para cuidar tu alimentación hoy?'],
+  ['Revise ou complete o que você comeu neste dia.', 'Review or complete what you ate on this day.', 'Revisa o completa lo que comiste este día.'],
+  ['Dia anterior', 'Previous day', 'Día anterior'],
+  ['Próximo dia', 'Next day', 'Día siguiente'],
+  ['Escolher data no calendário', 'Pick a date on the calendar', 'Elegir fecha en el calendario'],
+  ['Voltar para hoje', 'Back to today', 'Volver a hoy'],
+  ['RESUMO DE HOJE', "TODAY'S SUMMARY", 'RESUMEN DE HOY'],
+  ['RESUMO DE {0}', 'SUMMARY FOR {0}', 'RESUMEN DEL {0}'],
+  ['Seu corpo merece', 'Your body deserves', 'Tu cuerpo merece'],
+  ['consistência.', 'consistency.', 'constancia.'],
+  ['Restante', 'Remaining', 'Restante'],
+  ['Da meta', 'Of goal', 'De la meta'],
+  ['0 kcal', '0 kcal', '0 kcal'],
+  ['de', 'of', 'de'],
+  ['Macronutrientes', 'Macronutrients', 'Macronutrientes'],
+  ['P', 'P', 'P'],
+  ['C', 'C', 'C'],
+  ['G', 'F', 'G'],
+  ['Proteína', 'Protein', 'Proteína'],
+  ['Carboidratos', 'Carbs', 'Carbohidratos'],
+  ['Gorduras', 'Fat', 'Grasas'],
+  ['0% da meta', '0% of goal', '0% de la meta'],
+  ['{0}% da meta', '{0}% of goal', '{0}% de la meta'],
+  ['SEU DIA', 'YOUR DAY', 'TU DÍA'],
+  ['Refeições', 'Meals', 'Comidas'],
+  ['Refeições do dia', "Day's meals", 'Comidas del día'],
+  ['Personalizar refeições', 'Customize meals', 'Personalizar comidas'],
+  ['Você ainda não tem refeições. Use "Personalizar refeições" para criar as suas.', 'You don\'t have any meals yet. Use "Customize meals" to create yours.', 'Todavía no tienes comidas. Usa "Personalizar comidas" para crear las tuyas.'],
+  ['item', 'item', 'elemento'],
+  ['itens', 'items', 'elementos'],
+  ['{0} {1} · {2} kcal', '{0} {1} · {2} kcal', '{0} {1} · {2} kcal'],
+  ['Nada registrado ainda', 'Nothing logged yet', 'Nada registrado todavía'],
+  ['Registrar em {0}', 'Log on {0}', 'Registrar el {0}'],
+  ['Registro removido.', 'Entry removed.', 'Registro eliminado.'],
+  ['Não foi possível remover. {0}', "Couldn't remove. {0}", 'No se pudo eliminar. {0}'],
+  ['Remover {0}', 'Remove {0}', 'Eliminar {0}'],
+  ['Alimento removido', 'Removed food', 'Alimento eliminado'],
+  ['Não foi possível carregar o dia. {0}', "Couldn't load the day. {0}", 'No se pudo cargar el día. {0}'],
+
+  // Calendário
+  ['Escolher data', 'Pick a date', 'Elegir fecha'],
+  ['Mês anterior', 'Previous month', 'Mes anterior'],
+  ['Próximo mês', 'Next month', 'Mes siguiente'],
+  ['Dias com alimentos registrados', 'Days with logged foods', 'Días con alimentos registrados'],
+  ['Ir para hoje', 'Go to today', 'Ir a hoy'],
+  ['{0}, com registros', '{0}, with entries', '{0}, con registros'],
+
+  // Progresso: semana
+  ['EVOLUÇÃO', 'PROGRESS', 'EVOLUCIÓN'],
+  ['Seu progresso', 'Your progress', 'Tu progreso'],
+  ['Pequenos passos, grandes mudanças.', 'Small steps, big changes.', 'Pequeños pasos, grandes cambios.'],
+  ['CONSUMO DA SEMANA', "WEEK'S INTAKE", 'CONSUMO DE LA SEMANA'],
+  ['Semana anterior', 'Previous week', 'Semana anterior'],
+  ['Próxima semana', 'Next week', 'Semana siguiente'],
+  ['Esta semana · {0} – {1}', 'This week · {0} – {1}', 'Esta semana · {0} – {1}'],
+  ['Legenda', 'Legend', 'Leyenda'],
+  ['Meta diária', 'Daily goal', 'Meta diaria'],
+  ['Meta {0} kcal', 'Goal {0} kcal', 'Meta {0} kcal'],
+  ['Total da semana', 'Week total', 'Total de la semana'],
+  ['Média por dia registrado', 'Average per logged day', 'Promedio por día registrado'],
+  ['Dias registrados', 'Logged days', 'Días registrados'],
+  ['{0} de 7', '{0} of 7', '{0} de 7'],
+  ['{0}: ainda não chegou', "{0}: hasn't come yet", '{0}: todavía no llegó'],
+  ['{0}: {1} kcal, proteína {2} g, carboidratos {3} g, gorduras {4} g', '{0}: {1} kcal, protein {2} g, carbs {3} g, fat {4} g', '{0}: {1} kcal, proteína {2} g, carbohidratos {3} g, grasas {4} g'],
+  ['{0} kcal · {1}% da meta', '{0} kcal · {1}% of goal', '{0} kcal · {1}% de la meta'],
+  ['Nenhum alimento registrado', 'No foods logged', 'Ningún alimento registrado'],
+  ['Ver refeições deste dia', "See this day's meals", 'Ver comidas de este día'],
+  ['Registrar neste dia', 'Log on this day', 'Registrar en este día'],
+  ['Ver em tabela', 'View as table', 'Ver en tabla'],
+  ['Dia', 'Day', 'Día'],
+  ['Carb.', 'Carbs', 'Carb.'],
+  ['Gordura', 'Fat', 'Grasa'],
+  ['Não foi possível carregar o peso. {0}', "Couldn't load your weight. {0}", 'No se pudo cargar el peso. {0}'],
+  ['Não foi possível carregar a semana. {0}', "Couldn't load the week. {0}", 'No se pudo cargar la semana. {0}'],
+  ['Não foi possível atualizar a semana. {0}', "Couldn't update the week. {0}", 'No se pudo actualizar la semana. {0}'],
+
+  // Progresso: peso
+  ['PESO', 'WEIGHT', 'PESO'],
+  ['Acompanhamento de peso', 'Weight tracking', 'Seguimiento de peso'],
+  ['Período do gráfico', 'Chart period', 'Período del gráfico'],
+  ['30 dias', '30 days', '30 días'],
+  ['90 dias', '90 days', '90 días'],
+  ['Tudo', 'All', 'Todo'],
+  ['Peso', 'Weight', 'Peso'],
+  ['Data', 'Date', 'Fecha'],
+  ['Registrar peso', 'Log weight', 'Registrar peso'],
+  ['Peso-meta (opcional)', 'Target weight (optional)', 'Peso objetivo (opcional)'],
+  ['Ex.: 72', 'E.g. 72', 'Ej.: 72'],
+  ['Salvar meta', 'Save target', 'Guardar objetivo'],
+  ['Ver registros', 'View entries', 'Ver registros'],
+  ['Variação', 'Change', 'Variación'],
+  ['Ações', 'Actions', 'Acciones'],
+  ['Peso atual', 'Current weight', 'Peso actual'],
+  ['Variação no período', 'Change in period', 'Variación en el período'],
+  ['Pesagens no período', 'Weigh-ins in period', 'Pesajes en el período'],
+  ['estável', 'stable', 'estable'],
+  ['Nenhuma pesagem neste período. Escolha um período maior ou registre seu peso abaixo.', 'No weigh-ins in this period. Pick a longer period or log your weight below.', 'No hay pesajes en este período. Elige un período más largo o registra tu peso abajo.'],
+  ['Registre seu peso abaixo para começar a acompanhar a evolução.', 'Log your weight below to start tracking your progress.', 'Registra tu peso abajo para empezar a seguir tu evolución.'],
+  ['Peso de {0} a {1}: de {2} para {3}.', 'Weight from {0} to {1}: {2} to {3}.', 'Peso del {0} al {1}: de {2} a {3}.'],
+  ['Meta {0}', 'Target {0}', 'Objetivo {0}'],
+  ['Meta de {0} alcançada.', 'Target of {0} reached.', 'Objetivo de {0} alcanzado.'],
+  ['Faltam {0} para a meta de {1}.', '{0} to go to reach {1}.', 'Faltan {0} para el objetivo de {1}.'],
+  ['Progresso até o peso-meta', 'Progress to target weight', 'Progreso hacia el peso objetivo'],
+  ['{0}% do caminho desde a primeira pesagem ({1}).', '{0}% of the way since the first weigh-in ({1}).', '{0}% del camino desde el primer pesaje ({1}).'],
+  ['Seu peso mudou {0} desde o último cálculo de metas.', 'Your weight changed {0} since your goals were last calculated.', 'Tu peso cambió {0} desde el último cálculo de metas.'],
+  ['Excluir pesagem de {0}', 'Delete weigh-in from {0}', 'Eliminar pesaje del {0}'],
+  ['Excluir a pesagem de {0} ({1})?', 'Delete the weigh-in from {0} ({1})?', '¿Eliminar el pesaje del {0} ({1})?'],
+  ['Pesagem excluída.', 'Weigh-in deleted.', 'Pesaje eliminado.'],
+  ['Não foi possível excluir. {0}', "Couldn't delete. {0}", 'No se pudo eliminar. {0}'],
+  ['Escolha uma data até hoje.', 'Pick a date up to today.', 'Elige una fecha hasta hoy.'],
+  ['Pesagem do dia atualizada.', "Day's weigh-in updated.", 'Pesaje del día actualizado.'],
+  ['Peso registrado.', 'Weight logged.', 'Peso registrado.'],
+  ['Não foi possível registrar. {0}', "Couldn't log it. {0}", 'No se pudo registrar. {0}'],
+  ['O peso-meta precisa estar entre {0} e {1} kg.', 'Target weight must be between {0} and {1} kg.', 'El peso objetivo debe estar entre {0} y {1} kg.'],
+  ['Peso-meta removido.', 'Target weight removed.', 'Peso objetivo eliminado.'],
+  ['Peso-meta salvo.', 'Target weight saved.', 'Peso objetivo guardado.'],
+  ['Não foi possível salvar a meta. {0}', "Couldn't save the target. {0}", 'No se pudo guardar el objetivo. {0}'],
+
+  // Alimentos
+  ['NUTRIÇÃO', 'NUTRITION', 'NUTRICIÓN'],
+  ['Banco de alimentos', 'Food database', 'Base de alimentos'],
+  ['Encontre informações para montar sua refeição.', 'Find information to build your meal.', 'Encuentra información para armar tu comida.'],
+  ['Adicionar alimento', 'Add food', 'Agregar alimento'],
+  ['Adicionar receita', 'Add recipe', 'Agregar receta'],
+  ['SÓ SUAS', 'JUST YOURS', 'SOLO TUYAS'],
+  ['Minhas receitas', 'My recipes', 'Mis recetas'],
+  ['CONSULTA', 'LOOKUP', 'CONSULTA'],
+  ['Pesquisar alimento...', 'Search food...', 'Buscar alimento...'],
+  ['Pesquisar alimento', 'Search food', 'Buscar alimento'],
+  ['Nenhum alimento encontrado.', 'No foods found.', 'No se encontraron alimentos.'],
+  ['Meu', 'Mine', 'Mío'],
+  ['{0} kcal · {1}{2}', '{0} kcal · {1}{2}', '{0} kcal · {1}{2}'],
+  ['1 unidade', '1 unit', '1 unidad'],
+  ['{0} unidades', '{0} units', '{0} unidades'],
+  ['unidade', 'unit', 'unidad'],
+  ['1 unidade ({0} {1})', '1 unit ({0} {1})', '1 unidad ({0} {1})'],
+  ['Editar {0}', 'Edit {0}', 'Editar {0}'],
+  ['Excluir {0}', 'Delete {0}', 'Eliminar {0}'],
+  ['Novo alimento', 'New food', 'Nuevo alimento'],
+  ['Editar alimento', 'Edit food', 'Editar alimento'],
+  ['Salvar alimento', 'Save food', 'Guardar alimento'],
+  ['Salvar alterações', 'Save changes', 'Guardar cambios'],
+  ['Escolha a unidade e a quantidade que servem de referência. Este alimento fica visível só na sua conta.', 'Choose the unit and amount used as reference. This food is only visible in your account.', 'Elige la unidad y la cantidad de referencia. Este alimento solo es visible en tu cuenta.'],
+  ['Nome', 'Name', 'Nombre'],
+  ['Ex.: Shake de whey', 'E.g. Whey shake', 'Ej.: Batido de proteína'],
+  ['Unidade', 'Unit', 'Unidad'],
+  ['Gramas (g)', 'Grams (g)', 'Gramos (g)'],
+  ['Mililitros (ml)', 'Milliliters (ml)', 'Mililitros (ml)'],
+  ['Quantidade base', 'Base amount', 'Cantidad base'],
+  ['Peso de 1 unidade (opcional)', 'Weight of 1 unit (optional)', 'Peso de 1 unidad (opcional)'],
+  ['Ex.: 90', 'E.g. 90', 'Ej.: 90'],
+  ['Preencha o peso da unidade para poder lançar este alimento por unidade nas receitas. Informe os valores nutricionais correspondentes a', 'Fill in the unit weight to log this food by unit in recipes. Enter the nutrition values for', 'Completa el peso de la unidad para registrar este alimento por unidad en las recetas. Indica los valores nutricionales correspondientes a'],
+  ['100 g', '100 g', '100 g'],
+  ['Calorias (kcal)', 'Calories (kcal)', 'Calorías (kcal)'],
+  ['Proteína (g)', 'Protein (g)', 'Proteína (g)'],
+  ['Carboidratos (g)', 'Carbs (g)', 'Carbohidratos (g)'],
+  ['Gordura (g)', 'Fat (g)', 'Grasa (g)'],
+  ['Dê um nome ao alimento.', 'Give the food a name.', 'Ponle un nombre al alimento.'],
+  ['Informe uma quantidade base maior que zero.', 'Enter a base amount greater than zero.', 'Indica una cantidad base mayor que cero.'],
+  ['O peso de 1 unidade precisa ser maior que zero.', 'The weight of 1 unit must be greater than zero.', 'El peso de 1 unidad debe ser mayor que cero.'],
+  ['Use apenas números iguais ou maiores que zero.', 'Use only numbers equal to or greater than zero.', 'Usa solo números iguales o mayores que cero.'],
+  ['Alimento atualizado.', 'Food updated.', 'Alimento actualizado.'],
+  ['Alimento criado.', 'Food created.', 'Alimento creado.'],
+  ['Você já tem um alimento com esse nome.', 'You already have a food with this name.', 'Ya tienes un alimento con ese nombre.'],
+  ['Não foi possível salvar o alimento. Tente novamente.', "Couldn't save the food. Please try again.", 'No se pudo guardar el alimento. Inténtalo de nuevo.'],
+  ['Excluir “{0}”? Ele também sai das receitas em que aparece.', 'Delete “{0}”? It will also be removed from the recipes it appears in.', '¿Eliminar “{0}”? También se quitará de las recetas en las que aparece.'],
+  ['Alimento excluído.', 'Food deleted.', 'Alimento eliminado.'],
+  ['Esse alimento está em uma refeição registrada. Remova a refeição antes.', 'This food is in a logged meal. Remove that entry first.', 'Este alimento está en una comida registrada. Elimina ese registro antes.'],
+  ['Não foi possível excluir o alimento.', "Couldn't delete the food.", 'No se pudo eliminar el alimento.'],
+
+  // Receitas
+  ['Você ainda não tem receitas. Crie uma para registrar suas refeições de sempre em um toque.', "You don't have recipes yet. Create one to log your usual meals in one tap.", 'Todavía no tienes recetas. Crea una para registrar tus comidas de siempre en un toque.'],
+  ['Sem ingredientes.', 'No ingredients.', 'Sin ingredientes.'],
+  ['Nova receita', 'New recipe', 'Nueva receta'],
+  ['Editar receita', 'Edit recipe', 'Editar receta'],
+  ['Salvar receita', 'Save recipe', 'Guardar receta'],
+  ['Junte os alimentos que você repete sempre e salve com um nome, como “Almoço 1”.', 'Group the foods you always repeat and save them with a name, like “Lunch 1”.', 'Junta los alimentos que siempre repites y guárdalos con un nombre, como “Almuerzo 1”.'],
+  ['Nome da receita', 'Recipe name', 'Nombre de la receta'],
+  ['Ex.: Almoço 1', 'E.g. Lunch 1', 'Ej.: Almuerzo 1'],
+  ['Buscar alimento', 'Search food', 'Buscar alimento'],
+  ['Digite parte do nome...', 'Type part of the name...', 'Escribe parte del nombre...'],
+  ['Alimento', 'Food', 'Alimento'],
+  ['Quantidade', 'Amount', 'Cantidad'],
+  ['Medida', 'Measure', 'Medida'],
+  ['Incluir', 'Add', 'Agregar'],
+  ['(nenhum resultado)', '(no results)', '(sin resultados)'],
+  ['(1 resultado)', '(1 result)', '(1 resultado)'],
+  ['({0} resultados)', '({0} results)', '({0} resultados)'],
+  ['{0} · {1} kcal', '{0} · {1} kcal', '{0} · {1} kcal'],
+  ['Inclua pelo menos um alimento.', 'Add at least one food.', 'Agrega al menos un alimento.'],
+  ['{0} kcal no total', '{0} kcal in total', '{0} kcal en total'],
+  ['Escolha um alimento.', 'Choose a food.', 'Elige un alimento.'],
+  ['Informe uma quantidade maior que zero.', 'Enter an amount greater than zero.', 'Indica una cantidad mayor que cero.'],
+  ['Quantidade muito alta para este alimento.', 'Amount too high for this food.', 'Cantidad demasiado alta para este alimento.'],
+  ['Dê um nome à receita.', 'Give the recipe a name.', 'Ponle un nombre a la receta.'],
+  ['Receita atualizada.', 'Recipe updated.', 'Receta actualizada.'],
+  ['Receita criada.', 'Recipe created.', 'Receta creada.'],
+  ['Você já tem uma receita com esse nome.', 'You already have a recipe with this name.', 'Ya tienes una receta con ese nombre.'],
+  ['Não foi possível salvar a receita. Tente novamente.', "Couldn't save the recipe. Please try again.", 'No se pudo guardar la receta. Inténtalo de nuevo.'],
+  ['Excluir a receita “{0}”?', 'Delete the recipe “{0}”?', '¿Eliminar la receta “{0}”?'],
+  ['Receita excluída.', 'Recipe deleted.', 'Receta eliminada.'],
+  ['Não foi possível excluir a receita.', "Couldn't delete the recipe.", 'No se pudo eliminar la receta.'],
+
+  // Personalizar refeições
+  ['Monte a rotina do seu jeito: renomeie, acrescente "Ceia", "Lanche 2", ou remova o que não usa. Arraste pelo punho à esquerda para mudar a ordem.', 'Set up your routine your way: rename, add "Supper", "Snack 2", or remove what you don\'t use. Drag by the handle on the left to reorder.', 'Arma tu rutina a tu manera: renombra, agrega "Cena ligera", "Merienda 2" o elimina lo que no uses. Arrastra desde el asa de la izquierda para cambiar el orden.'],
+  ['Acrescentar refeição', 'Add meal', 'Agregar comida'],
+  ['Salvar refeições', 'Save meals', 'Guardar comidas'],
+  ['refeição', 'meal', 'comida'],
+  ['esta refeição', 'this meal', 'esta comida'],
+  ['Mover {0}. Use as setas para cima e para baixo.', 'Move {0}. Use the up and down arrows.', 'Mover {0}. Usa las flechas arriba y abajo.'],
+  ['Arraste para reordenar', 'Drag to reorder', 'Arrastra para reordenar'],
+  ['Trocar ícone de {0}', 'Change icon of {0}', 'Cambiar icono de {0}'],
+  ['Nome da refeição', 'Meal name', 'Nombre de la comida'],
+  ['Nome da refeição {0}', 'Meal name {0}', 'Nombre de la comida {0}'],
+  ['Remover "{0}"? Os alimentos já registrados nela serão apagados junto.', 'Remove "{0}"? The foods already logged in it will be deleted too.', '¿Eliminar "{0}"? Los alimentos ya registrados en ella también se borrarán.'],
+  ['Remover "{0}"?', 'Remove "{0}"?', '¿Eliminar "{0}"?'],
+  ['Mantenha pelo menos uma refeição.', 'Keep at least one meal.', 'Mantén al menos una comida.'],
+  ['Dê um nome a todas as refeições.', 'Give every meal a name.', 'Ponle un nombre a todas las comidas.'],
+  ['Há nomes repetidos na lista.', 'There are repeated names in the list.', 'Hay nombres repetidos en la lista.'],
+  ['Refeições atualizadas.', 'Meals updated.', 'Comidas actualizadas.'],
+  ['Não foi possível salvar as refeições. {0}', "Couldn't save the meals. {0}", 'No se pudieron guardar las comidas. {0}'],
+  ['Café da manhã', 'Breakfast', 'Desayuno'],
+  ['Almoço', 'Lunch', 'Almuerzo'],
+  ['Lanche', 'Snack', 'Merienda'],
+  ['Jantar', 'Dinner', 'Cena'],
+
+  // Registrar consumo
+  ['Registrar consumo', 'Log intake', 'Registrar consumo'],
+  ['Crie uma refeição antes em "Personalizar refeições".', 'Create a meal first in "Customize meals".', 'Crea una comida antes en "Personalizar comidas".'],
+  ['Receita', 'Recipe', 'Receta'],
+  ['Refeição', 'Meal', 'Comida'],
+  ['Selecione um alimento para ver as calorias.', 'Select a food to see the calories.', 'Selecciona un alimento para ver las calorías.'],
+  ['Selecione um alimento e uma quantidade válida.', 'Select a food and a valid amount.', 'Selecciona un alimento y una cantidad válida.'],
+  ['{0} de {1} = {2} kcal · P {3} g · C {4} g · G {5} g', '{0} of {1} = {2} kcal · P {3} g · C {4} g · F {5} g', '{0} de {1} = {2} kcal · P {3} g · C {4} g · G {5} g'],
+  ['Escolha uma receita para ver o que será lançado.', 'Choose a recipe to see what will be logged.', 'Elige una receta para ver lo que se registrará.'],
+  ['Você ainda não tem receitas. Crie uma na aba Alimentos.', "You don't have recipes yet. Create one in the Foods tab.", 'Todavía no tienes recetas. Crea una en la pestaña Alimentos.'],
+  ['Esta receita está sem ingredientes.', 'This recipe has no ingredients.', 'Esta receta no tiene ingredientes.'],
+  ['{0} {1} · {2} kcal: {3}', '{0} {1} · {2} kcal: {3}', '{0} {1} · {2} kcal: {3}'],
+  ['Registrar receita', 'Log recipe', 'Registrar receta'],
+  ['Registrar', 'Log', 'Registrar'],
+  ['Escolha em qual refeição registrar.', 'Choose which meal to log it in.', 'Elige en qué comida registrarlo.'],
+  ['Escolha uma receita que tenha ingredientes.', 'Choose a recipe that has ingredients.', 'Elige una receta que tenga ingredientes.'],
+  ['{0} registrada.', '{0} logged.', '{0} registrada.'],
+  ['{0} registrado.', '{0} logged.', '{0} registrado.'],
+
+  // Perfil e metas
+  ['SUA CONTA', 'YOUR ACCOUNT', 'TU CUENTA'],
+  ['Ajuste seus dados e metas.', 'Adjust your details and goals.', 'Ajusta tus datos y metas.'],
+  ['META DIÁRIA ESTIMADA', 'ESTIMATED DAILY GOAL', 'META DIARIA ESTIMADA'],
+  ['Recalcular metas', 'Recalculate goals', 'Recalcular metas'],
+  ['Gasto calórico estimado: —', 'Estimated calorie expenditure: —', 'Gasto calórico estimado: —'],
+  ['Gasto calórico estimado: {0} kcal', 'Estimated calorie expenditure: {0} kcal', 'Gasto calórico estimado: {0} kcal'],
+  ['Responda ao questionário para calcular suas metas.', 'Answer the questionnaire to calculate your goals.', 'Responde el cuestionario para calcular tus metas.'],
+  ['{0} · {1} · {2} kg, {3} cm, {4} anos', '{0} · {1} · {2} kg, {3} cm, {4} years', '{0} · {1} · {2} kg, {3} cm, {4} años'],
+  ['Estes números são', 'These numbers are', 'Estos números son'],
+  ['estimativas', 'estimates', 'estimaciones'],
+  ['calculadas por fórmulas populacionais e o gasto real varia de pessoa para pessoa. Não siga estas metas em situações especiais — gravidez, amamentação, doença, transtorno alimentar, uso de medicamentos ou extremos de peso e idade.', 'based on population formulas, and actual expenditure varies from person to person. Don\'t follow these goals in special situations — pregnancy, breastfeeding, illness, eating disorders, medication use, or extremes of weight and age.', 'calculadas con fórmulas poblacionales, y el gasto real varía de una persona a otra. No sigas estas metas en situaciones especiales: embarazo, lactancia, enfermedad, trastornos alimentarios, uso de medicamentos o extremos de peso y edad.'],
+  ['A avaliação de um nutricionista ou médico é altamente recomendada.', 'An assessment by a dietitian or doctor is highly recommended.', 'Se recomienda encarecidamente la evaluación de un nutricionista o médico.'],
+  ['Sair da conta', 'Sign out', 'Cerrar sesión'],
+  ['Informe seu nome.', 'Enter your name.', 'Indica tu nombre.'],
+  ['Perfil atualizado.', 'Profile updated.', 'Perfil actualizado.'],
+  ['Não foi possível salvar o perfil. {0}', "Couldn't save the profile. {0}", 'No se pudo guardar el perfil. {0}'],
+  ['Erro desconhecido.', 'Unknown error.', 'Error desconocido.'],
+  ['O banco ainda não tem as colunas do questionário. Rode o supabase.sql atualizado no SQL Editor do Supabase.', "The database doesn't have the questionnaire columns yet. Run the updated supabase.sql in the Supabase SQL Editor.", 'La base de datos todavía no tiene las columnas del cuestionario. Ejecuta el supabase.sql actualizado en el SQL Editor de Supabase.'],
+  ['Sem permissão para gravar o perfil. Rode os grants do supabase.sql no SQL Editor.', 'No permission to save the profile. Run the grants from supabase.sql in the SQL Editor.', 'Sin permiso para guardar el perfil. Ejecuta los grants de supabase.sql en el SQL Editor.'],
+  ['Algum valor ficou fora dos limites aceitos pelo banco. Revise os dados informados.', 'A value is outside the limits accepted by the database. Review the details you entered.', 'Algún valor quedó fuera de los límites aceptados por la base de datos. Revisa los datos ingresados.'],
+  ['Já existe um registro com esses dados.', 'A record with this data already exists.', 'Ya existe un registro con estos datos.'],
+  ['A tabela não existe neste projeto do Supabase. Rode o supabase.sql no SQL Editor.', "The table doesn't exist in this Supabase project. Run supabase.sql in the SQL Editor.", 'La tabla no existe en este proyecto de Supabase. Ejecuta supabase.sql en el SQL Editor.'],
+  ['{0} (código {1})', '{0} (code {1})', '{0} (código {1})'],
+
+  // Questionário de metas
+  ['Vamos calcular suas metas', "Let's calculate your goals", 'Vamos a calcular tus metas'],
+  ['Atualizar suas metas', 'Update your goals', 'Actualizar tus metas'],
+  ['Etapa 1 de 6', 'Step 1 of 6', 'Paso 1 de 6'],
+  ['Etapa {0} de {1}', 'Step {0} of {1}', 'Paso {0} de {1}'],
+  ['Qual é o seu peso?', "What's your weight?", '¿Cuál es tu peso?'],
+  ['Pode usar decimais, como 74,5.', 'You can use decimals, like 74.5.', 'Puedes usar decimales, como 74,5.'],
+  ['Qual é a sua altura?', "What's your height?", '¿Cuál es tu altura?'],
+  ['Qual é a sua idade?', "What's your age?", '¿Cuál es tu edad?'],
+  ['Qual é o seu sexo?', "What's your sex?", '¿Cuál es tu sexo?'],
+  ['A fórmula usada tem parâmetros definidos apenas para estes dois valores.', 'The formula used only defines parameters for these two values.', 'La fórmula usada solo tiene parámetros definidos para estos dos valores.'],
+  ['Qual é o seu nível de atividade física?', "What's your physical activity level?", '¿Cuál es tu nivel de actividad física?'],
+  ['Qual é o seu objetivo?', "What's your goal?", '¿Cuál es tu objetivo?'],
+  ['Suas metas foram calculadas!', 'Your goals are ready!', '¡Tus metas fueron calculadas!'],
+  ['Gasto calórico estimado', 'Estimated calorie expenditure', 'Gasto calórico estimado'],
+  ['Meta para {0}', 'Goal to {0}', 'Meta para {0}'],
+  ['Continuar', 'Continue', 'Continuar'],
+  ['Calcular metas', 'Calculate goals', 'Calcular metas'],
+  ['Começar', 'Start', 'Empezar'],
+  ['Escolha uma opção para continuar.', 'Choose an option to continue.', 'Elige una opción para continuar.'],
+  ['Metas salvas, mas o peso não entrou no histórico. {0}', "Goals saved, but the weight wasn't added to your history. {0}", 'Metas guardadas, pero el peso no entró en el historial. {0}'],
+  ['Não foi possível salvar suas metas. {0}', "Couldn't save your goals. {0}", 'No se pudieron guardar tus metas. {0}'],
+  ['Informe um peso entre {0} e {1} kg.', 'Enter a weight between {0} and {1} kg.', 'Indica un peso entre {0} y {1} kg.'],
+  ['Informe uma altura entre {0} e {1} cm.', 'Enter a height between {0} and {1} cm.', 'Indica una altura entre {0} y {1} cm.'],
+  ['Informe uma idade inteira entre {0} e {1} anos.', 'Enter a whole age between {0} and {1} years.', 'Indica una edad entera entre {0} y {1} años.'],
+  ['Escolha uma opção de sexo.', 'Choose a sex option.', 'Elige una opción de sexo.'],
+  ['Escolha seu nível de atividade física.', 'Choose your physical activity level.', 'Elige tu nivel de actividad física.'],
+  ['Escolha seu objetivo.', 'Choose your goal.', 'Elige tu objetivo.'],
+  ['Masculino', 'Male', 'Masculino'],
+  ['Feminino', 'Female', 'Femenino'],
+  ['Sedentário', 'Sedentary', 'Sedentario'],
+  ['Pouco ou nenhum exercício.', 'Little or no exercise.', 'Poco o ningún ejercicio.'],
+  ['Pouco ativo', 'Lightly active', 'Poco activo'],
+  ['Exercícios leves 1 a 3 dias por semana.', 'Light exercise 1 to 3 days a week.', 'Ejercicio ligero de 1 a 3 días por semana.'],
+  ['Moderadamente ativo', 'Moderately active', 'Moderadamente activo'],
+  ['Exercícios moderados 3 a 5 dias por semana.', 'Moderate exercise 3 to 5 days a week.', 'Ejercicio moderado de 3 a 5 días por semana.'],
+  ['Muito ativo', 'Very active', 'Muy activo'],
+  ['Exercícios intensos 6 a 7 dias por semana.', 'Intense exercise 6 to 7 days a week.', 'Ejercicio intenso de 6 a 7 días por semana.'],
+  ['Extremamente ativo', 'Extremely active', 'Extremadamente activo'],
+  ['Treino muito intenso ou trabalho físico pesado.', 'Very intense training or heavy physical work.', 'Entrenamiento muy intenso o trabajo físico pesado.'],
+  ['Perder gordura', 'Lose fat', 'Perder grasa'],
+  ['Déficit moderado, cerca de 20% do gasto.', 'Moderate deficit, about 20% of expenditure.', 'Déficit moderado, cerca del 20% del gasto.'],
+  ['Perder gordura devagar', 'Lose fat slowly', 'Perder grasa despacio'],
+  ['Déficit leve, cerca de 10% do gasto.', 'Mild deficit, about 10% of expenditure.', 'Déficit leve, cerca del 10% del gasto.'],
+  ['Manter o peso', 'Maintain weight', 'Mantener el peso'],
+  ['Consumo igual ao gasto estimado.', 'Intake equal to estimated expenditure.', 'Consumo igual al gasto estimado.'],
+  ['Ganhar massa devagar', 'Gain muscle slowly', 'Ganar masa despacio'],
+  ['Superávit leve, cerca de 5% do gasto.', 'Mild surplus, about 5% of expenditure.', 'Superávit leve, cerca del 5% del gasto.'],
+  ['Ganhar massa muscular', 'Gain muscle', 'Ganar masa muscular'],
+  ['Superávit moderado, cerca de 10% do gasto.', 'Moderate surplus, about 10% of expenditure.', 'Superávit moderado, cerca del 10% del gasto.'],
+  ['A meta parou no piso de {0} kcal, acima do seu gasto estimado de {1} kcal. Reduzir calorias a partir de um gasto tão baixo não é seguro por conta própria: procure um nutricionista ou médico antes de seguir com esse objetivo.',
+    'The goal stopped at the {0} kcal floor, above your estimated expenditure of {1} kcal. Cutting calories from such a low expenditure isn\'t safe on your own: see a dietitian or doctor before pursuing this goal.',
+    'La meta se detuvo en el mínimo de {0} kcal, por encima de tu gasto estimado de {1} kcal. Reducir calorías desde un gasto tan bajo no es seguro por tu cuenta: consulta a un nutricionista o médico antes de seguir con este objetivo.'],
+  ['A proteína e a gordura precisaram ser reduzidas para caber na meta calórica, o que indica uma combinação exigente de peso e déficit. A distribuição adequada para o seu caso deve ser definida por um profissional.',
+    'Protein and fat had to be reduced to fit the calorie goal, which points to a demanding combination of weight and deficit. The right split for your case should be set by a professional.',
+    'La proteína y la grasa tuvieron que reducirse para caber en la meta calórica, lo que indica una combinación exigente de peso y déficit. La distribución adecuada para tu caso debe definirla un profesional.'],
+];
+
+const DICTIONARIES = { en: {}, es: {} };
+TRANSLATIONS.forEach(([pt, en, es]) => {
+  DICTIONARIES.en[pt] = en;
+  DICTIONARIES.es[pt] = es;
+});
+
+function readStoredLanguage() {
+  try {
+    const salvo = localStorage.getItem(LANGUAGE_KEY);
+    if (LANGUAGES[salvo]) return salvo;
+  } catch {}
+  // Sem escolha salva: segue o idioma do aparelho, caindo para português.
+  const doAparelho = (navigator.language || 'pt').slice(0, 2).toLowerCase();
+  return LANGUAGES[doAparelho] ? doAparelho : 'pt';
+}
+
+let currentLanguage = readStoredLanguage();
+
+function appLocale() {
+  return LANGUAGES[currentLanguage].locale;
+}
+
+// t('Registrar em {0}', data) -> "Log on Sep 21"
+function t(texto, ...valores) {
+  const traduzido = currentLanguage === 'pt' ? texto : (DICTIONARIES[currentLanguage][texto] ?? texto);
+  return valores.length ? traduzido.replace(/\{(\d+)\}/g, (marca, i) => (valores[i] ?? marca)) : traduzido;
+}
+
+/* ---------------------------------------------------------
+   Textos fixos do HTML
+   --------------------------------------------------------- */
+
+// Guarda o texto original (em português) de cada nó e atributo traduzível do HTML
+// ANTES de qualquer script alterar a página. Trocar de idioma reaplica a partir desse
+// original, então ir e voltar entre idiomas nunca acumula tradução sobre tradução.
+const staticTexts = [];
+const staticAttributes = [];
+const TRANSLATABLE_ATTRIBUTES = ['placeholder', 'aria-label', 'title', 'alt'];
+
+function captureStaticTexts() {
+  const percurso = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
+    acceptNode(no) {
+      if (!no.parentElement || no.parentElement.closest('script, style, .sprite')) return NodeFilter.FILTER_REJECT;
+      return DICTIONARIES.en[no.data.trim()] !== undefined ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+    },
+  });
+  for (let no = percurso.nextNode(); no; no = percurso.nextNode()) {
+    const [, antes, meio, depois] = no.data.match(/^(\s*)([\s\S]*?)(\s*)$/);
+    staticTexts.push({ no, antes, chave: meio, depois });
+  }
+  document.querySelectorAll(TRANSLATABLE_ATTRIBUTES.map((a) => `[${a}]`).join(',')).forEach((el) => {
+    TRANSLATABLE_ATTRIBUTES.forEach((atributo) => {
+      const valor = el.getAttribute(atributo);
+      if (valor && DICTIONARIES.en[valor] !== undefined) staticAttributes.push({ el, atributo, chave: valor });
+    });
+  });
+}
+
+function applyStaticTexts() {
+  staticTexts.forEach(({ no, antes, chave, depois }) => { no.data = antes + t(chave) + depois; });
+  staticAttributes.forEach(({ el, atributo, chave }) => el.setAttribute(atributo, t(chave)));
+  document.title = t('FitLab | Seu progresso, do seu jeito');
+  document.documentElement.lang = LANGUAGES[currentLanguage].htmlLang;
+}
+
+// Troca o idioma, salva a escolha neste aparelho e avisa o resto do app para redesenhar
+// o que é gerado dinamicamente.
+function setLanguage(idioma) {
+  if (!LANGUAGES[idioma] || idioma === currentLanguage) return false;
+  currentLanguage = idioma;
+  try { localStorage.setItem(LANGUAGE_KEY, idioma); } catch {}
+  applyStaticTexts();
+  document.dispatchEvent(new CustomEvent('fitlab:language', { detail: { language: idioma } }));
+  return true;
+}
+
+// Os scripts ficam no fim do <body>: o HTML já existe quando este arquivo roda.
+captureStaticTexts();
+applyStaticTexts();

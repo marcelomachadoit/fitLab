@@ -1,0 +1,172 @@
+# Nomes da base compartilhada em inglês e espanhol. Só nomes: os valores nutricionais
+# continuam vindo de tabela-nutricional.txt. A primeira coluna precisa ser idêntica ao
+# nome usado lá. Pratos brasileiros sem equivalente direto mantêm o nome original com
+# uma descrição curta.
+# Formato: Nome em português | Nome em inglês | Nome em espanhol
+
+Arroz branco cozido | Cooked white rice | Arroz blanco cocido
+Arroz integral cozido | Cooked brown rice | Arroz integral cocido
+Feijão carioca cozido | Cooked pinto beans | Frijoles pintos cocidos
+Feijão preto cozido | Cooked black beans | Frijoles negros cocidos
+Lentilha cozida | Cooked lentils | Lentejas cocidas
+Grão-de-bico cozido | Cooked chickpeas | Garbanzos cocidos
+Ervilha cozida | Cooked peas | Guisantes cocidos
+Milho cozido | Boiled corn | Maíz cocido
+Aveia em flocos | Rolled oats | Copos de avena
+Granola | Granola | Granola
+Macarrão cozido | Cooked pasta | Pasta cocida
+Espaguete cozido | Cooked spaghetti | Espaguetis cocidos
+Pão francês | French roll | Pan francés
+Pão de forma | Sliced white bread | Pan de molde
+Pão integral | Whole wheat bread | Pan integral
+Tapioca sem recheio | Plain tapioca crepe | Tapioca sin relleno
+Cuscuz de milho cozido | Steamed corn couscous | Cuscús de maíz cocido
+Farofa de mandioca | Farofa (toasted cassava flour) | Farofa (harina de yuca tostada)
+Batata inglesa cozida | Boiled potato | Papa cocida
+Batata-doce cozida | Boiled sweet potato | Batata cocida
+Mandioca cozida | Boiled cassava | Yuca cocida
+Inhame cozido | Boiled yam | Ñame cocido
+Batata frita | French fries | Papas fritas
+Purê de batata | Mashed potatoes | Puré de papas
+Farinha de trigo | Wheat flour | Harina de trigo
+Farinha de mandioca | Cassava flour | Harina de yuca
+Açúcar | Sugar | Azúcar
+Mel | Honey | Miel
+Frango grelhado | Grilled chicken | Pollo a la plancha
+Peito de frango cozido | Boiled chicken breast | Pechuga de pollo cocida
+Coxa de frango assada | Roasted chicken drumstick | Muslo de pollo asado
+Asa de frango assada | Roasted chicken wings | Alitas de pollo asadas
+Frango à milanesa | Breaded chicken | Pollo empanizado
+Patinho grelhado | Grilled beef top round | Bola de res a la plancha
+Patinho cozido | Cooked beef top round | Bola de res cocida
+Acém cozido | Cooked beef chuck | Aguja de res cocida
+Coxão mole grelhado | Grilled beef topside | Tapa de res a la plancha
+Contrafilé grelhado | Grilled sirloin steak | Entrecot a la plancha
+Picanha grelhada | Grilled picanha (top sirloin cap) | Picaña a la plancha
+Carne moída cozida | Cooked ground beef | Carne molida cocida
+Carne seca cozida | Cooked dried salted beef | Cecina cocida
+Lombo suíno assado | Roasted pork loin | Lomo de cerdo asado
+Costela suína assada | Roasted pork ribs | Costillas de cerdo asadas
+Bacon frito | Fried bacon | Tocino frito
+Presunto | Ham | Jamón cocido
+Peito de peru | Turkey breast | Pechuga de pavo
+Linguiça calabresa | Calabresa sausage | Longaniza calabresa
+Salsicha | Hot dog sausage | Salchicha
+Ovo cozido | Boiled egg | Huevo cocido
+Ovo frito | Fried egg | Huevo frito
+Clara de ovo | Egg white | Clara de huevo
+Atum em água | Tuna in water | Atún en agua
+Sardinha | Sardines | Sardinas
+Salmão grelhado | Grilled salmon | Salmón a la plancha
+Tilápia grelhada | Grilled tilapia | Tilapia a la plancha
+Merluza assada | Baked hake | Merluza al horno
+Bacalhau cozido | Cooked salt cod | Bacalao cocido
+Camarão cozido | Cooked shrimp | Camarones cocidos
+Leite integral | Whole milk | Leche entera
+Leite desnatado | Skim milk | Leche desnatada
+Leite semidesnatado | Semi-skimmed milk | Leche semidesnatada
+Iogurte natural integral | Plain whole-milk yogurt | Yogur natural entero
+Iogurte grego natural | Plain Greek yogurt | Yogur griego natural
+Queijo muçarela | Mozzarella cheese | Queso mozzarella
+Queijo minas frescal | Minas fresh cheese | Queso fresco Minas
+Queijo parmesão | Parmesan cheese | Queso parmesano
+Requeijão | Requeijão (Brazilian cream cheese spread) | Requeijão (queso crema brasileño)
+Cream cheese | Cream cheese | Queso crema
+Manteiga | Butter | Mantequilla
+Azeite de oliva | Olive oil | Aceite de oliva
+Óleo de soja | Soybean oil | Aceite de soja
+Abacate | Avocado | Aguacate
+Banana | Banana | Plátano
+Maçã | Apple | Manzana
+Laranja | Orange | Naranja
+Tangerina | Tangerine | Mandarina
+Limão | Lime | Limón
+Uva | Grapes | Uvas
+Manga | Mango | Mango
+Mamão | Papaya | Papaya
+Melão | Melon | Melón
+Melancia | Watermelon | Sandía
+Morango | Strawberries | Fresas
+Abacaxi | Pineapple | Piña
+Pera | Pear | Pera
+Kiwi | Kiwi | Kiwi
+Goiaba | Guava | Guayaba
+Maracujá | Passion fruit | Maracuyá
+Coco fresco | Fresh coconut | Coco fresco
+Castanha-do-pará | Brazil nuts | Nueces de Brasil
+Castanha de caju | Cashews | Anacardos
+Amendoim | Peanuts | Cacahuetes
+Amêndoas | Almonds | Almendras
+Nozes | Walnuts | Nueces
+Pasta de amendoim | Peanut butter | Mantequilla de cacahuete
+Chia | Chia seeds | Semillas de chía
+Linhaça | Flaxseed | Linaza
+Brócolis cozido | Cooked broccoli | Brócoli cocido
+Couve-flor cozida | Cooked cauliflower | Coliflor cocida
+Cenoura cozida | Cooked carrot | Zanahoria cocida
+Tomate cru | Raw tomato | Tomate crudo
+Alface | Lettuce | Lechuga
+Couve refogada | Sautéed collard greens | Col rizada salteada
+Espinafre cozido | Cooked spinach | Espinaca cocida
+Abobrinha cozida | Cooked zucchini | Calabacín cocido
+Chuchu cozido | Cooked chayote | Chayote cocido
+Beterraba cozida | Cooked beet | Remolacha cocida
+Pepino cru | Raw cucumber | Pepino crudo
+Pimentão | Bell pepper | Pimiento
+Cebola crua | Raw onion | Cebolla cruda
+Alho | Garlic | Ajo
+Cogumelo | Mushrooms | Champiñones
+Molho de tomate | Tomato sauce | Salsa de tomate
+Ketchup | Ketchup | Kétchup
+Maionese | Mayonnaise | Mayonesa
+Mostarda | Mustard | Mostaza
+Molho barbecue | Barbecue sauce | Salsa barbacoa
+Pizza de muçarela | Mozzarella pizza | Pizza de mozzarella
+Hambúrguer bovino | Beef burger patty | Hamburguesa de res
+Cheeseburger | Cheeseburger | Hamburguesa con queso
+Hot dog | Hot dog | Perrito caliente
+Coxinha de frango | Coxinha (chicken croquette) | Coxinha (croqueta de pollo)
+Empada de frango | Chicken pie | Empanada de pollo
+Pastel de carne | Pastel (fried beef pastry) | Pastel (empanada frita de carne)
+Pão de queijo | Pão de queijo (cheese bread) | Pan de queso
+Lasanha à bolonhesa | Lasagna bolognese | Lasaña a la boloñesa
+Strogonoff de frango | Chicken stroganoff | Strogonoff de pollo
+Macarrão ao molho de tomate | Pasta with tomato sauce | Pasta con salsa de tomate
+Arroz com feijão | Rice and beans | Arroz con frijoles
+Omelete simples | Plain omelet | Tortilla francesa
+Salada de alface e tomate | Lettuce and tomato salad | Ensalada de lechuga y tomate
+Sopa de legumes | Vegetable soup | Sopa de verduras
+Açaí com xarope | Açaí bowl with syrup | Açaí con jarabe
+Chocolate ao leite | Milk chocolate | Chocolate con leche
+Chocolate amargo 70% | Dark chocolate 70% | Chocolate negro 70%
+Biscoito recheado | Sandwich cookies | Galletas rellenas
+Biscoito água e sal | Saltine crackers | Galletas saladas
+Bolacha maisena | Maria cookies | Galletas María
+Bolo de chocolate | Chocolate cake | Pastel de chocolate
+Bolo simples | Plain cake | Bizcocho
+Brigadeiro | Brigadeiro (chocolate truffle) | Brigadeiro (trufa de chocolate)
+Sorvete de creme | Vanilla ice cream | Helado de vainilla
+Pudim de leite | Flan | Flan
+Tiramisù | Tiramisu | Tiramisú
+Waffle | Waffle | Gofre
+Cookie com chocolate | Chocolate chip cookie | Galleta con chispas de chocolate
+Geleia de frutas | Fruit jam | Mermelada de frutas
+Pipoca sem óleo | Air-popped popcorn | Palomitas sin aceite
+Pipoca com óleo | Popcorn popped in oil | Palomitas con aceite
+Cereal matinal | Breakfast cereal | Cereal de desayuno
+Cerveja (média) | Beer (average) | Cerveza (promedio)
+Cerveja pilsen (média) | Pilsner beer (average) | Cerveza pilsner (promedio)
+Cerveja puro malte (média) | All-malt beer (average) | Cerveza pura malta (promedio)
+Cerveja sem álcool (média) | Non-alcoholic beer (average) | Cerveza sin alcohol (promedio)
+Vinho tinto (média) | Red wine (average) | Vino tinto (promedio)
+Vinho branco (média) | White wine (average) | Vino blanco (promedio)
+Espumante (média) | Sparkling wine (average) | Vino espumoso (promedio)
+Whisky (média) | Whisky (average) | Whisky (promedio)
+Vodka (média) | Vodka (average) | Vodka (promedio)
+Gin (média) | Gin (average) | Ginebra (promedio)
+Rum (média) | Rum (average) | Ron (promedio)
+Tequila (média) | Tequila (average) | Tequila (promedio)
+Cachaça (média) | Cachaça (average) | Cachaza (promedio)
+Licor (média) | Liqueur (average) | Licor (promedio)
+Saquê (média) | Sake (average) | Sake (promedio)
+Energético (média) | Energy drink (average) | Bebida energética (promedio)

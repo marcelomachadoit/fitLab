@@ -4,7 +4,12 @@ const fs = require('fs');
 // Carrega goals.js num escopo isolado, sem DOM nem Supabase, sem dependencia externa.
 const src = fs.readFileSync(require('path').join(__dirname, 'js/goals.js'), 'utf8');
 const sandbox = {};
-new Function('exports', `${src}
+// goals.js usa t() e appLocale() do módulo de idiomas; aqui basta o português, que é a chave.
+const i18nMinimo = `
+  function appLocale() { return 'pt-BR'; }
+  function t(texto, ...valores) { return texto.replace(/\\{(\\d+)\\}/g, (marca, i) => (valores[i] ?? marca)); }
+`;
+new Function('exports', `${i18nMinimo}${src}
   exports.calculateBMR = calculateBMR;
   exports.calculateTDEE = calculateTDEE;
   exports.calculateTargetCalories = calculateTargetCalories;
@@ -119,6 +124,8 @@ afirma('conjunto válido passa', validateNutritionAnswers(validos) === null);
   const erro = validateNutritionAnswers(resposta);
   afirma(`rejeita ${nome}`, typeof erro === 'string' && erro.length > 0, erro || 'PASSOU INDEVIDAMENTE');
 });
+
+afirma('mensagem de validação traz os limites reais', validateNutritionAnswers({ ...validos, weight: 0 }) === 'Informe um peso entre 30 e 300 kg.', validateNutritionAnswers({ ...validos, weight: 0 }));
 
 console.log('\n== Perfil completo x incompleto ==');
 afirma('usuário sem perfil abre o questionário', isProfileComplete(null) === false);

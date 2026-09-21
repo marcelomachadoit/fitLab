@@ -30,6 +30,20 @@ O app envia como retorno `window.location.origin + window.location.pathname`, ou
 
 O login bloqueia novas tentativas por 15 minutos depois de 5 falhas no mesmo navegador para o mesmo e-mail. Essa é uma camada adicional: a proteção principal contra força bruta deve continuar sendo o rate limit do Supabase Auth. O link **Esqueci minha senha** usa `resetPasswordForEmail`; configure a URL do Cloudflare Pages em **Authentication > URL Configuration > Redirect URLs** para que o link de recuperação retorne ao app.
 
+## Idiomas
+
+O app está em português, inglês e espanhol. O botão com o globo na barra superior abre a lista de idiomas, e a tela de login tem um seletor próprio (PT / EN / ES), já que ali ainda não existe barra. Sem escolha anterior, o app segue o idioma do aparelho; se não for um dos três, abre em português.
+
+A escolha fica salva no aparelho (`localStorage`) e, com a conta aberta, também em `profiles.language`. A preferência da conta vale mais que a do aparelho, então quem escolheu inglês no celular vê inglês ao entrar pelo computador.
+
+Tudo fica em `js/i18n.js`. A chave de cada texto é o próprio texto em português, e o código chama `t('Registrar em {0}', data)`. Se faltar alguma tradução, a interface mostra o português em vez de um identificador quebrado. Os textos fixos do HTML são guardados em português quando a página abre e traduzidos a partir desse original, então trocar de idioma várias vezes não acumula erro. Datas e números usam o formato de cada idioma (`2,400.5` e "Sep 21" em inglês; `2400,5` e "21 sept" em espanhol).
+
+**Nomes dos alimentos:** a base compartilhada tem nome em inglês e espanhol (`name_en`, `name_es`), vindos de `data/nomes-alimentos.txt` e carregados pelo `supabase-foods.sql`. Só o nome muda: calorias e macros são os mesmos nas três línguas. A busca encontra o alimento por qualquer um dos nomes, então quem usa inglês acha "Alface" digitando "lettuce" ou "alface". As listas ficam em ordem alfabética do nome exibido.
+
+**O que não é traduzido:** as porções ("1 xícara (150 g)") e os nomes de refeições, receitas e alimentos criados pelo usuário, que aparecem como ele escreveu. As refeições padrão de uma conta nova nascem no idioma em uso na hora do cadastro e depois viram dados do usuário.
+
+Para acrescentar uma tradução, inclua a linha `[português, inglês, espanhol]` na lista `TRANSLATIONS` de `js/i18n.js`, mantendo os mesmos marcadores `{0}`, `{1}` nas três línguas.
+
 ## Metas nutricionais
 
 No primeiro acesso, o app abre um questionário de 6 etapas (peso, altura, idade, sexo, nível de atividade e objetivo) e não deixa prosseguir até ser concluído. Quem já tem perfil completo entra direto. Na aba **Perfil**, "Recalcular metas" reabre o mesmo questionário já preenchido; ao salvar, o resumo do dia passa a usar as metas novas na hora, sem novo login.

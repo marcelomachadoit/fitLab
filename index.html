@@ -26,7 +26,6 @@
     <symbol id="i-bowl" viewBox="0 0 24 24"><path d="M3.2 11h17.6a8.8 8.8 0 0 1-17.6 0Z"/><path d="M6 20.5h12"/><path d="M12 7.6c-1.6-.9-1.6-3 0-3.9"/><path d="M15.6 7.6c-1.6-.9-1.6-3 0-3.9"/></symbol>
     <symbol id="i-user" viewBox="0 0 24 24"><path d="M12 12.2a3.9 3.9 0 1 0 0-7.8 3.9 3.9 0 0 0 0 7.8Z"/><path d="M4.6 20.4a7.6 7.6 0 0 1 14.8 0"/></symbol>
     <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5.2v13.6"/><path d="M5.2 12h13.6"/></symbol>
-    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 9.4a6 6 0 1 0-12 0c0 5.2-2 6.4-2 6.4h16s-2-1.2-2-6.4Z"/><path d="M10.3 19.4a2 2 0 0 0 3.4 0"/></symbol>
     <symbol id="i-search" viewBox="0 0 24 24"><path d="M11 18.6a7.6 7.6 0 1 0 0-15.2 7.6 7.6 0 0 0 0 15.2Z"/><path d="m20.6 20.6-4.2-4.2"/></symbol>
     <symbol id="i-sun" viewBox="0 0 24 24"><path d="M12 16.2a4.2 4.2 0 1 0 0-8.4 4.2 4.2 0 0 0 0 8.4Z"/><path d="M12 2.4v1.8M12 19.8v1.8M4.8 4.8l1.3 1.3M17.9 17.9l1.3 1.3M2.4 12h1.8M19.8 12h1.8M4.8 19.2l1.3-1.3M17.9 6.1l1.3-1.3"/></symbol>
     <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20.3 14.6A8.7 8.7 0 0 1 9.4 3.7a8.7 8.7 0 1 0 10.9 10.9Z"/></symbol>
@@ -49,6 +48,7 @@
     <symbol id="i-grip" viewBox="0 0 24 24"><path d="M5 9.2h14"/><path d="M5 14.8h14"/></symbol>
     <symbol id="i-chevron-left" viewBox="0 0 24 24"><path d="m14.6 5.6-6.4 6.4 6.4 6.4"/></symbol>
     <symbol id="i-chevron-right" viewBox="0 0 24 24"><path d="m9.4 5.6 6.4 6.4-6.4 6.4"/></symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24"><path d="M12 20.8a8.8 8.8 0 1 0 0-17.6 8.8 8.8 0 0 0 0 17.6Z"/><path d="M3.2 12h17.6"/><path d="M12 3.2c2.4 2.4 3.6 5.3 3.6 8.8s-1.2 6.4-3.6 8.8c-2.4-2.4-3.6-5.3-3.6-8.8s1.2-6.4 3.6-8.8Z"/></symbol>
     <symbol id="i-close" viewBox="0 0 24 24"><path d="M6.6 6.6 17.4 17.4"/><path d="M17.4 6.6 6.6 17.4"/></symbol>
   </svg>
 
@@ -78,7 +78,14 @@
       </aside>
 
       <div class="auth-gate-panel">
-        <img class="auth-logo" src="logo.png" alt="Logo FitLab" width="56" height="56" decoding="async">
+        <div class="auth-panel-top">
+          <img class="auth-logo" src="logo.png" alt="Logo FitLab" width="56" height="56" decoding="async">
+          <div class="segmented auth-lang" role="group" aria-label="Idioma">
+            <button class="segment" type="button" data-language="pt" aria-pressed="false">PT</button>
+            <button class="segment" type="button" data-language="en" aria-pressed="false">EN</button>
+            <button class="segment" type="button" data-language="es" aria-pressed="false">ES</button>
+          </div>
+        </div>
         <p class="eyebrow">BEM-VINDO AO FITLAB</p>
         <h1 id="auth-title">Seu ritmo,<br><strong>seu resultado.</strong></h1>
         <p class="auth-copy">Entre para salvar suas refeições e acompanhar sua evolução.</p>
@@ -141,10 +148,17 @@
           <svg class="icon icon-sun"><use href="#i-sun"></use></svg>
           <svg class="icon icon-moon"><use href="#i-moon"></use></svg>
         </button>
-        <button class="icon-button" type="button" aria-label="Notificações">
-          <svg class="icon"><use href="#i-bell"></use></svg>
-          <i></i>
-        </button>
+        <div class="lang-picker">
+          <button class="icon-button lang-button" type="button" data-action="language" aria-haspopup="menu" aria-expanded="false" aria-controls="lang-menu" aria-label="Mudar idioma">
+            <svg class="icon"><use href="#i-globe"></use></svg>
+            <span class="lang-code" id="lang-code">PT</span>
+          </button>
+          <div class="lang-menu" id="lang-menu" role="menu" aria-label="Idioma" hidden>
+            <button type="button" role="menuitemradio" data-language="pt" aria-checked="false"><span>Português</span><small>PT</small></button>
+            <button type="button" role="menuitemradio" data-language="en" aria-checked="false"><span>English</span><small>EN</small></button>
+            <button type="button" role="menuitemradio" data-language="es" aria-checked="false"><span>Español</span><small>ES</small></button>
+          </div>
+        </div>
         <button class="profile-button" type="button" data-action="profile" aria-label="Abrir perfil">MC</button>
       </div>
     </header>
@@ -768,9 +782,7 @@
           <svg class="icon"><use href="#i-chevron-right"></use></svg>
         </button>
       </div>
-      <div class="calendar-weekdays" aria-hidden="true">
-        <span>S</span><span>T</span><span>Q</span><span>Q</span><span>S</span><span>S</span><span>D</span>
-      </div>
+      <div class="calendar-weekdays" id="calendar-weekdays" aria-hidden="true"></div>
       <div class="calendar-grid" id="calendar-grid"></div>
       <p class="field-note calendar-note"><i class="calendar-dot"></i>Dias com alimentos registrados</p>
       <footer class="modal-actions">
@@ -782,6 +794,7 @@
   <div class="toast" role="status" aria-live="polite"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/i18n.js"></script>
   <script src="js/supabase.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/foods.js"></script>

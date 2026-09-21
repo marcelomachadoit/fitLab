@@ -19,17 +19,18 @@ async function initializeApp() {
   showAuthenticatedApp(user);
   renderSelectedDate();
   // O perfil vem primeiro: é dele que saem as metas usadas no resumo do dia.
-  await loadNutritionProfile().catch(() => showToast('Não foi possível carregar seu perfil.', 'error'));
+  await loadNutritionProfile().catch(() => showToast(t('Não foi possível carregar seu perfil.'), 'error'));
   // Cada carga falha por conta própria: um erro em uma seção não deixa o resto da tela vazio.
   await Promise.all([
-    loadFoodCatalog().catch(() => showToast('Não foi possível carregar os alimentos.', 'error')),
-    loadRecipes().catch(() => showToast('Não foi possível carregar suas receitas.', 'error')),
-    refreshDashboard().catch(() => showToast('Não foi possível carregar suas refeições.', 'error')),
-    loadWeight().catch(() => showToast('Não foi possível carregar seu histórico de peso.', 'error')),
+    loadFoodCatalog().catch(() => showToast(t('Não foi possível carregar os alimentos.'), 'error')),
+    loadRecipes().catch(() => showToast(t('Não foi possível carregar suas receitas.'), 'error')),
+    refreshDashboard().catch(() => showToast(t('Não foi possível carregar suas refeições.'), 'error')),
+    loadWeight().catch(() => showToast(t('Não foi possível carregar seu histórico de peso.'), 'error')),
   ]);
+  appReady = true;
   // Conta nova ou perfil incompleto: o questionário abre e não pode ser dispensado.
   if (!isProfileComplete(nutritionProfile)) openGoalsDialog(true);
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js?v=26').catch(() => {});
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js?v=29').catch(() => {});
 }
 
 // CSS e JS vêm do cache primeiro. Quando um service worker novo assume a página, os
@@ -49,12 +50,12 @@ if ('serviceWorker' in navigator) {
 // Avisa uma vez, depois que a tela já decidiu o que mostrar.
 function reportFileProtocol() {
   if (!isFileProtocol()) return;
-  document.querySelector('#auth-feedback').textContent = FILE_PROTOCOL_MESSAGE;
-  showToast('Abra o app por um servidor local, não pelo arquivo.', 'error');
+  document.querySelector('#auth-feedback').textContent = t(FILE_PROTOCOL_MESSAGE);
+  showToast(t('Abra o app por um servidor local, não pelo arquivo.'), 'error');
 }
 
 document.addEventListener('DOMContentLoaded', () => initializeApp()
   .then(reportFileProtocol)
   .catch(() => {
-    document.querySelector('#auth-feedback').textContent = 'Não foi possível carregar o aplicativo. Tente novamente.';
+    document.querySelector('#auth-feedback').textContent = t('Não foi possível carregar o aplicativo. Tente novamente.');
   }));

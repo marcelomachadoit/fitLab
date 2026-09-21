@@ -36,7 +36,7 @@ async function getMealSlots() {
 async function createDefaultMealSlots() {
   const user = await getCurrentUser();
   if (!user) return [];
-  const rows = DEFAULT_MEAL_SLOTS.map((slot, index) => ({ user_id: user.id, name: slot.name, icon: slot.icon, position: index }));
+  const rows = DEFAULT_MEAL_SLOTS.map((slot, index) => ({ user_id: user.id, name: t(slot.name), icon: slot.icon, position: index }));
   const { data, error } = await supabaseClient.from('meal_slots').insert(rows).select('*');
   if (error) throw error;
   return data;

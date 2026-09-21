@@ -13,6 +13,8 @@ let weekDays = [];
 let weekFocus = null;
 let calendarMonth = null;
 let calendarRequest = 0;
+// Vira true quando a primeira carga termina; antes disso não há o que redesenhar.
+let appReady = false;
 let weightLogs = [];
 let weightRange = '30';
 let mealSlots = [];
@@ -66,7 +68,7 @@ function toggleTheme() {
   const next = current === 'dark' ? 'light' : 'dark';
   applyTheme(next);
   try { localStorage.setItem(THEME_KEY, next); } catch {}
-  showToast(next === 'dark' ? 'Tema escuro ativado.' : 'Tema claro ativado.');
+  showToast(next === 'dark' ? t('Tema escuro ativado.') : t('Tema claro ativado.'));
 }
 
 function showView(viewName) {
@@ -74,8 +76,8 @@ function showView(viewName) {
   document.querySelectorAll('.nav-item').forEach((item) => item.classList.toggle('active', item.dataset.target === viewName));
   window.scrollTo({ top: 0, behavior: 'smooth' });
   if (viewName === 'progresso') {
-    loadWeek().catch((error) => showToast(`Não foi possível carregar a semana. ${describeDatabaseError(error)}`, 'error'));
-    loadWeight().catch((error) => showToast(`Não foi possível carregar o peso. ${describeDatabaseError(error)}`, 'error'));
+    loadWeek().catch((error) => showToast(t('Não foi possível carregar a semana. {0}', describeDatabaseError(error)), 'error'));
+    loadWeight().catch((error) => showToast(t('Não foi possível carregar o peso. {0}', describeDatabaseError(error)), 'error'));
   }
 }
 
@@ -88,7 +90,7 @@ function showToast(message, type = '') {
 }
 
 function formatNumber(value) {
-  return new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 }).format(value || 0);
+  return new Intl.NumberFormat(appLocale(), { maximumFractionDigits: 1 }).format(value || 0);
 }
 
 function baseUnitOf(food) {
@@ -106,8 +108,28 @@ function baseAmountOf(food) {
 // "100 g", "250 ml", "1 unidade" — a referência a que os valores do alimento se aplicam.
 function baseLabel(food) {
   const amount = baseAmountOf(food);
-  if (baseUnitOf(food) === 'un') return amount === 1 ? '1 unidade' : `${formatNumber(amount)} unidades`;
+  if (baseUnitOf(food) === 'un') return amount === 1 ? t('1 unidade') : t('{0} unidades', formatNumber(amount));
   return `${formatNumber(amount)} ${baseUnitOf(food)}`;
+}
+
+// Nome do alimento no idioma escolhido. Só a base compartilhada tem tradução
+// (name_en / name_es); o que o próprio usuário cadastrou aparece como ele escreveu.
+function foodName(food) {
+  if (!food) return '';
+  if (currentLanguage === 'en' && food.name_en) return food.name_en;
+  if (currentLanguage === 'es' && food.name_es) return food.name_es;
+  return food.name;
+}
+
+// A busca encontra o alimento por qualquer um dos nomes: quem usa inglês acha "Alface"
+// digitando "lettuce" e também digitando "alface".
+function foodMatches(food, termoNormalizado) {
+  return [food.name, food.name_en, food.name_es].some((nome) => nome && normalizeText(nome).includes(termoNormalizado));
+}
+
+// Listas em ordem alfabética do nome que o usuário vê, não do nome em português.
+function sortFoodsByName(lista) {
+  return [...lista].sort((a, b) => foodName(a).localeCompare(foodName(b), appLocale()));
 }
 
 function formatQuantity(quantity, food) {
@@ -115,7 +137,7 @@ function formatQuantity(quantity, food) {
 }
 
 function appendMacroChips(target, values) {
-  [['P', values.protein], ['C', values.carbohydrates], ['G', values.fat]].forEach(([label, value]) => {
+  [[t('P'), values.protein], [t('C'), values.carbohydrates], [t('G'), values.fat]].forEach(([label, value]) => {
     const chip = document.createElement('span');
     const key = document.createElement('b');
     key.textContent = label;
@@ -142,7 +164,7 @@ function renderFoods(foods) {
   if (!foods.length) {
     const emptyState = document.createElement('p');
     emptyState.className = 'empty-state';
-    emptyState.textContent = 'Nenhum alimento encontrado.';
+    emptyState.textContent = t('Nenhum alimento encontrado.');
     list.append(emptyState);
     return;
   }
@@ -160,16 +182,16 @@ function renderFoods(foods) {
     const title = document.createElement('span');
     title.className = 'food-title';
     const name = document.createElement('strong');
-    name.textContent = food.name;
+    name.textContent = foodName(food);
     title.append(name);
     if (food.user_id) {
       const badge = document.createElement('span');
       badge.className = 'own-badge';
-      badge.textContent = 'Meu';
+      badge.textContent = t('Meu');
       title.append(badge);
     }
     const nutrition = document.createElement('small');
-    nutrition.textContent = `${formatNumber(food.calories)} kcal · ${baseLabel(food)}${food.portion_label ? ` · ${food.portion_label}` : ''}`;
+    nutrition.textContent = t('{0} kcal · {1}{2}', formatNumber(food.calories), baseLabel(food), food.portion_label ? ` · ${food.portion_label}` : '');
     const macros = document.createElement('span');
     macros.className = 'food-macros';
     appendMacroChips(macros, food);
@@ -181,8 +203,8 @@ function renderFoods(foods) {
       const actions = document.createElement('span');
       actions.className = 'item-actions';
       actions.append(
-        createIconButton('i-edit', 'ghost-button', `Editar ${food.name}`, () => openFoodDialog(food)),
-        createIconButton('i-trash', 'ghost-button danger', `Excluir ${food.name}`, () => removeFood(food)),
+        createIconButton('i-edit', 'ghost-button', t('Editar {0}', foodName(food)), () => openFoodDialog(food)),
+        createIconButton('i-trash', 'ghost-button danger', t('Excluir {0}', foodName(food)), () => removeFood(food)),
       );
       card.append(actions);
     }
@@ -193,8 +215,8 @@ function renderFoods(foods) {
 
 function openFoodDialog(food = null) {
   editingFoodId = food ? food.id : null;
-  document.querySelector('#food-dialog-title').textContent = food ? 'Editar alimento' : 'Novo alimento';
-  document.querySelector('#food-submit').textContent = food ? 'Salvar alterações' : 'Salvar alimento';
+  document.querySelector('#food-dialog-title').textContent = food ? t('Editar alimento') : t('Novo alimento');
+  document.querySelector('#food-submit').textContent = food ? t('Salvar alterações') : t('Salvar alimento');
   document.querySelector('#food-name').value = food ? food.name : '';
   document.querySelector('#food-unit').value = food ? baseUnitOf(food) : 'g';
   document.querySelector('#food-serving').value = food ? baseAmountOf(food) : 100;
@@ -245,19 +267,19 @@ async function handleFoodSubmit(event) {
     fat: Number(document.querySelector('#food-fat').value || 0),
   };
   if (!name) {
-    feedback.textContent = 'Dê um nome ao alimento.';
+    feedback.textContent = t('Dê um nome ao alimento.');
     return;
   }
   if (!Number.isFinite(servingSize) || servingSize <= 0) {
-    feedback.textContent = 'Informe uma quantidade base maior que zero.';
+    feedback.textContent = t('Informe uma quantidade base maior que zero.');
     return;
   }
   if (portionAmount !== null && (!Number.isFinite(portionAmount) || portionAmount <= 0)) {
-    feedback.textContent = 'O peso de 1 unidade precisa ser maior que zero.';
+    feedback.textContent = t('O peso de 1 unidade precisa ser maior que zero.');
     return;
   }
   if (Object.values(values).some((value) => !Number.isFinite(value) || value < 0)) {
-    feedback.textContent = 'Use apenas números iguais ou maiores que zero.';
+    feedback.textContent = t('Use apenas números iguais ou maiores que zero.');
     return;
   }
   button.disabled = true;
@@ -271,40 +293,38 @@ async function handleFoodSubmit(event) {
       ...values,
     }, editingFoodId);
     closeDialog('food-dialog');
-    showToast(editingFoodId ? 'Alimento atualizado.' : 'Alimento criado.');
+    showToast(editingFoodId ? t('Alimento atualizado.') : t('Alimento criado.'));
     await loadFoodCatalog();
     filterFoodList(name);
   } catch (error) {
     feedback.textContent = error && error.code === '23505'
-      ? 'Você já tem um alimento com esse nome.'
-      : 'Não foi possível salvar o alimento. Tente novamente.';
+      ? t('Você já tem um alimento com esse nome.')
+      : t('Não foi possível salvar o alimento. Tente novamente.');
   } finally {
     button.disabled = false;
   }
 }
 
 async function removeFood(food) {
-  if (!window.confirm(`Excluir “${food.name}”? Ele também sai das receitas em que aparece.`)) return;
+  if (!window.confirm(t('Excluir “{0}”? Ele também sai das receitas em que aparece.', foodName(food)))) return;
   try {
     await deleteFood(food.id);
-    showToast('Alimento excluído.');
+    showToast(t('Alimento excluído.'));
     await loadFoodCatalog();
     await loadRecipes();
   } catch (error) {
     showToast(error && error.code === '23503'
-      ? 'Esse alimento está em uma refeição registrada. Remova a refeição antes.'
-      : 'Não foi possível excluir o alimento.', 'error');
+      ? t('Esse alimento está em uma refeição registrada. Remova a refeição antes.')
+      : t('Não foi possível excluir o alimento.'), 'error');
   }
 }
 
 function filterFoodList(term = '') {
   const search = document.querySelector('#food-search');
   search.value = term;
-  const needle = term.trim().toLowerCase();
-  const matches = needle
-    ? foodCatalog.filter((food) => food.name.toLowerCase().includes(needle))
-    : foodCatalog.slice(0, FOOD_PAGE_SIZE);
-  renderFoods(matches);
+  const needle = normalizeText(term.trim());
+  const ordenados = sortFoodsByName(needle ? foodCatalog.filter((food) => foodMatches(food, needle)) : foodCatalog);
+  renderFoods(needle ? ordenados : ordenados.slice(0, FOOD_PAGE_SIZE));
 }
 
 async function loadFoodCatalog() {
@@ -323,7 +343,7 @@ function renderRecipes(recipes) {
   if (!recipes.length) {
     const emptyState = document.createElement('p');
     emptyState.className = 'empty-state';
-    emptyState.textContent = 'Você ainda não tem receitas. Crie uma para registrar suas refeições de sempre em um toque.';
+    emptyState.textContent = t('Você ainda não tem receitas. Crie uma para registrar suas refeições de sempre em um toque.');
     list.append(emptyState);
     return;
   }
@@ -340,16 +360,16 @@ function renderRecipes(recipes) {
     const actions = document.createElement('span');
     actions.className = 'item-actions';
     actions.append(
-      createIconButton('i-edit', 'ghost-button', `Editar ${recipe.name}`, () => openRecipeDialog(recipe)),
-      createIconButton('i-trash', 'ghost-button danger', `Excluir ${recipe.name}`, () => removeRecipe(recipe)),
+      createIconButton('i-edit', 'ghost-button', t('Editar {0}', recipe.name), () => openRecipeDialog(recipe)),
+      createIconButton('i-trash', 'ghost-button danger', t('Excluir {0}', recipe.name), () => removeRecipe(recipe)),
     );
     header.append(heading, actions);
 
     const ingredients = document.createElement('p');
     ingredients.className = 'recipe-ingredients';
     ingredients.textContent = items.length
-      ? items.map((item) => `${item.foods ? item.foods.name : 'Alimento removido'} ${formatQuantity(item.quantity, item.foods)}`).join(' · ')
-      : 'Sem ingredientes.';
+      ? items.map((item) => `${item.foods ? foodName(item.foods) : t('Alimento removido')} ${formatQuantity(item.quantity, item.foods)}`).join(' · ')
+      : t('Sem ingredientes.');
 
     const summary = document.createElement('div');
     summary.className = 'recipe-total';
@@ -373,7 +393,7 @@ function normalizeText(value) {
 // Helpers compartilhados pelos dois seletores de alimento (receita e registro de consumo).
 function matchingFoods(term) {
   const needle = normalizeText(String(term || '').trim());
-  return needle ? foodCatalog.filter((food) => normalizeText(food.name).includes(needle)) : foodCatalog;
+  return sortFoodsByName(needle ? foodCatalog.filter((food) => foodMatches(food, needle)) : foodCatalog);
 }
 
 function populateFoodSelect(select, matches) {
@@ -382,16 +402,16 @@ function populateFoodSelect(select, matches) {
   matches.forEach((food) => {
     const option = document.createElement('option');
     option.value = String(food.id);
-    option.textContent = food.user_id ? `${food.name} (meu)` : food.name;
+    option.textContent = food.user_id ? t('{0} (meu)', foodName(food)) : foodName(food);
     select.append(option);
   });
   if (previous && matches.some((food) => String(food.id) === previous)) select.value = previous;
 }
 
 function describeMatches(counter, matches, term) {
-  if (!matches.length) counter.textContent = '(nenhum resultado)';
+  if (!matches.length) counter.textContent = t('(nenhum resultado)');
   else if (!term) counter.textContent = `(${matches.length})`;
-  else counter.textContent = matches.length === 1 ? '(1 resultado)' : `(${matches.length} resultados)`;
+  else counter.textContent = matches.length === 1 ? t('(1 resultado)') : t('({0} resultados)', matches.length);
 }
 
 function populateUnitSelect(select, food) {
@@ -416,22 +436,22 @@ function fillRecipeFoodSelect() {
   const select = document.querySelector('#recipe-food');
   const previous = select.value;
   const term = normalizeText(document.querySelector('#recipe-food-search').value.trim());
-  const matches = term ? foodCatalog.filter((food) => normalizeText(food.name).includes(term)) : foodCatalog;
+  const matches = matchingFoods(term);
 
   select.replaceChildren();
   matches.forEach((food) => {
     const option = document.createElement('option');
     option.value = String(food.id);
-    option.textContent = food.user_id ? `${food.name} (meu)` : food.name;
+    option.textContent = food.user_id ? t('{0} (meu)', foodName(food)) : foodName(food);
     select.append(option);
   });
   // Mantém o alimento escolhido enquanto ele continuar entre os resultados.
   if (previous && matches.some((food) => String(food.id) === previous)) select.value = previous;
 
   const counter = document.querySelector('#recipe-food-count');
-  if (!matches.length) counter.textContent = '(nenhum resultado)';
+  if (!matches.length) counter.textContent = t('(nenhum resultado)');
   else if (!term) counter.textContent = `(${matches.length})`;
-  else counter.textContent = matches.length === 1 ? '(1 resultado)' : `(${matches.length} resultados)`;
+  else counter.textContent = matches.length === 1 ? t('(1 resultado)') : t('({0} resultados)', matches.length);
 
   updateRecipeUnit(true);
 }
@@ -446,10 +466,10 @@ function selectedRecipeFood() {
 function recipeUnitOptions(food) {
   if (!food) return [];
   const unit = baseUnitOf(food);
-  const options = [{ value: 'base', label: unit === 'un' ? 'unidade' : unit, factor: 1 }];
+  const options = [{ value: 'base', label: unit === 'un' ? t('unidade') : unit, factor: 1 }];
   const portion = Number(food.portion_amount);
   if (unit !== 'un' && portion > 0) {
-    options.push({ value: 'portion', label: food.portion_label || `1 unidade (${formatNumber(portion)} ${unit})`, factor: portion });
+    options.push({ value: 'portion', label: food.portion_label || t('1 unidade ({0} {1})', formatNumber(portion), unit), factor: portion });
   }
   return options;
 }
@@ -490,8 +510,8 @@ function openRecipeDialog(recipe = null) {
       ? (recipe.recipe_items || []).filter((item) => item.foods).map((item) => ({ food_id: item.food_id, quantity: Number(item.quantity), foods: item.foods }))
       : [],
   };
-  document.querySelector('#recipe-dialog-title').textContent = recipe ? 'Editar receita' : 'Nova receita';
-  document.querySelector('#recipe-submit').textContent = recipe ? 'Salvar alterações' : 'Salvar receita';
+  document.querySelector('#recipe-dialog-title').textContent = recipe ? t('Editar receita') : t('Nova receita');
+  document.querySelector('#recipe-submit').textContent = recipe ? t('Salvar alterações') : t('Salvar receita');
   document.querySelector('#recipe-name').value = recipe ? recipe.name : '';
   document.querySelector('#recipe-feedback').textContent = '';
   document.querySelector('#recipe-food-search').value = '';
@@ -509,12 +529,12 @@ function renderRecipeDraft() {
     const info = document.createElement('div');
     info.className = 'ingredient-info';
     const name = document.createElement('strong');
-    name.textContent = item.foods.name;
+    name.textContent = foodName(item.foods);
     const detail = document.createElement('small');
     const nutrition = calculateNutrition(item.foods, item.quantity);
-    detail.textContent = `${formatQuantity(item.quantity, item.foods)} · ${formatNumber(nutrition.calories)} kcal`;
+    detail.textContent = t('{0} · {1} kcal', formatQuantity(item.quantity, item.foods), formatNumber(nutrition.calories));
     info.append(name, detail);
-    row.append(info, createIconButton('i-trash', 'ghost-button danger', `Remover ${item.foods.name}`, () => {
+    row.append(info, createIconButton('i-trash', 'ghost-button danger', t('Remover {0}', foodName(item.foods)), () => {
       recipeDraft.items.splice(index, 1);
       renderRecipeDraft();
     }));
@@ -524,12 +544,12 @@ function renderRecipeDraft() {
   const summary = document.querySelector('#recipe-summary');
   summary.replaceChildren();
   if (!recipeDraft.items.length) {
-    summary.textContent = 'Inclua pelo menos um alimento.';
+    summary.textContent = t('Inclua pelo menos um alimento.');
     return;
   }
   const totals = calculateRecipeTotals(recipeDraft.items);
   const calories = document.createElement('strong');
-  calories.textContent = `${formatNumber(totals.calories)} kcal no total`;
+  calories.textContent = t('{0} kcal no total', formatNumber(totals.calories));
   const macros = document.createElement('span');
   macros.className = 'food-macros';
   appendMacroChips(macros, totals);
@@ -542,17 +562,17 @@ function addRecipeItem() {
   const option = selectedRecipeUnit();
   const typed = Number(document.querySelector('#recipe-quantity').value);
   if (!food || !option) {
-    feedback.textContent = 'Escolha um alimento.';
+    feedback.textContent = t('Escolha um alimento.');
     return;
   }
   if (!Number.isFinite(typed) || typed <= 0) {
-    feedback.textContent = 'Informe uma quantidade maior que zero.';
+    feedback.textContent = t('Informe uma quantidade maior que zero.');
     return;
   }
   // Guardamos sempre na unidade base do alimento; a medida escolhida é só a forma de digitar.
   const quantity = Number((typed * option.factor).toFixed(2));
   if (quantity > 100000) {
-    feedback.textContent = 'Quantidade muito alta para este alimento.';
+    feedback.textContent = t('Quantidade muito alta para este alimento.');
     return;
   }
   feedback.textContent = '';
@@ -570,11 +590,11 @@ async function handleRecipeSubmit(event) {
   const button = document.querySelector('#recipe-submit');
   const name = document.querySelector('#recipe-name').value.trim();
   if (!name) {
-    feedback.textContent = 'Dê um nome à receita.';
+    feedback.textContent = t('Dê um nome à receita.');
     return;
   }
   if (!recipeDraft.items.length) {
-    feedback.textContent = 'Inclua pelo menos um alimento.';
+    feedback.textContent = t('Inclua pelo menos um alimento.');
     return;
   }
   button.disabled = true;
@@ -586,25 +606,25 @@ async function handleRecipeSubmit(event) {
       items: recipeDraft.items.map((item) => ({ food_id: item.food_id, quantity: item.quantity })),
     });
     closeDialog('recipe-dialog');
-    showToast(recipeDraft.id ? 'Receita atualizada.' : 'Receita criada.');
+    showToast(recipeDraft.id ? t('Receita atualizada.') : t('Receita criada.'));
     await loadRecipes();
   } catch (error) {
     feedback.textContent = error && error.code === '23505'
-      ? 'Você já tem uma receita com esse nome.'
-      : 'Não foi possível salvar a receita. Tente novamente.';
+      ? t('Você já tem uma receita com esse nome.')
+      : t('Não foi possível salvar a receita. Tente novamente.');
   } finally {
     button.disabled = false;
   }
 }
 
 async function removeRecipe(recipe) {
-  if (!window.confirm(`Excluir a receita “${recipe.name}”?`)) return;
+  if (!window.confirm(t('Excluir a receita “{0}”?', recipe.name))) return;
   try {
     await deleteRecipe(recipe.id);
-    showToast('Receita excluída.');
+    showToast(t('Receita excluída.'));
     await loadRecipes();
   } catch (error) {
-    showToast('Não foi possível excluir a receita.', 'error');
+    showToast(t('Não foi possível excluir a receita.'), 'error');
   }
 }
 
@@ -629,8 +649,80 @@ function currentGoals() {
 
 async function loadNutritionProfile() {
   nutritionProfile = await getNutritionProfile();
+  syncLanguageWithProfile();
   applyProfileToInterface();
   return nutritionProfile;
+}
+
+/* Idioma -------------------------------------------------------------- */
+
+function updateLanguageControls() {
+  document.querySelector('#lang-code').textContent = LANGUAGES[currentLanguage].short;
+  document.querySelectorAll('[data-language]').forEach((botao) => {
+    const ativo = botao.dataset.language === currentLanguage;
+    botao.classList.toggle('selected', ativo);
+    if (botao.hasAttribute('aria-checked')) botao.setAttribute('aria-checked', String(ativo));
+    if (botao.hasAttribute('aria-pressed')) botao.setAttribute('aria-pressed', String(ativo));
+  });
+}
+
+function toggleLanguageMenu(abrir) {
+  const menu = document.querySelector('#lang-menu');
+  const botao = document.querySelector('[data-action="language"]');
+  const aberto = abrir ?? menu.hidden;
+  menu.hidden = !aberto;
+  botao.setAttribute('aria-expanded', String(aberto));
+  if (aberto) {
+    const atual = menu.querySelector(`[data-language="${currentLanguage}"]`);
+    if (atual) atual.focus();
+  }
+}
+
+// A conta tem prioridade sobre o aparelho: quem escolheu inglês no celular vê inglês
+// também no computador. Conta sem preferência salva recebe a escolha atual.
+function syncLanguageWithProfile() {
+  if (!nutritionProfile) return;
+  const daConta = nutritionProfile.language;
+  if (LANGUAGES[daConta]) {
+    setLanguage(daConta);
+  } else {
+    saveLanguagePreference(currentLanguage)
+      .then(() => { nutritionProfile.language = currentLanguage; })
+      .catch(() => {});
+  }
+}
+
+function chooseLanguage(idioma) {
+  toggleLanguageMenu(false);
+  if (!setLanguage(idioma)) return;
+  showToast(t('Idioma alterado.'));
+  const logado = !document.querySelector('#app-shell').hidden;
+  if (!logado) return;
+  saveLanguagePreference(idioma)
+    .then(() => { if (nutritionProfile) nutritionProfile.language = idioma; })
+    .catch((error) => showToast(`${t('Idioma alterado.')} ${describeDatabaseError(error)}`, 'error'));
+}
+
+// Tudo que é gerado pelo JS é redesenhado no idioma novo. Os textos fixos do HTML já
+// foram trocados por applyStaticTexts(); os diálogos não precisam, porque enquanto um
+// está aberto o fundo modal impede de alcançar o seletor de idioma.
+function rerenderForLanguage() {
+  updateLanguageControls();
+  // A tela de acesso é redesenhada mesmo escondida, sem mudar a visibilidade dela.
+  const gate = document.querySelector('#auth-gate');
+  const gateEscondido = gate.hidden;
+  openAuthModal(authMode);
+  gate.hidden = gateEscondido;
+  if (document.querySelector('#app-shell').hidden) return;
+  renderSelectedDate();
+  applyProfileToInterface();
+  // Durante a carga inicial (idioma vindo da conta), o próprio carregamento desenha o
+  // resto; redesenhar em paralelo criaria as refeições padrão duas vezes numa conta nova.
+  if (!appReady) return;
+  filterFoodList(document.querySelector('#food-search').value);
+  renderRecipes(recipeList);
+  renderWeight();
+  refreshDashboard().catch((error) => showToast(`${t('Não foi possível carregar suas refeições.')} ${describeDatabaseError(error)}`, 'error'));
 }
 
 // "Pronta" para quem informou sexo feminino no questionário; em outro dia que não hoje,
@@ -639,11 +731,11 @@ function renderGreeting() {
   const nota = document.querySelector('#greeting-note');
   if (!nota) return;
   if (selectedDate !== todayKey()) {
-    nota.textContent = 'Revise ou complete o que você comeu neste dia.';
+    nota.textContent = t('Revise ou complete o que você comeu neste dia.');
     return;
   }
-  const pronto = nutritionProfile && nutritionProfile.sex === 'female' ? 'Pronta' : 'Pronto';
-  nota.textContent = `${pronto} para cuidar da sua alimentação hoje?`;
+  const pronto = nutritionProfile && nutritionProfile.sex === 'female' ? t('Pronta') : t('Pronto');
+  nota.textContent = t('{0} para cuidar da sua alimentação hoje?', pronto);
 }
 
 // O nome salvo em profiles tem prioridade sobre o dos metadados do Auth.
@@ -661,7 +753,7 @@ function applyProfileToInterface() {
 }
 
 function appendGoalMacros(target, protein, carbs, fat) {
-  [['Proteína', protein, 'protein'], ['Carboidratos', carbs, 'carbs'], ['Gorduras', fat, 'fats']].forEach(([label, value, kind]) => {
+  [[t('Proteína'), protein, 'protein'], [t('Carboidratos'), carbs, 'carbs'], [t('Gorduras'), fat, 'fats']].forEach(([label, value, kind]) => {
     const tile = document.createElement('div');
     tile.className = `goal-macro ${kind}`;
     const name = document.createElement('span');
@@ -676,25 +768,25 @@ function appendGoalMacros(target, protein, carbs, fat) {
 // Traduz o erro do banco em instrução. O código bruto vai junto quando não é um caso
 // conhecido: um "tente novamente" genérico esconde justamente o que precisa ser corrigido.
 function describeDatabaseError(error) {
-  if (!error) return 'Erro desconhecido.';
+  if (!error) return t('Erro desconhecido.');
   const code = error.code || '';
   if (code === 'PGRST204' || code === '42703') {
-    return 'O banco ainda não tem as colunas do questionário. Rode o supabase.sql atualizado no SQL Editor do Supabase.';
+    return t('O banco ainda não tem as colunas do questionário. Rode o supabase.sql atualizado no SQL Editor do Supabase.');
   }
   if (code === '42501') {
-    return 'Sem permissão para gravar o perfil. Rode os grants do supabase.sql no SQL Editor.';
+    return t('Sem permissão para gravar o perfil. Rode os grants do supabase.sql no SQL Editor.');
   }
   if (code === '23514') {
-    return 'Algum valor ficou fora dos limites aceitos pelo banco. Revise os dados informados.';
+    return t('Algum valor ficou fora dos limites aceitos pelo banco. Revise os dados informados.');
   }
   if (code === '23505') {
-    return 'Já existe um registro com esses dados.';
+    return t('Já existe um registro com esses dados.');
   }
   if (code === '42P01') {
-    return 'A tabela não existe neste projeto do Supabase. Rode o supabase.sql no SQL Editor.';
+    return t('A tabela não existe neste projeto do Supabase. Rode o supabase.sql no SQL Editor.');
   }
-  const message = error.message || error.details || 'sem detalhes';
-  return code ? `${message} (código ${code})` : message;
+  const message = error.message || error.details || t('sem detalhes');
+  return code ? t('{0} (código {1})', message, code) : message;
 }
 
 function renderGoalWarnings(selector, warnings) {
@@ -717,15 +809,15 @@ function renderProfileGoals() {
   macros.replaceChildren();
   if (!isProfileComplete(nutritionProfile)) {
     target.textContent = '—';
-    tdee.textContent = 'Gasto calórico estimado: —';
-    details.textContent = 'Responda ao questionário para calcular suas metas.';
+    tdee.textContent = t('Gasto calórico estimado: —');
+    details.textContent = t('Responda ao questionário para calcular suas metas.');
     renderGoalWarnings('#profile-goal-warnings', []);
     return;
   }
   target.textContent = `${formatNumber(nutritionProfile.target_calories)} kcal`;
-  tdee.textContent = `Gasto calórico estimado: ${formatNumber(nutritionProfile.tdee)} kcal`;
+  tdee.textContent = t('Gasto calórico estimado: {0} kcal', formatNumber(nutritionProfile.tdee));
   appendGoalMacros(macros, nutritionProfile.protein_g, nutritionProfile.carbs_g, nutritionProfile.fat_g);
-  details.textContent = `${GOALS[nutritionProfile.goal].label} · ${ACTIVITY_LEVELS[nutritionProfile.activity_level].label} · ${formatNumber(nutritionProfile.weight)} kg, ${formatNumber(nutritionProfile.height)} cm, ${nutritionProfile.age} anos`;
+  details.textContent = t('{0} · {1} · {2} kg, {3} cm, {4} anos', t(GOALS[nutritionProfile.goal].label), t(ACTIVITY_LEVELS[nutritionProfile.activity_level].label), formatNumber(nutritionProfile.weight), formatNumber(nutritionProfile.height), nutritionProfile.age);
   // Os sinalizadores não são gravados: recalcula a partir das respostas para saber se
   // algum limite de segurança entrou em ação neste perfil.
   renderGoalWarnings('#profile-goal-warnings', describeGoalWarnings(calculateNutritionGoals(profileAnswers(nutritionProfile))));
@@ -748,17 +840,17 @@ function openGoalsDialog(mandatory = false) {
   document.querySelector('#goal-age').value = goalDraft.age || '';
   document.querySelector('#goals-close').hidden = mandatory;
   document.querySelector('#goals-dialog-title').textContent = isProfileComplete(nutritionProfile)
-    ? 'Atualizar suas metas'
-    : 'Vamos calcular suas metas';
+    ? t('Atualizar suas metas')
+    : t('Vamos calcular suas metas');
   renderGoalOptions();
   showGoalStep(0);
   openDialog('goals-dialog');
 }
 
 function renderGoalOptions() {
-  buildOptionGrid('#goal-sex-options', Object.entries(SEX_OPTIONS).map(([value, label]) => ({ value, label })), 'sex');
-  buildOptionGrid('#goal-activity-options', Object.entries(ACTIVITY_LEVELS).map(([value, config]) => ({ value, label: config.label, hint: config.hint })), 'activity_level');
-  buildOptionGrid('#goal-objective-options', Object.entries(GOALS).map(([value, config]) => ({ value, label: config.label, hint: config.hint })), 'goal');
+  buildOptionGrid('#goal-sex-options', Object.entries(SEX_OPTIONS).map(([value, label]) => ({ value, label: t(label) })), 'sex');
+  buildOptionGrid('#goal-activity-options', Object.entries(ACTIVITY_LEVELS).map(([value, config]) => ({ value, label: t(config.label), hint: t(config.hint) })), 'activity_level');
+  buildOptionGrid('#goal-objective-options', Object.entries(GOALS).map(([value, config]) => ({ value, label: t(config.label), hint: t(config.hint) })), 'goal');
 }
 
 // As opções saem das constantes de goals.js: rótulos e valores não se repetem no HTML.
@@ -798,10 +890,10 @@ function showGoalStep(step) {
   document.querySelectorAll('.goal-step').forEach((section) => { section.hidden = Number(section.dataset.step) !== step; });
   const label = document.querySelector('#goals-step-label');
   label.hidden = isSummary;
-  label.textContent = `Etapa ${step + 1} de ${GOAL_STEPS}`;
+  label.textContent = t('Etapa {0} de {1}', step + 1, GOAL_STEPS);
   document.querySelector('#goals-progress').style.width = `${((isSummary ? GOAL_STEPS : step + 1) / GOAL_STEPS) * 100}%`;
   document.querySelector('#goals-back').hidden = step === 0 || isSummary;
-  document.querySelector('#goals-next').textContent = isSummary ? 'Começar' : step === GOAL_STEPS - 1 ? 'Calcular metas' : 'Continuar';
+  document.querySelector('#goals-next').textContent = isSummary ? t('Começar') : step === GOAL_STEPS - 1 ? t('Calcular metas') : t('Continuar');
   document.querySelector('#goals-feedback').textContent = '';
   const input = document.querySelector(`.goal-step[data-step="${step}"] input`);
   if (input) input.focus();
@@ -815,19 +907,19 @@ function captureGoalStep(step) {
 }
 
 function validateGoalStep(step) {
-  if (step === 0) return validateProfileNumber(goalDraft.weight, PROFILE_LIMITS.weight) ? null : `Informe um peso entre ${PROFILE_LIMITS.weight.min} e ${PROFILE_LIMITS.weight.max} kg.`;
-  if (step === 1) return validateProfileNumber(goalDraft.height, PROFILE_LIMITS.height) ? null : `Informe uma altura entre ${PROFILE_LIMITS.height.min} e ${PROFILE_LIMITS.height.max} cm.`;
-  if (step === 2) return validateProfileNumber(goalDraft.age, PROFILE_LIMITS.age) && Number.isInteger(goalDraft.age) ? null : `Informe uma idade inteira entre ${PROFILE_LIMITS.age.min} e ${PROFILE_LIMITS.age.max} anos.`;
-  if (step === 3) return SEX_OPTIONS[goalDraft.sex] ? null : 'Escolha uma opção para continuar.';
-  if (step === 4) return ACTIVITY_LEVELS[goalDraft.activity_level] ? null : 'Escolha seu nível de atividade física.';
-  if (step === 5) return GOALS[goalDraft.goal] ? null : 'Escolha seu objetivo.';
+  if (step === 0) return validateProfileNumber(goalDraft.weight, PROFILE_LIMITS.weight) ? null : t('Informe um peso entre {0} e {1} kg.', PROFILE_LIMITS.weight.min, PROFILE_LIMITS.weight.max);
+  if (step === 1) return validateProfileNumber(goalDraft.height, PROFILE_LIMITS.height) ? null : t('Informe uma altura entre {0} e {1} cm.', PROFILE_LIMITS.height.min, PROFILE_LIMITS.height.max);
+  if (step === 2) return validateProfileNumber(goalDraft.age, PROFILE_LIMITS.age) && Number.isInteger(goalDraft.age) ? null : t('Informe uma idade inteira entre {0} e {1} anos.', PROFILE_LIMITS.age.min, PROFILE_LIMITS.age.max);
+  if (step === 3) return SEX_OPTIONS[goalDraft.sex] ? null : t('Escolha uma opção para continuar.');
+  if (step === 4) return ACTIVITY_LEVELS[goalDraft.activity_level] ? null : t('Escolha seu nível de atividade física.');
+  if (step === 5) return GOALS[goalDraft.goal] ? null : t('Escolha seu objetivo.');
   return null;
 }
 
 function renderGoalsSummary(goals) {
   document.querySelector('#summary-tdee').textContent = `${formatNumber(goals.tdee)} kcal`;
   document.querySelector('#summary-target').textContent = `${formatNumber(goals.target_calories)} kcal`;
-  document.querySelector('#summary-goal-label').textContent = `Meta para ${(GOALS[goalDraft.goal] || GOALS.maintenance).label.toLowerCase()}`;
+  document.querySelector('#summary-goal-label').textContent = t('Meta para {0}', t((GOALS[goalDraft.goal] || GOALS.maintenance).label).toLowerCase());
   const macros = document.querySelector('#summary-macros');
   macros.replaceChildren();
   appendGoalMacros(macros, goals.protein_g, goals.carbs_g, goals.fat_g);
@@ -865,14 +957,14 @@ async function handleGoalsSubmit(event) {
     nutritionProfile = await saveNutritionProfile(goalDraft, goals, document.querySelector('#profile-name-input').value.trim());
     // O peso informado no questionário também entra no histórico, com a data de hoje.
     await saveWeightLog(todayKey(), goalDraft.weight)
-      .catch((error) => showToast(`Metas salvas, mas o peso não entrou no histórico. ${describeDatabaseError(error)}`, 'error'));
+      .catch((error) => showToast(t('Metas salvas, mas o peso não entrou no histórico. {0}', describeDatabaseError(error)), 'error'));
     renderGoalsSummary(goals);
     applyProfileToInterface();
     await refreshDashboard();
     await loadWeight().catch(() => {});
     showGoalStep(GOAL_STEPS);
   } catch (error) {
-    feedback.textContent = `Não foi possível salvar suas metas. ${describeDatabaseError(error)}`;
+    feedback.textContent = t('Não foi possível salvar suas metas. {0}', describeDatabaseError(error));
   } finally {
     button.disabled = false;
   }
@@ -882,15 +974,15 @@ async function handleProfileSubmit(event) {
   event.preventDefault();
   const name = document.querySelector('#profile-name-input').value.trim();
   if (!name) {
-    showToast('Informe seu nome.', 'error');
+    showToast(t('Informe seu nome.'), 'error');
     return;
   }
   try {
     nutritionProfile = await saveProfileName(name);
     applyProfileToInterface();
-    showToast('Perfil atualizado.');
+    showToast(t('Perfil atualizado.'));
   } catch (error) {
-    showToast(`Não foi possível salvar o perfil. ${describeDatabaseError(error)}`, 'error');
+    showToast(t('Não foi possível salvar o perfil. {0}', describeDatabaseError(error)), 'error');
   }
 }
 
@@ -898,26 +990,29 @@ async function handleProfileSubmit(event) {
    Dia selecionado
    --------------------------------------------------------- */
 
-const WEEKDAY_SHORT = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-const WEEKDAY_LONG = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+// Nome do dia da semana no idioma atual ("Seg", "Mon", "Lun"...), com inicial maiúscula.
+function weekdayName(data, formato) {
+  const nome = new Intl.DateTimeFormat(appLocale(), { weekday: formato }).format(data).replace('.', '');
+  return nome.charAt(0).toUpperCase() + nome.slice(1);
+}
 
 function formatDayMonth(key) {
-  return parseDateKey(key).toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' }).replace('.', '').replace(' de ', ' ');
+  return parseDateKey(key).toLocaleDateString(appLocale(), { day: 'numeric', month: 'short' }).replace('.', '').replace(' de ', ' ');
 }
 
 function formatLongDay(key) {
   const data = parseDateKey(key);
-  return `${WEEKDAY_LONG[data.getDay()]}, ${formatDayMonth(key)}`;
+  return `${weekdayName(data, 'long')}, ${formatDayMonth(key)}`;
 }
 
 function renderSelectedDate() {
   const data = parseDateKey(selectedDate);
   const hoje = selectedDate === todayKey();
   document.querySelector('#day-number').textContent = data.getDate();
-  document.querySelector('#month-label').textContent = data.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '').toUpperCase();
-  const extenso = data.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' }).toUpperCase();
-  document.querySelector('#today-label').textContent = hoje ? `HOJE · ${extenso}` : extenso;
-  document.querySelector('#summary-kicker').textContent = hoje ? 'RESUMO DE HOJE' : `RESUMO DE ${formatDayMonth(selectedDate).toUpperCase()}`;
+  document.querySelector('#month-label').textContent = data.toLocaleDateString(appLocale(), { month: 'short' }).replace('.', '').toUpperCase();
+  const extenso = data.toLocaleDateString(appLocale(), { weekday: 'long', day: 'numeric', month: 'long' }).toUpperCase();
+  document.querySelector('#today-label').textContent = hoje ? t('HOJE · {0}', extenso) : extenso;
+  document.querySelector('#summary-kicker').textContent = hoje ? t('RESUMO DE HOJE') : t('RESUMO DE {0}', formatDayMonth(selectedDate).toUpperCase());
   document.querySelector('[data-action="go-today"]').hidden = hoje;
   renderGreeting();
   // Não existe consumo registrado no futuro: o avanço para no dia de hoje.
@@ -933,7 +1028,7 @@ async function setSelectedDate(key) {
 }
 
 function changeSelectedDate(key) {
-  setSelectedDate(key).catch((error) => showToast(`Não foi possível carregar o dia. ${describeDatabaseError(error)}`, 'error'));
+  setSelectedDate(key).catch((error) => showToast(t('Não foi possível carregar o dia. {0}', describeDatabaseError(error)), 'error'));
 }
 
 /* Calendário ------------------------------------------------------------ */
@@ -956,9 +1051,17 @@ function renderCalendar() {
   const hoje = todayKey();
   const primeiro = toDateKey(new Date(ano, mes, 1));
   const ultimo = toDateKey(new Date(ano, mes + 1, 0));
-  const titulo = calendarMonth.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+  const titulo = calendarMonth.toLocaleDateString(appLocale(), { month: 'long', year: 'numeric' });
   document.querySelector('#calendar-month').textContent = titulo.charAt(0).toUpperCase() + titulo.slice(1);
   document.querySelector('[data-action="next-month"]').disabled = primeiro >= toDateKey(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
+
+  const cabecalho = document.querySelector('#calendar-weekdays');
+  cabecalho.replaceChildren();
+  for (let i = 0; i < 7; i += 1) {
+    const letra = document.createElement('span');
+    letra.textContent = weekdayName(new Date(2024, 0, 1 + i), 'narrow'); // 1º/jan/2024 foi segunda-feira
+    cabecalho.append(letra);
+  }
 
   const grid = document.querySelector('#calendar-grid');
   grid.replaceChildren();
@@ -1000,7 +1103,7 @@ function renderCalendar() {
       grid.querySelectorAll('.calendar-day').forEach((botao) => {
         const temDado = datas.has(botao.dataset.date);
         botao.classList.toggle('has-data', temDado);
-        if (temDado) botao.setAttribute('aria-label', `${formatLongDay(botao.dataset.date)}, com registros`);
+        if (temDado) botao.setAttribute('aria-label', t('{0}, com registros', formatLongDay(botao.dataset.date)));
       });
     })
     .catch(() => {});
@@ -1031,7 +1134,7 @@ async function loadWeek() {
 function shiftWeek(delta) {
   weekStart = addDaysToKey(weekStart, delta * 7);
   weekFocus = null;
-  loadWeek().catch((error) => showToast(`Não foi possível carregar a semana. ${describeDatabaseError(error)}`, 'error'));
+  loadWeek().catch((error) => showToast(t('Não foi possível carregar a semana. {0}', describeDatabaseError(error)), 'error'));
 }
 
 function renderWeek() {
@@ -1039,7 +1142,7 @@ function renderWeek() {
   const hoje = todayKey();
   const semanaAtual = weekStart === weekStartKey(hoje);
   document.querySelector('#week-title').textContent = semanaAtual
-    ? `Esta semana · ${formatDayMonth(weekStart)} – ${formatDayMonth(fim)}`
+    ? t('Esta semana · {0} – {1}', formatDayMonth(weekStart), formatDayMonth(fim))
     : `${formatDayMonth(weekStart)} – ${formatDayMonth(fim)}`;
   document.querySelector('[data-action="next-week"]').disabled = semanaAtual;
 
@@ -1056,9 +1159,9 @@ function renderWeekStats() {
   const stats = document.querySelector('#week-stats');
   stats.replaceChildren();
   [
-    ['Total da semana', `${formatNumber(total)} kcal`],
-    ['Média por dia registrado', `${formatNumber(Math.round(media))} kcal`],
-    ['Dias registrados', `${registrados.length} de 7`],
+    [t('Total da semana'), `${formatNumber(total)} kcal`],
+    [t('Média por dia registrado'), `${formatNumber(Math.round(media))} kcal`],
+    [t('Dias registrados'), t('{0} de 7', registrados.length)],
   ].forEach(([rotulo, valor]) => {
     const item = document.createElement('div');
     const nome = document.createElement('span');
@@ -1088,7 +1191,7 @@ function renderWeekChart(hoje) {
   // Mesmo referencial das barras: a área acima da faixa de rótulos (--label-h).
   linhaMeta.style.bottom = `calc(var(--label-h) + (100% - var(--label-h)) * ${(meta / teto).toFixed(4)})`;
   const rotuloMeta = document.createElement('span');
-  rotuloMeta.textContent = `Meta ${formatNumber(meta)} kcal`;
+  rotuloMeta.textContent = t('Meta {0} kcal', formatNumber(meta));
   linhaMeta.append(rotuloMeta);
   plot.append(linhaMeta);
 
@@ -1103,8 +1206,8 @@ function renderWeekChart(hoje) {
     if (dia.date === weekFocus) coluna.classList.add('is-focus');
     if (futuro) coluna.disabled = true;
     coluna.setAttribute('aria-label', futuro
-      ? `${formatLongDay(dia.date)}: ainda não chegou`
-      : `${formatLongDay(dia.date)}: ${formatNumber(dia.calories)} kcal, proteína ${formatNumber(dia.protein)} g, carboidratos ${formatNumber(dia.carbohydrates)} g, gorduras ${formatNumber(dia.fat)} g`);
+      ? t('{0}: ainda não chegou', formatLongDay(dia.date))
+      : t('{0}: {1} kcal, proteína {2} g, carboidratos {3} g, gorduras {4} g', formatLongDay(dia.date), formatNumber(dia.calories), formatNumber(dia.protein), formatNumber(dia.carbohydrates), formatNumber(dia.fat)));
 
     const area = document.createElement('span');
     area.className = 'week-bar-area';
@@ -1133,7 +1236,7 @@ function renderWeekChart(hoje) {
     const rotulo = document.createElement('span');
     rotulo.className = 'week-label';
     const nomeDia = document.createElement('b');
-    nomeDia.textContent = WEEKDAY_SHORT[data.getDay()];
+    nomeDia.textContent = weekdayName(data, 'short');
     const numero = document.createElement('small');
     numero.textContent = String(data.getDate());
     rotulo.append(nomeDia, numero);
@@ -1170,8 +1273,8 @@ function renderWeekDetail() {
   nome.textContent = formatLongDay(dia.date);
   const kcal = document.createElement('span');
   kcal.textContent = dia.calories
-    ? `${formatNumber(dia.calories)} kcal · ${Math.round((dia.calories / meta) * 100)}% da meta`
-    : 'Nenhum alimento registrado';
+    ? t('{0} kcal · {1}% da meta', formatNumber(dia.calories), Math.round((dia.calories / meta) * 100))
+    : t('Nenhum alimento registrado');
   titulo.append(nome, kcal);
   detalhe.append(titulo);
 
@@ -1185,7 +1288,7 @@ function renderWeekDetail() {
   const abrir = document.createElement('button');
   abrir.type = 'button';
   abrir.className = 'text-button';
-  abrir.append(createIcon('i-calendar'), document.createTextNode(dia.calories ? 'Ver refeições deste dia' : 'Registrar neste dia'));
+  abrir.append(createIcon('i-calendar'), document.createTextNode(dia.calories ? t('Ver refeições deste dia') : t('Registrar neste dia')));
   abrir.addEventListener('click', () => {
     showView('inicio');
     changeSelectedDate(dia.date);
@@ -1214,11 +1317,11 @@ function renderWeekTable() {
    --------------------------------------------------------- */
 
 function formatKg(valor) {
-  return `${new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(valor)} kg`;
+  return `${new Intl.NumberFormat(appLocale(), { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(valor)} kg`;
 }
 
 function formatVariation(delta) {
-  if (Math.abs(delta) < 0.05) return 'estável';
+  if (Math.abs(delta) < 0.05) return t('estável');
   return `${delta > 0 ? '+' : '−'}${formatKg(Math.abs(delta))}`;
 }
 
@@ -1261,9 +1364,9 @@ function renderWeightStats(periodo) {
   const atual = weightLogs[weightLogs.length - 1];
   const variacao = periodo.length > 1 ? periodo[periodo.length - 1].weight_kg - periodo[0].weight_kg : null;
   [
-    ['Peso atual', atual ? formatKg(atual.weight_kg) : '—'],
-    ['Variação no período', variacao === null ? '—' : formatVariation(variacao)],
-    ['Pesagens no período', String(periodo.length)],
+    [t('Peso atual'), atual ? formatKg(atual.weight_kg) : '—'],
+    [t('Variação no período'), variacao === null ? '—' : formatVariation(variacao)],
+    [t('Pesagens no período'), String(periodo.length)],
   ].forEach(([rotulo, valor]) => {
     const item = document.createElement('div');
     const nome = document.createElement('span');
@@ -1298,8 +1401,8 @@ function renderWeightChart(logs, alvo) {
     const vazio = document.createElement('p');
     vazio.className = 'empty-state';
     vazio.textContent = weightLogs.length
-      ? 'Nenhuma pesagem neste período. Escolha um período maior ou registre seu peso abaixo.'
-      : 'Registre seu peso abaixo para começar a acompanhar a evolução.';
+      ? t('Nenhuma pesagem neste período. Escolha um período maior ou registre seu peso abaixo.')
+      : t('Registre seu peso abaixo para começar a acompanhar a evolução.');
     caixa.append(vazio);
     return;
   }
@@ -1332,14 +1435,14 @@ function renderWeightChart(logs, alvo) {
     width: '100%',
     height: altura,
     role: 'img',
-    'aria-label': `Peso de ${formatDayMonth(logs[0].date)} a ${formatDayMonth(atual.date)}: de ${formatKg(logs[0].weight_kg)} para ${formatKg(atual.weight_kg)}.`,
+    'aria-label': t('Peso de {0} a {1}: de {2} para {3}.', formatDayMonth(logs[0].date), formatDayMonth(atual.date), formatKg(logs[0].weight_kg), formatKg(atual.weight_kg)),
   });
 
   for (let v = min; v <= max + (passo / 2); v += passo) {
     const y = yDe(v);
     svg.append(svgEl('line', { x1: m.left, x2: largura - m.right, y1: y, y2: y, class: 'weight-grid' }));
     const rotulo = svgEl('text', { x: m.left - 8, y: y + 4, class: 'weight-axis', 'text-anchor': 'end' });
-    rotulo.textContent = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 }).format(v);
+    rotulo.textContent = new Intl.NumberFormat(appLocale(), { maximumFractionDigits: 1 }).format(v);
     svg.append(rotulo);
   }
 
@@ -1347,7 +1450,7 @@ function renderWeightChart(logs, alvo) {
     const y = yDe(alvo);
     svg.append(svgEl('line', { x1: m.left, x2: largura - m.right, y1: y, y2: y, class: 'weight-target-line' }));
     const rotulo = svgEl('text', { x: largura - m.right, y: y - 6, class: 'weight-axis', 'text-anchor': 'end' });
-    rotulo.textContent = `Meta ${formatKg(alvo)}`;
+    rotulo.textContent = t('Meta {0}', formatKg(alvo));
     svg.append(rotulo);
   }
 
@@ -1399,7 +1502,7 @@ function renderWeightChart(logs, alvo) {
     dica.append(data, peso);
     if (anterior) {
       const delta = document.createElement('span');
-      delta.textContent = `${formatVariation(log.weight_kg - anterior.weight_kg)} desde ${formatDayMonth(anterior.date)}`;
+      delta.textContent = t('{0} desde {1}', formatVariation(log.weight_kg - anterior.weight_kg), formatDayMonth(anterior.date));
       dica.append(delta);
     }
     dica.hidden = false;
@@ -1431,21 +1534,21 @@ function renderWeightGoal(alvo) {
     const titulo = document.createElement('p');
     titulo.className = 'weight-goal-text';
     titulo.textContent = Math.abs(falta) < 0.05 || progresso === 100
-      ? `Meta de ${formatKg(alvo)} alcançada.`
-      : `Faltam ${formatKg(Math.abs(falta))} para a meta de ${formatKg(alvo)}.`;
+      ? t('Meta de {0} alcançada.', formatKg(alvo))
+      : t('Faltam {0} para a meta de {1}.', formatKg(Math.abs(falta)), formatKg(alvo));
     const barra = document.createElement('div');
     barra.className = 'progress';
     barra.setAttribute('role', 'progressbar');
     barra.setAttribute('aria-valuemin', '0');
     barra.setAttribute('aria-valuemax', '100');
     barra.setAttribute('aria-valuenow', String(progresso));
-    barra.setAttribute('aria-label', 'Progresso até o peso-meta');
+    barra.setAttribute('aria-label', t('Progresso até o peso-meta'));
     const preenchido = document.createElement('i');
     preenchido.style.width = `${progresso}%`;
     barra.append(preenchido);
     const nota = document.createElement('p');
     nota.className = 'field-note';
-    nota.textContent = `${progresso}% do caminho desde a primeira pesagem (${formatKg(inicio)}).`;
+    nota.textContent = t('{0}% do caminho desde a primeira pesagem ({1}).', progresso, formatKg(inicio));
     caixa.append(titulo, barra, nota);
   }
 
@@ -1456,11 +1559,11 @@ function renderWeightGoal(alvo) {
       const aviso = document.createElement('div');
       aviso.className = 'weight-recalc';
       const texto = document.createElement('span');
-      texto.textContent = `Seu peso mudou ${formatVariation(diferenca)} desde o último cálculo de metas.`;
+      texto.textContent = t('Seu peso mudou {0} desde o último cálculo de metas.', formatVariation(diferenca));
       const botao = document.createElement('button');
       botao.type = 'button';
       botao.className = 'text-button';
-      botao.append(createIcon('i-target'), document.createTextNode('Recalcular metas'));
+      botao.append(createIcon('i-target'), document.createTextNode(t('Recalcular metas')));
       botao.addEventListener('click', () => {
         openGoalsDialog(false);
         goalDraft.weight = atual.weight_kg;
@@ -1486,14 +1589,14 @@ function renderWeightTable() {
     const variacao = document.createElement('td');
     variacao.textContent = anterior ? formatVariation(log.weight_kg - anterior.weight_kg) : '—';
     const acoes = document.createElement('td');
-    acoes.append(createIconButton('i-trash', 'ghost-button danger', `Excluir pesagem de ${formatLongDay(log.date)}`, async () => {
-      if (!window.confirm(`Excluir a pesagem de ${formatLongDay(log.date)} (${formatKg(log.weight_kg)})?`)) return;
+    acoes.append(createIconButton('i-trash', 'ghost-button danger', t('Excluir pesagem de {0}', formatLongDay(log.date)), async () => {
+      if (!window.confirm(t('Excluir a pesagem de {0} ({1})?', formatLongDay(log.date), formatKg(log.weight_kg)))) return;
       try {
         await deleteWeightLog(log.id);
-        showToast('Pesagem excluída.');
+        showToast(t('Pesagem excluída.'));
         await loadWeight();
       } catch (error) {
-        showToast(`Não foi possível excluir. ${describeDatabaseError(error)}`, 'error');
+        showToast(t('Não foi possível excluir. {0}', describeDatabaseError(error)), 'error');
       }
     }));
     linha.append(data, peso, variacao, acoes);
@@ -1508,11 +1611,11 @@ async function handleWeightSubmit(event) {
   const peso = Number(document.querySelector('#weight-input').value);
   const data = document.querySelector('#weight-date').value;
   if (!validateProfileNumber(peso, PROFILE_LIMITS.weight)) {
-    feedback.textContent = `Informe um peso entre ${PROFILE_LIMITS.weight.min} e ${PROFILE_LIMITS.weight.max} kg.`;
+    feedback.textContent = t('Informe um peso entre {0} e {1} kg.', PROFILE_LIMITS.weight.min, PROFILE_LIMITS.weight.max);
     return;
   }
   if (!data || data > todayKey()) {
-    feedback.textContent = 'Escolha uma data até hoje.';
+    feedback.textContent = t('Escolha uma data até hoje.');
     return;
   }
   botao.disabled = true;
@@ -1521,10 +1624,10 @@ async function handleWeightSubmit(event) {
     const existia = weightLogs.some((log) => log.date === data);
     await saveWeightLog(data, peso);
     document.querySelector('#weight-input').value = '';
-    showToast(existia ? 'Pesagem do dia atualizada.' : 'Peso registrado.');
+    showToast(existia ? t('Pesagem do dia atualizada.') : t('Peso registrado.'));
     await loadWeight();
   } catch (error) {
-    feedback.textContent = `Não foi possível registrar. ${describeDatabaseError(error)}`;
+    feedback.textContent = t('Não foi possível registrar. {0}', describeDatabaseError(error));
   } finally {
     botao.disabled = false;
   }
@@ -1535,15 +1638,15 @@ async function handleTargetSubmit(event) {
   const bruto = document.querySelector('#weight-target-input').value.trim();
   const alvo = bruto === '' ? null : Number(bruto);
   if (alvo !== null && !validateProfileNumber(alvo, PROFILE_LIMITS.weight)) {
-    showToast(`O peso-meta precisa estar entre ${PROFILE_LIMITS.weight.min} e ${PROFILE_LIMITS.weight.max} kg.`, 'error');
+    showToast(t('O peso-meta precisa estar entre {0} e {1} kg.', PROFILE_LIMITS.weight.min, PROFILE_LIMITS.weight.max), 'error');
     return;
   }
   try {
     nutritionProfile = await saveTargetWeight(alvo);
-    showToast(alvo === null ? 'Peso-meta removido.' : 'Peso-meta salvo.');
+    showToast(alvo === null ? t('Peso-meta removido.') : t('Peso-meta salvo.'));
     renderWeight();
   } catch (error) {
-    showToast(`Não foi possível salvar a meta. ${describeDatabaseError(error)}`, 'error');
+    showToast(t('Não foi possível salvar a meta. {0}', describeDatabaseError(error)), 'error');
   }
 }
 
@@ -1557,7 +1660,7 @@ function renderMeals(meals, slots) {
   if (!slots.length) {
     const emptyState = document.createElement('p');
     emptyState.className = 'empty-state';
-    emptyState.textContent = 'Você ainda não tem refeições. Use "Personalizar refeições" para criar as suas.';
+    emptyState.textContent = t('Você ainda não tem refeições. Use "Personalizar refeições" para criar as suas.');
     list.append(emptyState);
     return;
   }
@@ -1580,10 +1683,10 @@ function renderMeals(meals, slots) {
     heading.textContent = slot.name;
     const description = document.createElement('p');
     description.textContent = items.length
-      ? `${items.length} ${items.length === 1 ? 'item' : 'itens'} · ${formatNumber(calories)} kcal`
-      : 'Nada registrado ainda';
+      ? t('{0} {1} · {2} kcal', items.length, items.length === 1 ? t('item') : t('itens'), formatNumber(calories))
+      : t('Nada registrado ainda');
     info.append(heading, description);
-    header.append(icon, info, createIconButton('i-plus', 'add-small', `Registrar em ${slot.name}`, () => openEntryDialog(slot.id)));
+    header.append(icon, info, createIconButton('i-plus', 'add-small', t('Registrar em {0}', slot.name), () => openEntryDialog(slot.id)));
     card.append(header);
 
     if (items.length) {
@@ -1594,18 +1697,18 @@ function renderMeals(meals, slots) {
         const detail = document.createElement('div');
         detail.className = 'ingredient-info';
         const name = document.createElement('strong');
-        name.textContent = meal.foods ? meal.foods.name : 'Alimento removido';
+        name.textContent = meal.foods ? foodName(meal.foods) : t('Alimento removido');
         const amount = document.createElement('small');
         const nutrition = meal.foods ? calculateNutrition(meal.foods, meal.quantity) : { calories: 0 };
-        amount.textContent = `${formatQuantity(meal.quantity, meal.foods)} · ${formatNumber(nutrition.calories)} kcal`;
+        amount.textContent = t('{0} · {1} kcal', formatQuantity(meal.quantity, meal.foods), formatNumber(nutrition.calories));
         detail.append(name, amount);
-        row.append(detail, createIconButton('i-trash', 'ghost-button danger', `Remover ${name.textContent}`, async () => {
+        row.append(detail, createIconButton('i-trash', 'ghost-button danger', t('Remover {0}', name.textContent), async () => {
           try {
             await deleteMeal(meal.id);
-            showToast('Registro removido.');
+            showToast(t('Registro removido.'));
             await refreshDashboard();
           } catch (error) {
-            showToast(`Não foi possível remover. ${describeDatabaseError(error)}`, 'error');
+            showToast(t('Não foi possível remover. {0}', describeDatabaseError(error)), 'error');
           }
         }));
         entries.append(row);
@@ -1629,7 +1732,7 @@ async function loadMealSlots() {
 
 function openSlotsDialog() {
   slotDraft = mealSlots.map((slot) => ({ id: slot.id, name: slot.name, icon: slot.icon }));
-  if (!slotDraft.length) slotDraft = DEFAULT_MEAL_SLOTS.map((slot) => ({ name: slot.name, icon: slot.icon }));
+  if (!slotDraft.length) slotDraft = DEFAULT_MEAL_SLOTS.map((slot) => ({ name: t(slot.name), icon: slot.icon }));
   document.querySelector('#slots-feedback').textContent = '';
   renderSlotDraft();
   openDialog('slots-dialog');
@@ -1646,8 +1749,8 @@ function renderSlotDraft() {
     const handle = document.createElement('button');
     handle.className = 'slot-drag';
     handle.type = 'button';
-    handle.setAttribute('aria-label', `Mover ${slot.name || 'refeição'}. Use as setas para cima e para baixo.`);
-    handle.title = 'Arraste para reordenar';
+    handle.setAttribute('aria-label', t('Mover {0}. Use as setas para cima e para baixo.', slot.name || t('refeição')));
+    handle.title = t('Arraste para reordenar');
     handle.append(createIcon('i-grip'));
     attachSlotDrag(handle, row);
     // Sem ponteiro (teclado, leitor de tela) as setas fazem o mesmo trabalho.
@@ -1658,7 +1761,7 @@ function renderSlotDraft() {
     });
 
     // O ícone gira pela lista aceita pelo banco a cada clique: escolha visual sem outro menu.
-    const iconButton = createIconButton(`i-${slot.icon}`, 'slot-icon', `Trocar ícone de ${slot.name || 'refeição'}`, () => {
+    const iconButton = createIconButton(`i-${slot.icon}`, 'slot-icon', t('Trocar ícone de {0}', slot.name || t('refeição')), () => {
       const atual = MEAL_SLOT_ICONS.indexOf(slot.icon);
       slot.icon = MEAL_SLOT_ICONS[(atual + 1) % MEAL_SLOT_ICONS.length];
       renderSlotDraft();
@@ -1670,15 +1773,15 @@ function renderSlotDraft() {
     input.type = 'text';
     input.maxLength = 60;
     input.value = slot.name;
-    input.placeholder = 'Nome da refeição';
-    input.setAttribute('aria-label', `Nome da refeição ${index + 1}`);
+    input.placeholder = t('Nome da refeição');
+    input.setAttribute('aria-label', t('Nome da refeição {0}', index + 1));
     input.addEventListener('input', () => { slot.name = input.value; });
     field.append(input);
 
-    row.append(handle, iconButton, field, createIconButton('i-trash', 'ghost-button danger', `Remover ${slot.name || 'refeição'}`, () => {
+    row.append(handle, iconButton, field, createIconButton('i-trash', 'ghost-button danger', t('Remover {0}', slot.name || t('refeição')), () => {
       const aviso = slot.id
-        ? `Remover "${slot.name}"? Os alimentos já registrados nela serão apagados junto.`
-        : `Remover "${slot.name || 'esta refeição'}"?`;
+        ? t('Remover "{0}"? Os alimentos já registrados nela serão apagados junto.', slot.name)
+        : t('Remover "{0}"?', slot.name || t('esta refeição'));
       if (!window.confirm(aviso)) return;
       slotDraft.splice(index, 1);
       renderSlotDraft();
@@ -1753,15 +1856,15 @@ async function handleSlotsSubmit(event) {
   const button = document.querySelector('#slots-submit');
   const nomes = slotDraft.map((slot) => slot.name.trim());
   if (!slotDraft.length) {
-    feedback.textContent = 'Mantenha pelo menos uma refeição.';
+    feedback.textContent = t('Mantenha pelo menos uma refeição.');
     return;
   }
   if (nomes.some((nome) => !nome)) {
-    feedback.textContent = 'Dê um nome a todas as refeições.';
+    feedback.textContent = t('Dê um nome a todas as refeições.');
     return;
   }
   if (new Set(nomes.map((nome) => nome.toLowerCase())).size !== nomes.length) {
-    feedback.textContent = 'Há nomes repetidos na lista.';
+    feedback.textContent = t('Há nomes repetidos na lista.');
     return;
   }
   button.disabled = true;
@@ -1775,10 +1878,10 @@ async function handleSlotsSubmit(event) {
       await saveMealSlot({ id: slot.id, name: slot.name.trim(), icon: slot.icon, position: index });
     }
     closeDialog('slots-dialog');
-    showToast('Refeições atualizadas.');
+    showToast(t('Refeições atualizadas.'));
     await refreshDashboard();
   } catch (error) {
-    feedback.textContent = `Não foi possível salvar as refeições. ${describeDatabaseError(error)}`;
+    feedback.textContent = t('Não foi possível salvar as refeições. {0}', describeDatabaseError(error));
   } finally {
     button.disabled = false;
   }
@@ -1788,13 +1891,13 @@ async function handleSlotsSubmit(event) {
 
 function openEntryDialog(slotId = null) {
   if (!mealSlots.length) {
-    showToast('Crie uma refeição antes em "Personalizar refeições".', 'error');
+    showToast(t('Crie uma refeição antes em "Personalizar refeições".'), 'error');
     return;
   }
   entryQuantityTouched = false;
   document.querySelector('#entry-dialog-title').textContent = selectedDate === todayKey()
-    ? 'Registrar consumo'
-    : `Registrar em ${formatDayMonth(selectedDate)}`;
+    ? t('Registrar consumo')
+    : t('Registrar em {0}', formatDayMonth(selectedDate));
   document.querySelector('#entry-food-search').value = '';
   document.querySelector('#entry-feedback').textContent = '';
   fillSlotSelect(slotId);
@@ -1813,7 +1916,7 @@ function setEntryMode(mode) {
   });
   document.querySelector('#entry-food-mode').hidden = mode !== 'food';
   document.querySelector('#entry-recipe-mode').hidden = mode !== 'recipe';
-  document.querySelector('#entry-submit').textContent = mode === 'recipe' ? 'Registrar receita' : 'Registrar';
+  document.querySelector('#entry-submit').textContent = mode === 'recipe' ? t('Registrar receita') : t('Registrar');
   document.querySelector('#entry-feedback').textContent = '';
 }
 
@@ -1863,12 +1966,12 @@ function updateEntryPreview() {
   const option = selectedEntryUnit();
   const digitado = Number(document.querySelector('#entry-quantity').value);
   if (!food || !option || !Number.isFinite(digitado) || digitado <= 0) {
-    preview.textContent = 'Selecione um alimento e uma quantidade válida.';
+    preview.textContent = t('Selecione um alimento e uma quantidade válida.');
     return;
   }
   const quantidade = Number((digitado * option.factor).toFixed(2));
   const nutrition = calculateNutrition(food, quantidade);
-  preview.textContent = `${formatQuantity(quantidade, food)} de ${food.name} = ${formatNumber(nutrition.calories)} kcal · P ${formatNumber(nutrition.protein)} g · C ${formatNumber(nutrition.carbohydrates)} g · G ${formatNumber(nutrition.fat)} g`;
+  preview.textContent = t('{0} de {1} = {2} kcal · P {3} g · C {4} g · G {5} g', formatQuantity(quantidade, food), foodName(food), formatNumber(nutrition.calories), formatNumber(nutrition.protein), formatNumber(nutrition.carbohydrates), formatNumber(nutrition.fat));
 }
 
 function fillEntryRecipeSelect() {
@@ -1887,16 +1990,16 @@ function updateEntryRecipePreview() {
   const preview = document.querySelector('#entry-recipe-preview');
   const recipe = recipeList.find((item) => String(item.id) === document.querySelector('#entry-recipe').value);
   if (!recipe) {
-    preview.textContent = 'Você ainda não tem receitas. Crie uma na aba Alimentos.';
+    preview.textContent = t('Você ainda não tem receitas. Crie uma na aba Alimentos.');
     return;
   }
   const items = (recipe.recipe_items || []).filter((item) => item.foods);
   if (!items.length) {
-    preview.textContent = 'Esta receita está sem ingredientes.';
+    preview.textContent = t('Esta receita está sem ingredientes.');
     return;
   }
   const totals = calculateRecipeTotals(items);
-  preview.textContent = `${items.length} ${items.length === 1 ? 'item' : 'itens'} · ${formatNumber(totals.calories)} kcal: ${items.map((item) => `${item.foods.name} ${formatQuantity(item.quantity, item.foods)}`).join(', ')}`;
+  preview.textContent = t('{0} {1} · {2} kcal: {3}', items.length, items.length === 1 ? t('item') : t('itens'), formatNumber(totals.calories), items.map((item) => `${foodName(item.foods)} ${formatQuantity(item.quantity, item.foods)}`).join(', '));
 }
 
 async function handleEntrySubmit(event) {
@@ -1905,7 +2008,7 @@ async function handleEntrySubmit(event) {
   const button = document.querySelector('#entry-submit');
   const slotId = document.querySelector('#entry-slot').value;
   if (!slotId) {
-    feedback.textContent = 'Escolha em qual refeição registrar.';
+    feedback.textContent = t('Escolha em qual refeição registrar.');
     return;
   }
   button.disabled = true;
@@ -1915,35 +2018,35 @@ async function handleEntrySubmit(event) {
       const recipe = recipeList.find((item) => String(item.id) === document.querySelector('#entry-recipe').value);
       const items = recipe ? (recipe.recipe_items || []).filter((item) => item.foods) : [];
       if (!items.length) {
-        feedback.textContent = 'Escolha uma receita que tenha ingredientes.';
+        feedback.textContent = t('Escolha uma receita que tenha ingredientes.');
         return;
       }
       await addRecipeMeals(items.map((item) => ({ food_id: item.food_id, quantity: Number(item.quantity) })), slotId, selectedDate);
-      showToast(`${recipe.name} registrada.`);
+      showToast(t('{0} registrada.', recipe.name));
     } else {
       const food = selectedEntryFood();
       const option = selectedEntryUnit();
       const digitado = Number(document.querySelector('#entry-quantity').value);
       if (!food || !option) {
-        feedback.textContent = 'Escolha um alimento.';
+        feedback.textContent = t('Escolha um alimento.');
         return;
       }
       if (!Number.isFinite(digitado) || digitado <= 0) {
-        feedback.textContent = 'Informe uma quantidade maior que zero.';
+        feedback.textContent = t('Informe uma quantidade maior que zero.');
         return;
       }
       const quantidade = Number((digitado * option.factor).toFixed(2));
       if (quantidade > 100000) {
-        feedback.textContent = 'Quantidade muito alta para este alimento.';
+        feedback.textContent = t('Quantidade muito alta para este alimento.');
         return;
       }
       await addMeal(food.id, quantidade, slotId, selectedDate);
-      showToast(`${food.name} registrado.`);
+      showToast(t('{0} registrado.', foodName(food)));
     }
     closeDialog('entry-dialog');
     await refreshDashboard();
   } catch (error) {
-    feedback.textContent = `Não foi possível registrar. ${describeDatabaseError(error)}`;
+    feedback.textContent = t('Não foi possível registrar. {0}', describeDatabaseError(error));
   } finally {
     button.disabled = false;
   }
@@ -1952,7 +2055,7 @@ async function handleEntrySubmit(event) {
 function renderNutrition(meals, goals = currentGoals()) {
   const totals = meals.reduce((result, meal) => { const nutrition = meal.foods ? calculateNutrition(meal.foods, meal.quantity) : { calories: 0, protein: 0, carbohydrates: 0, fat: 0 }; Object.keys(nutrition).forEach((key) => { result[key] += nutrition[key]; }); return result; }, { calories: 0, protein: 0, carbohydrates: 0, fat: 0 });
   const values = [['calories', totals.calories, goals.calories], ['protein', totals.protein, goals.protein], ['carbs', totals.carbohydrates, goals.carbohydrates], ['fats', totals.fat, goals.fat]];
-  values.forEach(([name, value, goal]) => { const total = document.querySelector(`#${name}-total`); if (total) total.textContent = formatNumber(value); const goalElement = document.querySelector(`#${name}-goal`); if (goalElement) goalElement.textContent = formatNumber(goal); const percent = Math.min(100, Math.round((value / goal) * 100)); const progress = document.querySelector(`#${name}-progress`); if (progress) progress.style.width = `${percent}%`; const percentElement = document.querySelector(`#${name}-percent`); if (percentElement) percentElement.textContent = `${percent}% da meta`; });
+  values.forEach(([name, value, goal]) => { const total = document.querySelector(`#${name}-total`); if (total) total.textContent = formatNumber(value); const goalElement = document.querySelector(`#${name}-goal`); if (goalElement) goalElement.textContent = formatNumber(goal); const percent = Math.min(100, Math.round((value / goal) * 100)); const progress = document.querySelector(`#${name}-progress`); if (progress) progress.style.width = `${percent}%`; const percentElement = document.querySelector(`#${name}-percent`); if (percentElement) percentElement.textContent = t('{0}% da meta', percent); });
 
   const caloriePercent = Math.min(100, Math.round((totals.calories / goals.calories) * 100));
   const ring = document.querySelector('#calorie-ring-progress');
@@ -1968,7 +2071,7 @@ async function refreshDashboard() {
   renderMeals(meals, slots);
   renderNutrition(meals);
   // O gráfico da semana acompanha qualquer registro novo, removido ou de outro dia.
-  await loadWeek().catch((error) => showToast(`Não foi possível atualizar a semana. ${describeDatabaseError(error)}`, 'error'));
+  await loadWeek().catch((error) => showToast(t('Não foi possível atualizar a semana. {0}', describeDatabaseError(error)), 'error'));
 }
 
 /* ---------------------------------------------------------
@@ -2053,7 +2156,29 @@ document.querySelector('#entry-recipe').addEventListener('change', updateEntryRe
 document.querySelectorAll('[data-close-dialog]').forEach((button) => button.addEventListener('click', () => closeDialog(button.dataset.closeDialog)));
 document.querySelector('[data-action="new-food"]').addEventListener('click', () => openFoodDialog());
 document.querySelector('[data-action="new-recipe"]').addEventListener('click', () => openRecipeDialog());
+// O logo leva ao Início, como o item da navegação inferior. preventDefault evita
+// deixar "#inicio" na barra de endereços, onde a leitura dos links de e-mail procura parâmetros.
+document.querySelector('.brand').addEventListener('click', (event) => {
+  event.preventDefault();
+  showView('inicio');
+});
 document.querySelector('[data-action="theme"]').addEventListener('click', toggleTheme);
+document.querySelector('[data-action="language"]').addEventListener('click', (event) => {
+  event.stopPropagation();
+  toggleLanguageMenu();
+});
+document.querySelectorAll('[data-language]').forEach((botao) => botao.addEventListener('click', () => chooseLanguage(botao.dataset.language)));
+// Fecha o menu ao clicar fora ou com Esc, devolvendo o foco ao botão.
+document.addEventListener('click', (event) => {
+  if (!event.target.closest('.lang-picker')) toggleLanguageMenu(false);
+});
+document.addEventListener('keydown', (event) => {
+  if (event.key !== 'Escape' || document.querySelector('#lang-menu').hidden) return;
+  toggleLanguageMenu(false);
+  document.querySelector('[data-action="language"]').focus();
+});
+document.addEventListener('fitlab:language', rerenderForLanguage);
+updateLanguageControls();
 document.querySelector('[data-action="profile"]').addEventListener('click', () => showView('perfil'));
 document.querySelector('[data-action="logout"]').addEventListener('click', signOut);
 document.querySelector('#food-form').addEventListener('submit', handleFoodSubmit);
@@ -2073,7 +2198,8 @@ document.querySelector('#auth-form').addEventListener('submit', handleAuthSubmit
 document.querySelector('#auth-switch').addEventListener('click', () => openAuthModal(authMode === 'login' ? 'register' : 'login'));
 document.querySelector('#forgot-password').addEventListener('click', () => openAuthModal('forgot'));
 document.querySelector('#auth-password').addEventListener('input', (event) => updatePasswordRules(event.target.value));
-document.querySelector('#food-search').addEventListener('input', async (event) => { try { renderFoods(await searchFoods(event.target.value)); } catch (error) { showToast('Não foi possível carregar os alimentos.', 'error'); } });
+// Busca no catálogo já carregado: cobre os nomes traduzidos e responde sem esperar a rede.
+document.querySelector('#food-search').addEventListener('input', (event) => filterFoodList(event.target.value));
 document.querySelector('#profile-form').addEventListener('submit', handleProfileSubmit);
 document.querySelector('[data-action="edit-goals"]').addEventListener('click', () => openGoalsDialog(false));
 document.querySelector('#goals-form').addEventListener('submit', handleGoalsSubmit);

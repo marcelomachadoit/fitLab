@@ -583,17 +583,6 @@ input {
 .profile-button:hover { transform: translateY(-2px); }
 .icon-button:hover { color: var(--brand); }
 
-.icon-button i {
-  position: absolute;
-  width: 8px;
-  height: 8px;
-  background: var(--brand);
-  border-radius: 50%;
-  top: 9px;
-  right: 9px;
-  border: 2px solid var(--surface);
-}
-
 .profile-button {
   background: linear-gradient(140deg, var(--navy), #24314f);
   color: #fff;
@@ -1790,6 +1779,56 @@ input {
 @media (max-width: 480px) {
   .week-head:has(.weight-range) { flex-direction: column; }
 }
+
+/* ---------------------------------------------------------
+   Seletor de idioma
+   --------------------------------------------------------- */
+
+.lang-picker { position: relative; }
+
+.lang-button { width: auto; min-width: 42px; padding: 0 10px; display: flex; gap: 6px; }
+.lang-button .icon { width: 18px; height: 18px; }
+.lang-code { font-size: 12px; font-weight: 700; letter-spacing: .04em; }
+
+.lang-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 20;
+  display: grid;
+  gap: 2px;
+  min-width: 180px;
+  padding: 6px;
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  box-shadow: var(--shadow-lg);
+  animation: panel-in .18s var(--ease);
+}
+
+.lang-menu button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 12px;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--ink);
+  font-size: 14px;
+  text-align: left;
+  transition: background var(--speed) var(--ease);
+}
+
+.lang-menu button:hover,
+.lang-menu button:focus-visible { background: var(--surface-soft); }
+.lang-menu button small { font-size: 11px; font-weight: 700; color: var(--muted); }
+.lang-menu button.selected { color: var(--brand); font-weight: 700; }
+.lang-menu button.selected small { color: var(--brand); }
+
+.auth-panel-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.auth-lang { grid-template-columns: repeat(3, auto); }
+.auth-lang .segment { padding: 7px 10px; font-size: 12px; }
 
 /* ---------------------------------------------------------
    Perfil

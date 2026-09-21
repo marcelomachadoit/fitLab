@@ -28,6 +28,8 @@ alter table public.profiles add column if not exists updated_at timestamptz not 
 -- Peso-meta opcional do acompanhamento de peso. O peso usado nas metas continua em
 -- profiles.weight; as pesagens do dia a dia ficam em weight_logs.
 alter table public.profiles add column if not exists target_weight numeric;
+-- Idioma da interface escolhido pelo usuário (acompanha a conta entre aparelhos).
+alter table public.profiles add column if not exists language text;
 
 -- As refeições do dia deixaram de ser quatro tipos fixos e passaram a apontar para uma
 -- refeição criada pelo usuário (meal_slots). meal_type fica como coluna legada, sem uso:
@@ -38,6 +40,10 @@ alter table public.meals drop constraint if exists meals_type_valid;
 
 -- Alimentos do usuário: null marca as linhas da base compartilhada.
 alter table public.foods add column if not exists user_id uuid references auth.users(id) on delete cascade;
+-- Nomes da base compartilhada em inglês e espanhol (só nomes; os valores são os mesmos).
+-- Alimentos criados pelo usuário deixam estas colunas vazias e aparecem com o nome original.
+alter table public.foods add column if not exists name_en text;
+alter table public.foods add column if not exists name_es text;
 
 -- Estas duas regras mudaram de definição (base 'un' e serving_size livre): remove para que o
 -- bloco abaixo recrie com o texto atual. Sem isto, o "if not exists" manteria a versão antiga.
@@ -54,8 +60,10 @@ do $$ begin
 	if not exists (select 1 from pg_constraint where conname = 'profiles_goal_valid') then alter table public.profiles add constraint profiles_goal_valid check (goal is null or goal in ('loss_light', 'loss_moderate', 'maintenance', 'gain_light', 'gain_moderate')); end if;
 	-- Faixas de sanidade no banco: o cálculo vem do cliente, mas valor fora daqui não persiste.
 	if not exists (select 1 from pg_constraint where conname = 'profiles_targets_valid') then alter table public.profiles add constraint profiles_targets_valid check ((bmr is null or bmr between 400 and 6000) and (tdee is null or tdee between 400 and 12000) and (target_calories is null or target_calories between 800 and 12000) and (protein_g is null or protein_g between 0 and 1000) and (carbs_g is null or carbs_g between 0 and 2000) and (fat_g is null or fat_g between 0 and 1000)); end if;
+	if not exists (select 1 from pg_constraint where conname = 'profiles_language_valid') then alter table public.profiles add constraint profiles_language_valid check (language is null or language in ('pt', 'en', 'es')); end if;
 	if not exists (select 1 from pg_constraint where conname = 'profiles_target_weight_valid') then alter table public.profiles add constraint profiles_target_weight_valid check (target_weight is null or target_weight between 30 and 300); end if;
 	if not exists (select 1 from pg_constraint where conname = 'weight_logs_weight_valid') then alter table public.weight_logs add constraint weight_logs_weight_valid check (weight_kg between 30 and 300); end if;
+	if not exists (select 1 from pg_constraint where conname = 'foods_translated_names_length') then alter table public.foods add constraint foods_translated_names_length check ((name_en is null or char_length(name_en) between 1 and 200) and (name_es is null or char_length(name_es) between 1 and 200)); end if;
 	if not exists (select 1 from pg_constraint where conname = 'foods_name_length') then alter table public.foods add constraint foods_name_length check (char_length(name) between 1 and 200); end if;
 	if not exists (select 1 from pg_constraint where conname = 'foods_nutrition_valid') then alter table public.foods add constraint foods_nutrition_valid check (calories between 0 and 10000 and protein between 0 and 1000 and carbohydrates between 0 and 1000 and fat between 0 and 1000 and serving_size between 0.1 and 10000); end if;
 	if not exists (select 1 from pg_constraint where conname = 'foods_base_unit_valid') then alter table public.foods add constraint foods_base_unit_valid check (base_unit in ('g', 'ml', 'un')); end if;

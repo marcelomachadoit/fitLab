@@ -33,12 +33,12 @@ function readAuthRedirect() {
 function translateRedirectError(message) {
   const texto = String(message || '').toLowerCase();
   if (texto.includes('expired') || texto.includes('otp_expired')) {
-    return 'O link do e-mail expirou ou já foi usado. Peça um novo abaixo.';
+    return t('O link do e-mail expirou ou já foi usado. Peça um novo abaixo.');
   }
   if (texto.includes('invalid')) {
-    return 'O link do e-mail não é válido. Peça um novo abaixo.';
+    return t('O link do e-mail não é válido. Peça um novo abaixo.');
   }
-  return 'Não foi possível validar o link do e-mail. Peça um novo abaixo.';
+  return t('Não foi possível validar o link do e-mail. Peça um novo abaixo.');
 }
 
 // Limpa o token da barra de endereços depois de usá-lo.
@@ -69,11 +69,11 @@ function openAuthModal(mode = 'login') {
   confirmPasswordField.setAttribute('aria-hidden', String(!isReset));
   document.querySelector('#auth-confirm-password').required = isReset;
   document.querySelector('#auth-password').autocomplete = isRegister || isReset ? 'new-password' : 'current-password';
-  setAuthTitle(isRegister ? ['Comece sua', 'melhor fase.'] : isForgot ? ['Recupere seu', 'acesso.'] : isReset ? ['Crie uma', 'nova senha.'] : ['Seu ritmo,', 'seu resultado.']);
-  document.querySelector('#auth-submit').textContent = isRegister ? 'Criar conta' : isForgot ? 'Enviar link' : isReset ? 'Salvar nova senha' : 'Entrar';
-  document.querySelector('#auth-switch').textContent = isRegister ? 'Já tenho uma conta' : isForgot || isReset ? 'Voltar para entrar' : 'Ainda não tenho uma conta';
+  setAuthTitle(isRegister ? [t('Comece sua'), t('melhor fase.')] : isForgot ? [t('Recupere seu'), t('acesso.')] : isReset ? [t('Crie uma'), t('nova senha.')] : [t('Seu ritmo,'), t('seu resultado.')]);
+  document.querySelector('#auth-submit').textContent = isRegister ? t('Criar conta') : isForgot ? t('Enviar link') : isReset ? t('Salvar nova senha') : t('Entrar');
+  document.querySelector('#auth-switch').textContent = isRegister ? t('Já tenho uma conta') : isForgot || isReset ? t('Voltar para entrar') : t('Ainda não tenho uma conta');
   forgotButton.hidden = mode !== 'login';
-  document.querySelector('#auth-feedback').textContent = hasSupabase() ? '' : 'Configure o Supabase para ativar sua conta.';
+  document.querySelector('#auth-feedback').textContent = hasSupabase() ? '' : t('Configure o Supabase para ativar sua conta.');
 }
 
 function setAuthTitle(lines) {
@@ -97,16 +97,16 @@ async function handleAuthSubmit(event) {
   const feedback = document.querySelector('#auth-feedback');
   const button = document.querySelector('#auth-submit');
   if (!hasSupabase()) {
-    feedback.textContent = 'Adicione a URL e a anon key em js/supabase.js.';
+    feedback.textContent = t('Adicione a URL e a anon key em js/supabase.js.');
     return;
   }
   // Cadastro, recuperação e redefinição dependem de uma URL de retorno válida.
   if (isFileProtocol() && authMode !== 'login') {
-    feedback.textContent = FILE_PROTOCOL_MESSAGE;
+    feedback.textContent = t(FILE_PROTOCOL_MESSAGE);
     return;
   }
   button.disabled = true;
-  feedback.textContent = 'Aguarde...';
+  feedback.textContent = t('Aguarde...');
   const name = document.querySelector('#auth-name').value.trim();
   const email = document.querySelector('#auth-email').value.trim().toLowerCase();
   const password = document.querySelector('#auth-password').value;
@@ -117,19 +117,19 @@ async function handleAuthSubmit(event) {
   }
   if ((authMode === 'register' || authMode === 'reset') && !isStrongPassword(password)) {
     button.disabled = false;
-    feedback.textContent = 'Escolha uma senha que cumpra todos os requisitos indicados.';
+    feedback.textContent = t('Escolha uma senha que cumpra todos os requisitos indicados.');
     return;
   }
   if (authMode === 'reset' && password !== document.querySelector('#auth-confirm-password').value) {
     button.disabled = false;
-    feedback.textContent = 'As senhas não coincidem.';
+    feedback.textContent = t('As senhas não coincidem.');
     return;
   }
   if (authMode === 'forgot' || authMode === 'register') {
     const espera = remainingEmailCooldown(email);
     if (espera > 0) {
       button.disabled = false;
-      feedback.textContent = `Já enviamos um e-mail para este endereço. Aguarde ${Math.ceil(espera / 1000)} segundos antes de pedir outro.`;
+      feedback.textContent = t('Já enviamos um e-mail para este endereço. Aguarde {0} segundos antes de pedir outro.', Math.ceil(espera / 1000));
       return;
     }
   }
@@ -138,13 +138,13 @@ async function handleAuthSubmit(event) {
       const { error } = await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo: authRedirectUrl() });
       if (error) throw error;
       markEmailSent(email);
-      feedback.textContent = 'Se esse e-mail existir, enviaremos um link para redefinir sua senha.';
+      feedback.textContent = t('Se esse e-mail existir, enviaremos um link para redefinir sua senha.');
       return;
     }
     if (authMode === 'reset') {
       const { error } = await supabaseClient.auth.updateUser({ password });
       if (error) throw error;
-      feedback.textContent = 'Senha atualizada. Faça login novamente.';
+      feedback.textContent = t('Senha atualizada. Faça login novamente.');
       clearAuthRedirect();
       openAuthModal('login');
       return;
@@ -166,11 +166,11 @@ async function handleAuthSubmit(event) {
     }
     if (authMode === 'register' && !result.data.session) {
       markEmailSent(email);
-      feedback.textContent = 'Cadastro criado. Verifique seu e-mail para confirmar a conta.';
+      feedback.textContent = t('Cadastro criado. Verifique seu e-mail para confirmar a conta.');
       document.querySelector('#auth-form').reset();
       return;
     }
-    feedback.textContent = 'Login realizado.';
+    feedback.textContent = t('Login realizado.');
     clearLoginFailures(email);
     window.location.reload();
   } catch (error) {
@@ -211,7 +211,7 @@ function isLoginLocked(email) {
 
 function getLockoutMessage(email) {
   const remaining = Math.ceil((getAttemptState(email).lockedUntil - Date.now()) / 60000);
-  return `Muitas tentativas. Aguarde ${remaining} minuto${remaining === 1 ? '' : 's'} antes de tentar novamente.`;
+  return t('Muitas tentativas. Aguarde {0} minuto{1} antes de tentar novamente.', remaining, remaining === 1 ? '' : 's');
 }
 
 function recordLoginFailure(email) {
@@ -230,10 +230,10 @@ function clearLoginFailures(email) {
 // justamente a informação necessária para corrigir a configuração do projeto.
 function translateAuthError(error) {
   const messages = {
-    'Invalid login credentials': 'E-mail ou senha incorretos.',
-    'User already registered': 'Este e-mail já está cadastrado. Tente entrar.',
-    'Password should be at least 6 characters': 'A senha precisa ter pelo menos 8 caracteres.',
-    'Email not confirmed': 'Confirme seu e-mail antes de entrar. Procure a mensagem de confirmação na caixa de entrada.',
+    'Invalid login credentials': t('E-mail ou senha incorretos.'),
+    'User already registered': t('Este e-mail já está cadastrado. Tente entrar.'),
+    'Password should be at least 6 characters': t('A senha precisa ter pelo menos 8 caracteres.'),
+    'Email not confirmed': t('Confirme seu e-mail antes de entrar. Procure a mensagem de confirmação na caixa de entrada.'),
   };
   if (messages[error && error.message]) return messages[error.message];
 
@@ -241,28 +241,28 @@ function translateAuthError(error) {
   const status = (error && (error.status || error.code)) || '';
 
   if (texto.includes('redirect')) {
-    return 'A URL de retorno não está liberada no projeto. Adicione este endereço em Authentication > URL Configuration > Redirect URLs.';
+    return t('A URL de retorno não está liberada no projeto. Adicione este endereço em Authentication > URL Configuration > Redirect URLs.');
   }
   if (status === 429 || texto.includes('rate limit') || texto.includes('for security purposes') || texto.includes('too many')) {
     // O próprio Supabase costuma dizer quantos segundos faltam: repassa o número.
     const espera = texto.match(/after (\d+) seconds?/);
-    const quando = espera ? `${espera[1]} segundos` : 'alguns minutos';
-    return `Limite de envio de e-mails atingido. Aguarde ${quando} antes de pedir outro. O serviço de e-mail padrão do Supabase tem cota baixa; para uso real configure um SMTP próprio em Authentication > Emails.`;
+    const quando = espera ? t('{0} segundos', espera[1]) : t('alguns minutos');
+    return t('Limite de envio de e-mails atingido. Aguarde {0} antes de pedir outro. O serviço de e-mail padrão do Supabase tem cota baixa; para uso real configure um SMTP próprio em Authentication > Emails.', quando);
   }
   if (texto.includes('sending') && texto.includes('mail')) {
-    return 'O Supabase não conseguiu enviar o e-mail. Verifique o provedor de e-mail do projeto em Authentication > Emails.';
+    return t('O Supabase não conseguiu enviar o e-mail. Verifique o provedor de e-mail do projeto em Authentication > Emails.');
   }
   if (texto.includes('failed to fetch') || texto.includes('networkerror') || texto.includes('load failed')) {
-    return 'Sem conexão com o Supabase. Verifique sua internet e a URL do projeto em js/supabase.js.';
+    return t('Sem conexão com o Supabase. Verifique sua internet e a URL do projeto em js/supabase.js.');
   }
   if (texto.includes('should be different') || texto.includes('same password')) {
-    return 'A nova senha precisa ser diferente da anterior.';
+    return t('A nova senha precisa ser diferente da anterior.');
   }
   if (texto.includes('session') || texto.includes('jwt')) {
-    return 'A sessão do link expirou. Peça um novo e-mail de redefinição.';
+    return t('A sessão do link expirou. Peça um novo e-mail de redefinição.');
   }
-  const detalhe = (error && error.message) || 'sem detalhes';
-  return `Não foi possível concluir a autenticação: ${detalhe}${status ? ` (${status})` : ''}`;
+  const detalhe = (error && error.message) || t('sem detalhes');
+  return t('Não foi possível concluir a autenticação: {0}{1}', detalhe, status ? ` (${status})` : '');
 }
 
 function isStrongPassword(password) {

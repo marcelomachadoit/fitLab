@@ -4,15 +4,6 @@ const sampleFoods = [
   { id: 'yogurt', name: 'Iogurte grego', calories: 97, protein: 9, carbohydrates: 3.6, fat: 5, serving_size: 100 },
 ];
 
-async function searchFoods(searchTerm = '') {
-  if (!hasSupabase()) return sampleFoods.filter((food) => food.name.toLowerCase().includes(searchTerm.toLowerCase()));
-  let query = supabaseClient.from('foods').select('*').order('name').limit(60);
-  if (searchTerm) query = query.ilike('name', `%${searchTerm}%`);
-  const { data, error } = await query;
-  if (error) throw error;
-  return data;
-}
-
 // Base compartilhada + alimentos do próprio usuário: quem separa os dois é a RLS.
 async function listAllFoods() {
   if (!hasSupabase()) return sampleFoods;
@@ -35,7 +26,7 @@ async function saveFood(food, foodId = null) {
     base_unit: food.base_unit,
     serving_size: food.serving_size,
     portion_amount: portionAmount,
-    portion_label: portionAmount ? `1 unidade (${portionAmount} ${food.base_unit})` : null,
+    portion_label: portionAmount ? t('1 unidade ({0} {1})', portionAmount, food.base_unit) : null,
     user_id: user.id,
   };
   const query = foodId
