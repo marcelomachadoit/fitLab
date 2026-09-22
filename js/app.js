@@ -30,7 +30,7 @@ async function initializeApp() {
   appReady = true;
   // Conta nova ou perfil incompleto: o questionário abre e não pode ser dispensado.
   if (!isProfileComplete(nutritionProfile)) openGoalsDialog(true);
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js?v=30').catch(() => {});
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js?v=31').catch(() => {});
 }
 
 // CSS e JS vêm do cache primeiro. Quando um service worker novo assume a página, os

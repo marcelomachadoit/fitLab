@@ -1,4 +1,4 @@
-# FitLab
+# NutriTrack
 
 PWA mobile-first para contagem de calorias e acompanhamento nutricional. Usa HTML, CSS e JavaScript puro e foi preparado para hospedagem estática no Cloudflare Pages.
 
@@ -8,7 +8,7 @@ Abra a pasta no VS Code e use a extensão Live Server ou outro servidor HTTP loc
 
 ## Supabase
 
-O aplicativo agora exige uma sessão do Supabase antes de revelar o dashboard. Configure a URL e a chave `anon public` em `js/supabase.js` (ou defina `window.FITLAB_SUPABASE_URL` e `window.FITLAB_SUPABASE_ANON_KEY` antes desse script). A `service_role key` nunca deve ser usada no frontend.
+O aplicativo agora exige uma sessão do Supabase antes de revelar o dashboard. Configure a URL e a chave `anon public` em `js/supabase.js` (ou defina `window.NUTRITRACK_SUPABASE_URL` e `window.NUTRITRACK_SUPABASE_ANON_KEY` antes desse script). A `service_role key` nunca deve ser usada no frontend.
 
 Em um site estático do Cloudflare Pages, variáveis `.env` não são injetadas automaticamente no JavaScript do navegador. A URL e a anon key são credenciais públicas destinadas ao frontend; a proteção dos dados vem do Auth e das políticas RLS do banco. Nunca publique a service role key.
 
@@ -125,7 +125,7 @@ Envie o projeto para GitHub, conecte o repositório no Cloudflare Pages, deixe o
 
 ## iPhone
 
-Abra a URL publicada no Safari, toque em Compartilhar e escolha **Adicionar à Tela de Início**. O manifest, o apple-touch-icon e as meta tags já estão configurados para o FitLab.
+Abra a URL publicada no Safari, toque em Compartilhar e escolha **Adicionar à Tela de Início**. O manifest, o apple-touch-icon e as meta tags já estão configurados para o NutriTrack.
 
 ## Estado atual
 

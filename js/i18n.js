@@ -12,12 +12,12 @@ const LANGUAGES = {
   en: { label: 'English', short: 'EN', locale: 'en-US', htmlLang: 'en' },
   es: { label: 'Español', short: 'ES', locale: 'es-ES', htmlLang: 'es' },
 };
-const LANGUAGE_KEY = 'fitlab-language';
+const LANGUAGE_KEY = 'nutritrack-language';
 
 // [português, inglês, espanhol]
 const TRANSLATIONS = [
   // Geral / carregamento
-  ['FitLab | Seu progresso, do seu jeito', 'FitLab | Your progress, your way', 'FitLab | Tu progreso, a tu manera'],
+  ['NutriTrack | Seu progresso, do seu jeito', 'NutriTrack | Your progress, your way', 'NutriTrack | Tu progreso, a tu manera'],
   ['Não foi possível carregar seu perfil.', "Couldn't load your profile.", 'No se pudo cargar tu perfil.'],
   ['Não foi possível carregar os alimentos.', "Couldn't load foods.", 'No se pudieron cargar los alimentos.'],
   ['Não foi possível carregar suas receitas.', "Couldn't load your recipes.", 'No se pudieron cargar tus recetas.'],
@@ -34,8 +34,8 @@ const TRANSLATIONS = [
   ['{0} desde {1}', '{0} since {1}', '{0} desde el {1}'],
 
   ['anos', 'years', 'años'],
-  ['FitLab, início', 'FitLab, home', 'FitLab, inicio'],
-  ['Logo FitLab', 'FitLab logo', 'Logo de FitLab'],
+  ['NutriTrack, início', 'NutriTrack, home', 'NutriTrack, inicio'],
+  ['Logo NutriTrack', 'NutriTrack logo', 'Logo de NutriTrack'],
 
   // Idioma
   ['Idioma', 'Language', 'Idioma'],
@@ -52,7 +52,7 @@ const TRANSLATIONS = [
   ['Veja sua evolução semana a semana.', 'See your progress week by week.', 'Mira tu evolución semana a semana.'],
   ['Dados protegidos', 'Protected data', 'Datos protegidos'],
   ['Cada conta enxerga só os próprios registros.', 'Each account only sees its own records.', 'Cada cuenta solo ve sus propios registros.'],
-  ['BEM-VINDO AO FITLAB', 'WELCOME TO FITLAB', 'BIENVENIDO A FITLAB'],
+  ['BEM-VINDO AO NUTRITRACK', 'WELCOME TO NUTRITRACK', 'BIENVENIDO A NUTRITRACK'],
   ['Entre para salvar suas refeições e acompanhar sua evolução.', 'Sign in to save your meals and track your progress.', 'Inicia sesión para guardar tus comidas y seguir tu evolución.'],
   ['Seu nome', 'Your name', 'Tu nombre'],
   ['Como podemos chamar você?', 'What should we call you?', '¿Cómo te llamamos?'],
@@ -525,7 +525,7 @@ function captureStaticTexts() {
 function applyStaticTexts() {
   staticTexts.forEach(({ no, antes, chave, depois }) => { no.data = antes + t(chave) + depois; });
   staticAttributes.forEach(({ el, atributo, chave }) => el.setAttribute(atributo, t(chave)));
-  document.title = t('FitLab | Seu progresso, do seu jeito');
+  document.title = t('NutriTrack | Seu progresso, do seu jeito');
   document.documentElement.lang = LANGUAGES[currentLanguage].htmlLang;
 }
 
@@ -536,7 +536,7 @@ function setLanguage(idioma) {
   currentLanguage = idioma;
   try { localStorage.setItem(LANGUAGE_KEY, idioma); } catch {}
   applyStaticTexts();
-  document.dispatchEvent(new CustomEvent('fitlab:language', { detail: { language: idioma } }));
+  document.dispatchEvent(new CustomEvent('nutritrack:language', { detail: { language: idioma } }));
   return true;
 }
 

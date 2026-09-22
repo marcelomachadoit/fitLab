@@ -1,4 +1,4 @@
--- FitLab — schema completo. Idempotente: pode ser executado novamente com segurança.
+-- NutriTrack — schema completo. Idempotente: pode ser executado novamente com segurança.
 --
 -- Modelo de alimentos:
 --   foods.user_id is null  -> base nutricional compartilhada (somente leitura para o cliente)
@@ -196,7 +196,7 @@ security definer set search_path = public
 as $$
 begin
 	insert into public.profiles (id, name)
-	values (new.id, left(coalesce(nullif(new.raw_user_meta_data ->> 'name', ''), split_part(new.email, '@', 1), 'FitLab user'), 120));
+	values (new.id, left(coalesce(nullif(new.raw_user_meta_data ->> 'name', ''), split_part(new.email, '@', 1), 'NutriTrack user'), 120));
 	return new;
 end;
 $$;

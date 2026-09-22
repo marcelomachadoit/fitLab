@@ -1,4 +1,4 @@
--- FitLab — base nutricional compartilhada (166 itens).
+-- NutriTrack — base nutricional compartilhada (166 itens).
 -- Gerado a partir de data/tabela-nutricional.txt (valores) e data/nomes-alimentos.txt (nomes em
 -- inglês e espanhol). Não edite aqui: edite os .txt e gere de novo.
 --

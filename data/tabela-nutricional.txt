@@ -1,4 +1,4 @@
-# Base nutricional do FitLab — valores de referência (aproximados).
+# Base nutricional do NutriTrack — valores de referência (aproximados).
 # Não altere os números sem instrução explícita.
 # Formato:
 # Nome | Base | kcal | Proteína(g) | Carboidrato(g) | Gordura(g) | Porção comum | kcal/porção | Proteína/porção(g) | Carboidrato/porção(g) | Gordura/porção(g)

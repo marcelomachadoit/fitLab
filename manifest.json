@@ -1,6 +1,6 @@
 {
-  "name": "FitLab - Nutrição e Progresso",
-  "short_name": "FitLab",
+  "name": "NutriTrack - Nutrição e Progresso",
+  "short_name": "NutriTrack",
   "description": "Seu acompanhamento nutricional simples e inteligente.",
   "start_url": "/",
   "display": "standalone",

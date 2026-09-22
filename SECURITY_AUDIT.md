@@ -1,4 +1,4 @@
-# FitLab Security Audit
+# NutriTrack Security Audit
 
 Date: 2026-09-19
 

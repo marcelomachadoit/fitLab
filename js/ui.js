@@ -1,6 +1,6 @@
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const RING_CIRCUMFERENCE = 2 * Math.PI * 52;
-const THEME_KEY = 'fitlab-theme';
+const THEME_KEY = 'nutritrack-theme';
 const FOOD_PAGE_SIZE = 60;
 
 let foodCatalog = [];
@@ -1527,7 +1527,7 @@ function renderWeightChart(logs, alvo) {
 const RECALC_DISMISS_DAYS = 7;
 
 function recalcDismissKey() {
-  return `fitlab-recalc-dismissed:${(nutritionProfile && nutritionProfile.id) || 'sem-conta'}`;
+  return `nutritrack-recalc-dismissed:${(nutritionProfile && nutritionProfile.id) || 'sem-conta'}`;
 }
 
 function isRecalcDismissed() {
@@ -2201,7 +2201,7 @@ document.addEventListener('keydown', (event) => {
   toggleLanguageMenu(false);
   document.querySelector('[data-action="language"]').focus();
 });
-document.addEventListener('fitlab:language', rerenderForLanguage);
+document.addEventListener('nutritrack:language', rerenderForLanguage);
 updateLanguageControls();
 document.querySelector('[data-action="profile"]').addEventListener('click', () => showView('perfil'));
 document.querySelector('[data-action="logout"]').addEventListener('click', signOut);

@@ -184,7 +184,7 @@ async function handleAuthSubmit(event) {
 // evita queimar o limite com cliques repetidos e receber 429 do servidor.
 const EMAIL_COOLDOWN_MS = 60 * 1000;
 
-function getEmailCooldownKey(email) { return `fitlab-email-sent:${email}`; }
+function getEmailCooldownKey(email) { return `nutritrack-email-sent:${email}`; }
 
 function remainingEmailCooldown(email) {
   try {
@@ -199,7 +199,7 @@ function markEmailSent(email) {
   try { localStorage.setItem(getEmailCooldownKey(email), String(Date.now())); } catch {}
 }
 
-function getAttemptKey(email) { return `fitlab-login-attempts:${email}`; }
+function getAttemptKey(email) { return `nutritrack-login-attempts:${email}`; }
 
 function getAttemptState(email) {
   try { return JSON.parse(localStorage.getItem(getAttemptKey(email))) || { count: 0, lockedUntil: 0 }; } catch { return { count: 0, lockedUntil: 0 }; }
